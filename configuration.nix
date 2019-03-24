@@ -79,6 +79,7 @@
     xorg.xdpyinfo
     glxinfo
     pstree
+    sl
   ];
 
   fonts.fonts = with pkgs; [
