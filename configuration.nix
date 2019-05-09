@@ -1,5 +1,8 @@
 # Laptop config
 
+# To update run
+# sudo -HE nixos-rebuild switch
+
 { config, pkgs, ... }:
 
 {
@@ -33,6 +36,26 @@
   # Set your time zone.
   time.timeZone = "Australia/Melbourne";
 
+  nixpkgs.config = {
+    # hackage-packages was broken on unstable, give it a go anyway?
+    allowBroken = true;
+  
+    # Create an alias for the unstable channel
+    packageOverrides = pkgs: with pkgs; {
+      unstable = import <nixos-unstable> {
+        # pass the nixpkgs config to the unstable alias
+        config = config.nixpkgs.config;
+      };
+      # Don't run tests for Haskell packages
+      haskellPackages = pkgs.haskellPackages.override {
+        overrides = self: super: {
+          ghc-syb-utils = pkgs.haskell.lib.dontCheck super.ghc-syb-utils;
+          #cabal = pkgs.haskellPackages.cabalNoTest;
+        };
+      };
+    };
+  };
+  
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -56,7 +79,6 @@
     firefox
     pandoc
     i3lock
-    python3
     trayer
     networkmanagerapplet
     vlc
@@ -74,17 +96,60 @@
     xorg.xbacklight
     killall
     jdk
-    qt5.qtbase
     awscli
     xorg.xdpyinfo
+    #######
+    # Can't get glxinfo to work
     glxinfo
+    #unstable.intel-media-driver
+    #unstable.mesa
+    #######
     pstree
     sl
+    wirelesstools
+    cowsay
+    # For browser-media-keys firefox addon,
+    # supposedly lets media keys work when browser not in focus
+    xorg.xcbutilkeysyms
+    htop
+    hunspell
+    (import (fetchGit "https://github.com/haslersn/fish-nix-shell"))
+    nodePackages.bower
+    nodePackages.pulp
+    unstable.nodePackages.parcel-bundler
+    gnumake
+    gcc
+    chromium
+    redshift
+    iftop
+    vnstat
+    binutils-unwrapped
+    nix-index
+    nodejs
+    msr-tools
+    unstable.zoom
+    meshlab
+    nix-prefetch-git
+    conda
+    lolcat
+    figlet
+    # Haskell stuff, should use nix-shells for this
+    ghc
+    cabal-install
+    unstable.haskellPackages.stack
+    haskell.compiler.ghcjs
   ];
+
+  services.vnstat.enable = true;
 
   fonts.fonts = with pkgs; [
     source-code-pro
   ];
+
+  programs.fish.enable = true;
+  programs.fish.promptInit = ''
+    fish-nix-shell --info-right | source
+  '';
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -107,11 +172,13 @@
   sound.enable = true;
   hardware.pulseaudio.enable = true;
 
+  # Can't seem to get glxinfo working :/
+  hardware.opengl.enable = true;
+
   services.xserver = {
 
     enable = true;
     layout = "us";
-    xkbOptions = "eurosign:e";
 
     # Enable touchpad support.
     libinput.enable = true;
@@ -159,10 +226,7 @@
       
       emacs --daemon &
       '';
-  };
-
-  # Not sure if this is needed
-  programs.fish.enable = true;
+    };
 
   users.users.rowan = {
     isNormalUser = true;
@@ -185,7 +249,7 @@
     longitude = "144.9631";
   };
 
-  # This X1 won't wake up from sleep
+  # This X1 won't wake up from sleep, hibernate instead
   services.logind.extraConfig = "HandleLidSwitch=hibernate";
 
   systemd.services.lockScreenOnWake = { 
