@@ -15,12 +15,26 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.version = 2;
   boot.loader.grub.efiSupport = true;
-  # boot.loader.grub.efiInstallAsRemovable = true;
-  # boot.loader.efi.efiSysMountPoint = "/boot/efi";
   boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
 
   networking.hostName = "ro-X1";
   networking.networkmanager.enable = true;
+
+  sound.enable = true;
+  hardware.pulseaudio.enable = true;
+  hardware.pulseaudio.support32Bit = true;
+
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+    extraPackages = with pkgs; [
+      vaapiIntel
+      vaapiVdpau
+      libvdpau-va-gl
+      intel-media-driver # only available starting nixos-19.03 or the current nixos-unstable
+    ];
+  };
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -36,22 +50,18 @@
   # Set your time zone.
   time.timeZone = "Australia/Melbourne";
 
+
   nixpkgs.config = {
-    # hackage-packages was broken on unstable, give it a go anyway?
+    #allowUnfree = true;
+
+    # For qgis
     allowBroken = true;
-  
+
     # Create an alias for the unstable channel
     packageOverrides = pkgs: with pkgs; {
       unstable = import <nixos-unstable> {
         # pass the nixpkgs config to the unstable alias
         config = config.nixpkgs.config;
-      };
-      # Don't run tests for Haskell packages
-      haskellPackages = pkgs.haskellPackages.override {
-        overrides = self: super: {
-          ghc-syb-utils = pkgs.haskell.lib.dontCheck super.ghc-syb-utils;
-          #cabal = pkgs.haskellPackages.cabalNoTest;
-        };
       };
     };
   };
@@ -93,30 +103,25 @@
     gnupg
     bc
     imagemagick
-    xorg.xbacklight
+    xorg.xdpyinfo
     killall
     jdk
     awscli
-    xorg.xdpyinfo
-    #######
-    # Can't get glxinfo to work
-    glxinfo
-    #unstable.intel-media-driver
-    #unstable.mesa
-    #######
     pstree
     sl
     wirelesstools
     cowsay
-    # For browser-media-keys firefox addon,
-    # supposedly lets media keys work when browser not in focus
-    xorg.xcbutilkeysyms
     htop
     hunspell
     (import (fetchGit "https://github.com/haslersn/fish-nix-shell"))
+    ####
+    # Purescript dev stuff
     nodePackages.bower
     nodePackages.pulp
     unstable.nodePackages.parcel-bundler
+    # install purescript and spago using
+    #   https://github.com/justinwoo/easy-purescript-nix
+    ####
     gnumake
     gcc
     chromium
@@ -127,24 +132,64 @@
     nix-index
     nodejs
     msr-tools
-    unstable.zoom
+    zoom
     meshlab
     nix-prefetch-git
-    conda
     lolcat
     figlet
-    # Haskell stuff, should use nix-shells for this
-    ghc
-    cabal-install
-    unstable.haskellPackages.stack
-    haskell.compiler.ghcjs
+    fzf
+    gparted
+    ripgrep
+    file
+    patchelf
+    nmap
+    unstable.qgis
+    dfu-util
+    ldns
+    xournal
+    bashmount
+    filelight
+    iotop
+    inform7
+    frotz
+    maven
+    # Satellite/Radio stuff
+    gpredict
+    python36
+    arduino
+    hamlib
+    ####
+    ## Haskell stuff
+    #haskell.compiler.ghc822
+    #ghc
+    #cabal-install
+    #haskellPackages.stack
+    #haskellPackages.Agda
+    ####
+    dos2unix
+    docker
+    docker_compose
+    jq
+    openvpn
+    plover.stable
+    conda
+    glxinfo
+    libva-utils
+    libva
+    libspatialite
+    spatialite_tools
   ];
+
+  virtualisation.docker.enable = true;
+  virtualisation.docker.enableOnBoot = true;
 
   services.vnstat.enable = true;
 
   fonts.fonts = with pkgs; [
     source-code-pro
   ];
+
+  #fonts.fontconfig.dpi=180;
 
   programs.fish.enable = true;
   programs.fish.promptInit = ''
@@ -162,18 +207,17 @@
   # services.openssh.enable = true;
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [
+    8111 # workflow fileserver
+    8112 # workflow websocket
+  ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
   services.printing.enable = true;
 
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-
-  # Can't seem to get glxinfo working :/
-  hardware.opengl.enable = true;
+  hardware.brightnessctl.enable = true;
 
   services.xserver = {
 
@@ -185,6 +229,8 @@
 
     desktopManager.xterm.enable = false;
 
+    xkbOptions = "ctrl:nocaps";
+
     windowManager.xmonad = {
       enable = true;
       enableContribAndExtras = true;
@@ -195,17 +241,22 @@
       ];
     };
     windowManager.default = "xmonad";
-    # This used to me my .xinitrc
+    # what used to be .xinitrc
     displayManager.sessionCommands = with pkgs; lib.mkAfter
       ''
       xbindkeys
       
       xrdb -merge /home/rowan/.Xresources
-      xmodmap /home/rowan/.Xmodmap
+      #xmodmap /home/rowan/.Xmodmap
+      #setxkbmap -option ctrl:nocaps
       
-      xset s off
+      # turn off Display Power Management Service (DPMS)
       xset -dpms
-      xset s noblank 
+      setterm -blank 0 -powerdown 0
+
+      # turn off black Screensaver
+      xset s off
+
       
       trayer --edge bottom \
              --align right \
@@ -228,11 +279,17 @@
       '';
     };
 
+  # Make the `usb` group for read/write permissions to usb devices
+  users.groups.usb = {};
+  services.udev.extraRules = ''
+    KERNEL=="*", SUBSYSTEMS=="usb", MODE="0664", GROUP="usb"
+  '';
+
   users.users.rowan = {
     isNormalUser = true;
     home = "/home/rowan";
     uid = 1000;
-    extraGroups = [ "wheel" "networkmanager" "audio" ];
+    extraGroups = [ "wheel" "networkmanager" "audio" "usb" "fuse" "video" ];
     shell = "/run/current-system/sw/bin/fish";
   };
 
@@ -240,17 +297,20 @@
   # compatible, in order to avoid breaking some software such as database
   # servers. You should change this only after NixOS release notes say you
   # should.
-  system.stateVersion = "18.09"; # Did you read the comment?
+  system.stateVersion = "19.03"; # Did you read the comment?
 
   services.redshift = {
     enable = true;
-    # Melbourne
-    latitude = "-37.8136";
-    longitude = "144.9631";
+  };
+
+  # Melbourne
+  location = {
+    latitude = -37.8136;
+    longitude = 144.9631;
   };
 
   # This X1 won't wake up from sleep, hibernate instead
-  services.logind.extraConfig = "HandleLidSwitch=hibernate";
+  services.logind.lidSwitch = "hibernate";
 
   systemd.services.lockScreenOnWake = { 
     description = "Lock screen on wakeup";
