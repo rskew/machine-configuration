@@ -5,6 +5,23 @@
 
 { config, pkgs, ... }:
 
+let
+  easy-ps = import (pkgs.fetchFromGitHub {
+    owner = "justinwoo";
+    repo = "easy-purescript-nix";
+    # version has purs 0.13.4, spago 0.10.0.0
+    rev = "aa94aeac3a6ad9b4dfa0e807ad1421097d74f663";
+    sha256 = "1kfhi6rscgf165zg4f1s0fgppygisvc7dppxb93n02rypxfxjirm";
+  }) {
+    inherit pkgs;
+  };
+
+
+  tex = pkgs.texlive.combine {
+      inherit (pkgs.texlive) scheme-small xetex lastpage tcolorbox environ trimspaces mdframed needspace efbox lipsum cm-super;
+  };
+in
+
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -21,8 +38,32 @@
   networking.networkmanager.enable = true;
 
   sound.enable = true;
-  hardware.pulseaudio.enable = true;
-  hardware.pulseaudio.support32Bit = true;
+  hardware.pulseaudio = {
+    enable = true;
+    support32Bit = true;
+    zeroconf.discovery.enable = true;
+    # for bluetooth
+    package = pkgs.pulseaudioFull;
+    extraModules = [ pkgs.pulseaudio-modules-bt ];
+  };
+
+  hardware.bluetooth = {
+    enable = true;
+    config = {
+      General = {
+        Enable = "Source,Sink,Media,Socket";
+      };
+    };
+    #config = ''
+    #  [General]
+    #  Enable=Source,Sink,Media,Socket
+    #'';
+  };
+  services.blueman.enable = true;
+
+  # This loads the Broadcom Bluetooth patch that makes
+  # HSP/HFP mode work with bluetooth headsets
+  hardware.enableAllFirmware = true;
 
   hardware.opengl = {
     enable = true;
@@ -36,23 +77,29 @@
     ];
   };
 
+  services.upower.enable = true;
+
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
   i18n = {
-    consoleFont = "source-code-pro";
-    consoleKeyMap = "us";
     defaultLocale = "en_AU.UTF-8";
+  };
+
+  console = {
+    font = "source-code-pro";
+    keyMap = "us";
   };
 
   # Set your time zone.
   time.timeZone = "Australia/Melbourne";
 
-
   nixpkgs.config = {
-    #allowUnfree = true;
+    # for steam-run?
+    # for anydesk
+    allowUnfree = true;
 
     # For qgis
     allowBroken = true;
@@ -74,7 +121,6 @@
     ctags
     bat
     emacs
-    feh
     git
     tree
     xbindkeys
@@ -88,6 +134,8 @@
     rxvt_unicode
     firefox
     pandoc
+    tex
+    feh
     i3lock
     trayer
     networkmanagerapplet
@@ -105,7 +153,6 @@
     imagemagick
     xorg.xdpyinfo
     killall
-    jdk
     awscli
     pstree
     sl
@@ -119,8 +166,8 @@
     nodePackages.bower
     nodePackages.pulp
     unstable.nodePackages.parcel-bundler
-    # install purescript and spago using
-    #   https://github.com/justinwoo/easy-purescript-nix
+    easy-ps.purs
+    easy-ps.spago
     ####
     gnumake
     gcc
@@ -128,12 +175,11 @@
     redshift
     iftop
     vnstat
+    nethogs
     binutils-unwrapped
     nix-index
     nodejs
-    msr-tools
-    zoom
-    meshlab
+    unstable.zoom-us
     nix-prefetch-git
     lolcat
     figlet
@@ -146,26 +192,17 @@
     unstable.qgis
     dfu-util
     ldns
-    xournal
     bashmount
     filelight
     iotop
-    inform7
-    frotz
-    maven
     # Satellite/Radio stuff
+    ###
     gpredict
     python36
     arduino
     hamlib
-    ####
-    ## Haskell stuff
-    #haskell.compiler.ghc822
-    #ghc
-    #cabal-install
-    #haskellPackages.stack
-    #haskellPackages.Agda
-    ####
+    unstable.anydesk
+    ###
     dos2unix
     docker
     docker_compose
@@ -178,10 +215,82 @@
     libva
     libspatialite
     spatialite_tools
+    git-lfs
+    glib-networking
+    qbittorrent
+    libreoffice
+    swiProlog
+    usbutils
+    picocom
+    ghostscript
+    youtube-dl
+    pulsemixer
+    # For podman
+    podman
+    runc
+    conmon
+    slirp4netns
+    fuse-overlayfs
+    #
+    unstable.nixops
+    brightnessctl
+    httpie
+    ardour
+    wtf
+    tailscale
+    gnome3.zenity
+    steam
+    shotcut
+    # hackasat
+    direwolf
+    sox
+    audacity
+    spek
+    exiftool
+    #
+    tightvnc
+    arandr
   ];
+
+  virtualisation.virtualbox.host.enable = true;
+
+  virtualisation.libvirtd.enable = true;
+  boot.binfmt.emulatedSystems = [ "armv6l-linux" ];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
+  # TODO configure docker services that should run on boot
+  # - knowwhat
+  # - vega-editor
+
+  # Configure podman
+  environment.etc."containers/policy.json" = {
+    mode="0644";
+    text=''
+      {
+        "default": [
+          {
+            "type": "insecureAcceptAnything"
+          }
+        ],
+        "transports":
+          {
+            "docker-daemon":
+              {
+                "": [{"type":"insecureAcceptAnything"}]
+              }
+          }
+      }
+    '';
+  };
+
+  environment.etc."containers/registries.conf" = {
+    mode="0644";
+    text=''
+      [registries.search]
+      registries = ['docker.io', 'quay.io']
+    '';
+  };
 
   services.vnstat.enable = true;
 
@@ -208,16 +317,21 @@
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
-    8111 # workflow fileserver
-    8112 # workflow websocket
+    80 # Wekan
+    8085 # knowwhat fileserver
+    8086 # knowwhat websocket
+    8001 # kimai
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
-  services.printing.enable = true;
+  # Required for libvirtd virtualisation for nixops
+  networking.firewall.checkReversePath = false;
 
-  hardware.brightnessctl.enable = true;
+  services.tailscale.enable = true;
+
+  services.printing.enable = true;
 
   services.xserver = {
 
@@ -225,7 +339,10 @@
     layout = "us";
 
     # Enable touchpad support.
-    libinput.enable = true;
+    libinput = {
+      enable = true;
+      accelSpeed = "0.2";
+    };
 
     desktopManager.xterm.enable = false;
 
@@ -240,7 +357,7 @@
         haskellPackages.xmonad
       ];
     };
-    windowManager.default = "xmonad";
+    displayManager.defaultSession = "none+xmonad";
     # what used to be .xinitrc
     displayManager.sessionCommands = with pkgs; lib.mkAfter
       ''
@@ -256,7 +373,6 @@
 
       # turn off black Screensaver
       xset s off
-
       
       trayer --edge bottom \
              --align right \
@@ -271,6 +387,7 @@
       
       exec nm-applet &
       exec redshift &
+      exec blueman-applet &
       
       feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
       xcompmgr -c &
@@ -289,8 +406,14 @@
     isNormalUser = true;
     home = "/home/rowan";
     uid = 1000;
-    extraGroups = [ "wheel" "networkmanager" "audio" "usb" "fuse" "video" ];
+    extraGroups = [ "wheel" "networkmanager" "audio" "usb" "fuse" "video" "dialout" "uucp" "sound" "pulse" "libvirtd" "docker" ];
     shell = "/run/current-system/sw/bin/fish";
+
+    # Doing this because ???
+    # https://nixos.wiki/wiki/Podman
+    subUidRanges = [{ startUid = 100000; count = 65536; }];
+    subGidRanges = [{ startGid = 100000; count = 65536; }];
+    
   };
 
   # This value determines the NixOS release with which your system is to be
@@ -325,6 +448,43 @@
       /home/rowan/scripts/lock.sh
     '';
     serviceConfig.Type = "forking";
+  };
+
+  services.restic.backups = {
+    remotebackup = {
+      paths = [
+        # Projects in case github breaks or something
+        "/home/rowan/projects/mindmaps"
+        "/home/rowan/projects/knowwhat"
+        "/home/rowan/projects/modal-synth"
+        "/home/rowan/projects/purescript-functorial-data-migration-core"
+        "/home/rowan/projects/purescript-halogen-svg"
+        "/home/rowan/projects/purescript-knuth-bendix"
+        "/home/rowan/projects/purescript-string-rewriting"
+        #"/home/rowan/backups"
+        #"/home/rowan/fonts"
+        # Random stuff
+        "/home/rowan/memes"
+        "/home/rowan/Pictures"
+        "/home/rowan/screenshots"
+        #"/home/rowan/space"
+        #"/home/rowan/workflow"
+        # System configs
+        "/etc/nixos"
+        # Utilities
+        "/home/rowan/.ssh"
+        "/home/rowan/.config/fish"
+      ];
+      repository = "b2:restic-backups-X1-old-mate";
+      passwordFile = "/etc/nixos/secrets/restic-password";
+      # s3CredentialsFile just gets loaded as the systemd service 
+      # EnvironmentFile, nothing particular to S3
+      s3CredentialsFile = "/etc/nixos/secrets/restic-b2-appkey.env";
+      timerConfig = {
+        OnCalendar = "daily";
+      };
+      initialize = true;
+    };
   };
 
 }
