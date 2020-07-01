@@ -250,6 +250,9 @@ in
     #
     tightvnc
     arandr
+    rclone
+    restic
+    lazygit
   ];
 
   virtualisation.virtualbox.host.enable = true;
@@ -261,7 +264,6 @@ in
   virtualisation.docker.enableOnBoot = true;
   # TODO configure docker services that should run on boot
   # - knowwhat
-  # - vega-editor
 
   # Configure podman
   environment.etc."containers/policy.json" = {
@@ -453,27 +455,17 @@ in
   services.restic.backups = {
     remotebackup = {
       paths = [
-        # Projects in case github breaks or something
-        "/home/rowan/projects/mindmaps"
+        "/etc/nixos"
+        "/home/rowan/.ssh"
+        "/home/rowan/mindmaps"
         "/home/rowan/projects/knowwhat"
-        "/home/rowan/projects/modal-synth"
         "/home/rowan/projects/purescript-functorial-data-migration-core"
         "/home/rowan/projects/purescript-halogen-svg"
         "/home/rowan/projects/purescript-knuth-bendix"
         "/home/rowan/projects/purescript-string-rewriting"
-        #"/home/rowan/backups"
-        #"/home/rowan/fonts"
-        # Random stuff
+        "/home/rowan/screenshots"
         "/home/rowan/memes"
         "/home/rowan/Pictures"
-        "/home/rowan/screenshots"
-        #"/home/rowan/space"
-        #"/home/rowan/workflow"
-        # System configs
-        "/etc/nixos"
-        # Utilities
-        "/home/rowan/.ssh"
-        "/home/rowan/.config/fish"
       ];
       repository = "b2:restic-backups-X1-old-mate";
       passwordFile = "/etc/nixos/secrets/restic-password";
