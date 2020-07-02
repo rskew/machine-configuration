@@ -1,5 +1,12 @@
 # Laptop config
 
+# Steps to reproduce laptop state:
+# - this config
+# - clone github.com/rskew/dotfiles into /home/rowan/
+# - add password files to /etc/nixos/secrets/
+#   - restic-password for this machine's restic backup repository
+#   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
+
 # To update run
 # sudo -HE nixos-rebuild switch
 
@@ -15,7 +22,6 @@ let
   }) {
     inherit pkgs;
   };
-
 
   tex = pkgs.texlive.combine {
       inherit (pkgs.texlive) scheme-small xetex lastpage tcolorbox environ trimspaces mdframed needspace efbox lipsum cm-super;
@@ -54,10 +60,6 @@ in
         Enable = "Source,Sink,Media,Socket";
       };
     };
-    #config = ''
-    #  [General]
-    #  Enable=Source,Sink,Media,Socket
-    #'';
   };
   services.blueman.enable = true;
 
@@ -78,10 +80,6 @@ in
   };
 
   services.upower.enable = true;
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
   i18n = {
@@ -161,8 +159,7 @@ in
     htop
     hunspell
     (import (fetchGit "https://github.com/haslersn/fish-nix-shell"))
-    ####
-    # Purescript dev stuff
+    #### Purescript dev stuff
     nodePackages.bower
     nodePackages.pulp
     unstable.nodePackages.parcel-bundler
@@ -241,13 +238,13 @@ in
     gnome3.zenity
     steam
     shotcut
-    # hackasat
+    #### hackasat
     direwolf
     sox
     audacity
     spek
     exiftool
-    #
+    ####
     tightvnc
     arandr
     rclone
@@ -312,17 +309,11 @@ in
   programs.mtr.enable = true;
   programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
-  # List services that you want to enable:
-
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
-    80 # Wekan
-    8085 # knowwhat fileserver
-    8086 # knowwhat websocket
-    8001 # kimai
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
