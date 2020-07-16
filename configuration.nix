@@ -2,7 +2,8 @@
 
 # Steps to reproduce laptop state:
 # - this config
-# - clone github.com/rskew/dotfiles into /home/rowan/
+# - clone github.com/rskew/dotfiles into ~/
+# - clone github.com/rskew/bashscripties to ~/scripts
 # - add password files to /etc/nixos/secrets/
 #   - restic-password for this machine's restic backup repository
 #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
@@ -79,6 +80,11 @@ in
     ];
   };
 
+  # Used to create video loopback device that can be fed a webcam feed
+  # rotated by ffmpeg
+  boot.extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
+  boot.kernelModules = [ "v4l2loopback video_nr=22 exclusive_caps=1 card_label='processed_webcam'" ];
+
   services.upower.enable = true;
 
   # Select internationalisation properties.
@@ -95,13 +101,6 @@ in
   time.timeZone = "Australia/Melbourne";
 
   nixpkgs.config = {
-    # for steam-run?
-    # for anydesk
-    allowUnfree = true;
-
-    # For qgis
-    allowBroken = true;
-
     # Create an alias for the unstable channel
     packageOverrides = pkgs: with pkgs; {
       unstable = import <nixos-unstable> {
@@ -171,7 +170,6 @@ in
     chromium
     redshift
     iftop
-    vnstat
     nethogs
     binutils-unwrapped
     nix-index
@@ -186,21 +184,11 @@ in
     file
     patchelf
     nmap
-    unstable.qgis
     dfu-util
     ldns
     bashmount
     filelight
     iotop
-    # Satellite/Radio stuff
-    ###
-    gpredict
-    python36
-    arduino
-    hamlib
-    unstable.anydesk
-    ###
-    dos2unix
     docker
     docker_compose
     jq
@@ -208,90 +196,35 @@ in
     plover.stable
     conda
     glxinfo
-    libva-utils
-    libva
-    libspatialite
-    spatialite_tools
-    git-lfs
-    glib-networking
     qbittorrent
     libreoffice
     swiProlog
     usbutils
-    picocom
     ghostscript
     youtube-dl
     pulsemixer
-    # For podman
-    podman
-    runc
-    conmon
-    slirp4netns
-    fuse-overlayfs
-    #
     unstable.nixops
     brightnessctl
-    httpie
     ardour
-    wtf
     tailscale
-    gnome3.zenity
-    steam
     shotcut
-    #### hackasat
-    direwolf
-    sox
-    audacity
-    spek
-    exiftool
-    ####
     tightvnc
     arandr
     rclone
     restic
     lazygit
+    direnv
+    #### used to rotate webcam via loopback video device
+    guvcview
+    v4l-utils
+    ffmpeg
+    ####
   ];
-
-  virtualisation.virtualbox.host.enable = true;
-
-  virtualisation.libvirtd.enable = true;
-  boot.binfmt.emulatedSystems = [ "armv6l-linux" ];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
   # TODO configure docker services that should run on boot
   # - knowwhat
-
-  # Configure podman
-  environment.etc."containers/policy.json" = {
-    mode="0644";
-    text=''
-      {
-        "default": [
-          {
-            "type": "insecureAcceptAnything"
-          }
-        ],
-        "transports":
-          {
-            "docker-daemon":
-              {
-                "": [{"type":"insecureAcceptAnything"}]
-              }
-          }
-      }
-    '';
-  };
-
-  environment.etc."containers/registries.conf" = {
-    mode="0644";
-    text=''
-      [registries.search]
-      registries = ['docker.io', 'quay.io']
-    '';
-  };
-
-  services.vnstat.enable = true;
 
   fonts.fonts = with pkgs; [
     source-code-pro
@@ -314,6 +247,8 @@ in
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
+    #8085 # knowwhat site
+    #8086 # knowwhat ws
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
@@ -357,8 +292,6 @@ in
       xbindkeys
       
       xrdb -merge /home/rowan/.Xresources
-      #xmodmap /home/rowan/.Xmodmap
-      #setxkbmap -option ctrl:nocaps
       
       # turn off Display Power Management Service (DPMS)
       xset -dpms
@@ -384,8 +317,6 @@ in
       
       feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
       xcompmgr -c &
-      
-      emacs --daemon &
       '';
     };
 
@@ -401,13 +332,9 @@ in
     uid = 1000;
     extraGroups = [ "wheel" "networkmanager" "audio" "usb" "fuse" "video" "dialout" "uucp" "sound" "pulse" "libvirtd" "docker" ];
     shell = "/run/current-system/sw/bin/fish";
-
-    # Doing this because ???
-    # https://nixos.wiki/wiki/Podman
-    subUidRanges = [{ startUid = 100000; count = 65536; }];
-    subGidRanges = [{ startGid = 100000; count = 65536; }];
-    
   };
+
+  nix.trustedUsers = [ "root" "rowan" ];
 
   # This value determines the NixOS release with which your system is to be
   # compatible, in order to avoid breaking some software such as database
@@ -469,5 +396,7 @@ in
       initialize = true;
     };
   };
+
+  services.lorri.enable = true;
 
 }
