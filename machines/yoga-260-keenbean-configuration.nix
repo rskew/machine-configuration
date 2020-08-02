@@ -12,8 +12,7 @@
 # - add password files to /etc/nixos/secrets/
 #   - restic-password for this machine's restic backup repository
 #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
-# - install spacemacs by cloning the spacemacs repo to ~/.emacs.d
-# - install 'oh  my fish' (plugin manager for fish shell)
+# - install doom emacs by cloning the repo to ~/.emacs.d
 
 # To update run
 # sudo nixos-rebuild switch

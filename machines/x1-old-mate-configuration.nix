@@ -27,6 +27,30 @@ let
   tex = pkgs.texlive.combine {
       inherit (pkgs.texlive) scheme-small xetex lastpage tcolorbox environ trimspaces mdframed needspace efbox lipsum cm-super;
   };
+
+  # Run multiple tailscale daemons using multiple copies of
+  # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/tailscale.nix
+  # but giving them differnet socket folders, state folders, and ports.
+  tailscaled = {port ? "41641", dir ? "tailscale"}: {
+    description = "Tailscale client daemon";
+    after = [ "network-pre.target" ];
+    wants = [ "network-pre.target" ];
+    wantedBy = [ "multi-user.target" ];
+    unitConfig = {
+      StartLimitIntervalSec = 0;
+      StartLimitBurst = 0;
+    };
+    serviceConfig = {
+      ExecStart = "${pkgs.tailscale}/bin/tailscaled --port=${port} --socket=/var/run/${dir}/tailscaled.sock --state=/var/lib/${dir}/tailscale.state --tun=${dir}";
+      RuntimeDirectory = dir;
+      RuntimeDirectoryMode = 755;
+      StateDirectory = dir;
+      StateDirectoryMode = 750;
+      CacheDirectory = dir;
+      CacheDirectoryMode = 750;
+      Restart = "on-failure";
+    };
+  };
 in
 
 {
@@ -264,7 +288,14 @@ in
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
-  services.tailscale.enable = true;
+  systemd.services.tailscale0 = tailscaled { 
+    port = "41641";
+    dir = "tailscale0";
+  };
+  systemd.services.tailscale1 = tailscaled { 
+    port = "41642";
+    dir = "tailscale1";
+  };
 
   services.printing.enable = true;
 
@@ -396,8 +427,9 @@ in
           /home/rowan/Pictures
           /home/rowan/backups
         "
-        # export wekan db
-        # export firefox tabs
+        docker exec -it --workdir /data wekan-db mongodump > /dev/null 2>&1
+        docker cp wekan-db:/data/dump /home/rowan/backups/wekan/
+        echo /home/rowan/backups/wekan
       '';
       repository = "b2:restic-backups-X1-old-mate";
       passwordFile = "/etc/nixos/secrets/restic-password";
