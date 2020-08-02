@@ -32,7 +32,7 @@ in
 {
   imports =
     [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
+      ../hardware-configuration.nix
     ];
 
   # Use the GRUB 2 boot loader.
@@ -101,6 +101,9 @@ in
   time.timeZone = "Australia/Melbourne";
 
   nixpkgs.config = {
+    # For enableAllFirmware
+    allowUnfree = true;
+
     # Create an alias for the unstable channel
     packageOverrides = pkgs: with pkgs; {
       unstable = import <nixos-unstable> {
@@ -243,23 +246,29 @@ in
   programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    authorizedKeysFiles = ["/home/rowan/.ssh/id_rsa.pub"];
+    passwordAuthentication = false;
+    permitRootLogin = "no";
+  };
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
+    #80 # wekan, exposed by docker anyway
     #8085 # knowwhat site
     #8086 # knowwhat ws
+    19999 # netdata
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
-  # Required for libvirtd virtualisation for nixops
-  networking.firewall.checkReversePath = false;
-
   services.tailscale.enable = true;
 
   services.printing.enable = true;
+
+  services.netdata.enable = true;
 
   services.xserver = {
 
@@ -372,19 +381,24 @@ in
 
   services.restic.backups = {
     remotebackup = {
-      paths = [
-        "/etc/nixos"
-        "/home/rowan/.ssh"
-        "/home/rowan/mindmaps"
-        "/home/rowan/projects/knowwhat"
-        "/home/rowan/projects/purescript-functorial-data-migration-core"
-        "/home/rowan/projects/purescript-halogen-svg"
-        "/home/rowan/projects/purescript-knuth-bendix"
-        "/home/rowan/projects/purescript-string-rewriting"
-        "/home/rowan/screenshots"
-        "/home/rowan/memes"
-        "/home/rowan/Pictures"
-      ];
+      dynamicFilesFrom = ''
+        echo "
+          /etc/nixos
+          /home/rowan/.ssh
+          /home/rowan/mindmaps
+          /home/rowan/projects/knowwhat
+          /home/rowan/projects/purescript-functorial-data-migration-core
+          /home/rowan/projects/purescript-halogen-svg
+          /home/rowan/projects/purescript-knuth-bendix
+          /home/rowan/projects/purescript-string-rewriting
+          /home/rowan/screenshots
+          /home/rowan/memes
+          /home/rowan/Pictures
+          /home/rowan/backups
+        "
+        # export wekan db
+        # export firefox tabs
+      '';
       repository = "b2:restic-backups-X1-old-mate";
       passwordFile = "/etc/nixos/secrets/restic-password";
       # s3CredentialsFile just gets loaded as the systemd service 
@@ -396,7 +410,4 @@ in
       initialize = true;
     };
   };
-
-  services.lorri.enable = true;
-
 }
