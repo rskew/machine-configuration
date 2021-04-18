@@ -33,6 +33,7 @@ let
   # Run multiple tailscale daemons using multiple copies of
   # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/tailscale.nix
   # but giving them differnet socket folders, state folders, and ports.
+  # After a tailscale daemon is running, authenticate it with `sudo tailscale up --socket=/var/run/${dir}/tailscaled.sock`
   tailscaled = {port ? "41641", dir ? "tailscale"}: {
     description = "Tailscale client daemon";
     after = [ "network-pre.target" ];
@@ -53,6 +54,16 @@ let
       Restart = "on-failure";
     };
   };
+
+  pythonEnv = pkgs.python38.withPackages(ps: with ps; [ 
+    pandas 
+    matplotlib
+    seaborn
+  ]);
+  # Run xonsh with whatever python environment is active
+  xonsh = pkgs.writeShellScriptBin "xonsh" ''
+    SHELL_TYPE=best /usr/bin/env python ${pkgs.xonsh}/bin/.xonsh-wrapped
+  '';
 
 in
 {
@@ -142,7 +153,7 @@ in
   time.timeZone = "Australia/Melbourne";
 
   nixpkgs.config = {
-    # for zoom-us
+    # for zoom-us, teams
     allowUnfree = true;
 
     # Create an alias for the unstable channel
@@ -192,14 +203,13 @@ in
     fish
     sqlite
     rxvt_unicode
-    firefox
+    unstable.firefox
     pandoc
     feh
     i3lock
     trayer
     networkmanagerapplet
     vlc
-    xclip
     haskellPackages.xmobar
     pavucontrol
     pinta
@@ -233,6 +243,7 @@ in
     redshift
     iftop
     nethogs
+    vnstat
     binutils-unwrapped
     nix-index
     nodejs
@@ -265,7 +276,6 @@ in
     ghostscript
     youtube-dl
     pulsemixer
-    unstable.nixops
     brightnessctl
     ardour
     tailscale
@@ -281,20 +291,32 @@ in
     v4l-utils
     ffmpeg
     ####
-    touchegg
-    xournalpp
+    unstable.xournalpp
     gnome3.nautilus
     xautolock
     cachix
     sshfs
-    signal-desktop
+    unstable.signal-desktop
     gv
+    parcellite
+    unstable.teams
+    simplescreenrecorder
+    teyjus
+    openscad
+    libnotify
+    notify-osd
+    freecad
+    kubectl
+    git-lfs
+    k9s
+    csvkit
+    pythonEnv
+    xonsh
+    qgis
   ];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
-  # TODO configure docker services that should run on boot
-  # - knowwhat
 
   fonts.fonts = with pkgs; [
     source-code-pro
@@ -312,27 +334,12 @@ in
   programs.mtr.enable = true;
   programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
-  # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    authorizedKeysFiles = ["/home/rowan/.ssh/id_rsa_reflexive.pub"];
-    passwordAuthentication = false;
-    permitRootLogin = "no";
-  };
-
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
-    #8085 # knowwhat site
-    #8086 # knowwhat ws
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
-
-  networking.extraHosts =
-    ''
-      192.168.1.115 oldmate
-    '';
 
   systemd.services.tailscale0 = tailscaled { 
     port = "41641";
@@ -343,11 +350,14 @@ in
     dir = "tailscale1";
   };
 
+  services.vnstat.enable = true;
+
   services.printing.enable = true;
 
   services.xserver = {
 
     enable = true;
+
     layout = "us";
 
     # Enable touchpad support.
@@ -390,7 +400,7 @@ in
              --SetDockType true \
              --SetPartialStrut true \
              --expand true \
-             --width 4 \
+             --width 5 \
              --transparent true \
              --tint 0x000000 \
              --height 20 \
@@ -405,7 +415,11 @@ in
 
       touchegg &
 
+      parcellite &
+
       xautolock -time 10 -locker /home/rowan/scripts/lock.sh -corners 00-0 &
+
+      xkbcomp /etc/nixos/keymap.xkb $DISPLAY
       '';
   };
 
@@ -479,6 +493,8 @@ in
           /home/rowan/farm
           /home/rowan/mindmaps
           /home/rowan/backups
+          /home/rowan/harvest
+          /home/rowan/projects
         '
         docker exec -it --workdir /data wekan-db mongodump > /dev/null 2>&1
         docker cp wekan-db:/data/dump /home/rowan/backups/wekan/
