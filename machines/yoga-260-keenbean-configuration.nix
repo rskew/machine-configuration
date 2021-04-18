@@ -502,7 +502,7 @@ in
         echo /home/rowan/backups/wekan
       '';
       repository = "b2:restic-backups-yoga-260-keenbean";
-      passwordFile = "/etc/nixos/secrets/restic-password";
+      passwordFile = "/etc/nixos/secrets/restic-password-keenbean";
       # s3CredentialsFile just gets loaded as the systemd service 
       # EnvironmentFile, nothing particular to S3
       s3CredentialsFile = "/etc/nixos/secrets/restic-b2-appkey.env";

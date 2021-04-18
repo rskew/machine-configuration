@@ -1,15 +1,22 @@
 # Laptop config
 
 # Steps to reproduce laptop state:
-# - this config
+# - install nixos
+# - add unstable channel with `nix-channel --add https://nixos.org/channels/nixos-unstable nixos-unstable; nix-channel --update`
+# - clone this config from github.com/rskew/machine-configuration and follow instructions in README.md as well as:
+#   - update boot config for specific machine (e.g. boot.initrd.luks.device)
+#   - update networking.hostName
+#   - update backup repository for specific machine
 # - clone github.com/rskew/dotfiles into ~/
 # - clone github.com/rskew/bashscripties to ~/scripts
+# - restore restic backups to the locations listed in the restic backup config
 # - add password files to /etc/nixos/secrets/
 #   - restic-password for this machine's restic backup repository
 #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
+# - install doom emacs by cloning the repo to ~/.emacs.d
 
 # To update run
-# sudo -HE nixos-rebuild switch
+# sudo nixos-rebuild switch
 
 { config, pkgs, ... }:
 
@@ -17,20 +24,17 @@ let
   easy-ps = import (pkgs.fetchFromGitHub {
     owner = "justinwoo";
     repo = "easy-purescript-nix";
-    # version has purs 0.13.4, spago 0.10.0.0
+    # this version has purs 0.13.4, spago 0.10.0.0
     rev = "aa94aeac3a6ad9b4dfa0e807ad1421097d74f663";
     sha256 = "1kfhi6rscgf165zg4f1s0fgppygisvc7dppxb93n02rypxfxjirm";
   }) {
     inherit pkgs;
   };
 
-  tex = pkgs.texlive.combine {
-      inherit (pkgs.texlive) scheme-small xetex lastpage tcolorbox environ trimspaces mdframed needspace efbox lipsum cm-super;
-  };
-
   # Run multiple tailscale daemons using multiple copies of
   # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/tailscale.nix
   # but giving them differnet socket folders, state folders, and ports.
+  # After a tailscale daemon is running, authenticate it with `sudo tailscale up --socket=/var/run/${dir}/tailscaled.sock`
   tailscaled = {port ? "41641", dir ? "tailscale"}: {
     description = "Tailscale client daemon";
     after = [ "network-pre.target" ];
@@ -51,19 +55,48 @@ let
       Restart = "on-failure";
     };
   };
-in
 
+  pythonEnv = pkgs.python38.withPackages(ps: with ps; [ 
+    pandas 
+    matplotlib
+    seaborn
+  ]);
+  # Run xonsh with whatever python environment is active
+  xonsh = pkgs.writeShellScriptBin "xonsh" ''
+    SHELL_TYPE=best /usr/bin/env python ${pkgs.xonsh}/bin/.xonsh-wrapped
+  '';
+
+in
 {
   imports =
     [ # Include the results of the hardware scan.
       ../hardware-configuration.nix
     ];
 
-  # Use the GRUB 2 boot loader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.version = 2;
-  boot.loader.grub.efiSupport = true;
-  boot.loader.grub.device = "/dev/sda"; # or "nodev" for efi only
+  boot.initrd.luks.devices = {
+    root = {
+      device = "/dev/sda2";
+      preLVM = true;
+    };
+  };
+
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  boot.loader.grub = {
+    enable = true;
+    version = 2;
+    efiSupport = true;
+    enableCryptodisk = true;
+    device = "nodev";
+  };
+
+  # The global useDHCP flag is deprecated, therefore explicitly set to false here.
+  # Per-interface useDHCP will be mandatory in the future, so this generated config
+  # replicates the default behaviour.
+  networking.useDHCP = false;
+  networking.interfaces.enp0s31f6.useDHCP = true;
+  networking.interfaces.wlp4s0.useDHCP = true;
 
   networking.hostName = "ro-X1";
   networking.networkmanager.enable = true;
@@ -88,10 +121,6 @@ in
   };
   services.blueman.enable = true;
 
-  # This loads the Broadcom Bluetooth patch that makes
-  # HSP/HFP mode work with bluetooth headsets
-  hardware.enableAllFirmware = true;
-
   hardware.opengl = {
     enable = true;
     driSupport = true;
@@ -100,7 +129,7 @@ in
       vaapiIntel
       vaapiVdpau
       libvdpau-va-gl
-      intel-media-driver # only available starting nixos-19.03 or the current nixos-unstable
+      intel-media-driver # only available starting nixos-19.03
     ];
   };
 
@@ -125,7 +154,7 @@ in
   time.timeZone = "Australia/Melbourne";
 
   nixpkgs.config = {
-    # For enableAllFirmware
+    # for zoom-us, teams
     allowUnfree = true;
 
     # Create an alias for the unstable channel
@@ -134,6 +163,25 @@ in
         # pass the nixpkgs config to the unstable alias
         config = config.nixpkgs.config;
       };
+
+      vim = pkgs.vim_configurable.customize {
+        name = "vim-custom";
+        vimrcConfig.customRC = ''
+          filetype plugin indent on
+          filetype on
+          syntax on
+          set number relativenumber
+          set tabstop=4
+          set softtabstop=4
+          set expandtab
+          set shiftwidth=4
+          set smarttab
+          set clipboard=unnamed
+          set noerrorbells
+          set vb t_vb=
+          colorscheme torte
+        '';
+      };
     };
   };
   
@@ -141,7 +189,7 @@ in
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     wget
-    vimHugeX
+    vim
     ctags
     bat
     emacs
@@ -156,15 +204,13 @@ in
     fish
     sqlite
     rxvt_unicode
-    firefox
+    unstable.firefox
     pandoc
-    tex
     feh
     i3lock
     trayer
     networkmanagerapplet
     vlc
-    xclip
     haskellPackages.xmobar
     pavucontrol
     pinta
@@ -198,6 +244,7 @@ in
     redshift
     iftop
     nethogs
+    vnstat
     binutils-unwrapped
     nix-index
     nodejs
@@ -230,7 +277,6 @@ in
     ghostscript
     youtube-dl
     pulsemixer
-    unstable.nixops
     brightnessctl
     ardour
     tailscale
@@ -246,17 +292,32 @@ in
     v4l-utils
     ffmpeg
     ####
-    byobu
-    tmux
-    playonlinux
-    unrar
-    wine
+    unstable.xournalpp
+    gnome3.nautilus
+    xautolock
+    cachix
+    sshfs
+    unstable.signal-desktop
+    gv
+    parcellite
+    unstable.teams
+    simplescreenrecorder
+    teyjus
+    openscad
+    libnotify
+    notify-osd
+    freecad
+    kubectl
+    git-lfs
+    k9s
+    csvkit
+    pythonEnv
+    xonsh
+    qgis
   ];
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
-  # TODO configure docker services that should run on boot
-  # - knowwhat
 
   fonts.fonts = with pkgs; [
     source-code-pro
@@ -274,24 +335,8 @@ in
   programs.mtr.enable = true;
   programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
-  # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    authorizedKeysFiles = ["/home/rowan/.ssh/id_rsa.pub"];
-    passwordAuthentication = false;
-    permitRootLogin = "no";
-    extraConfig = ''
-    Protocol 2
-    '';
-    forwardX11 = false;
-  };
-
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
-    #80 # wekan, exposed by docker anyway
-    #8085 # knowwhat site
-    #8086 # knowwhat ws
-    19999 # netdata
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
@@ -306,31 +351,34 @@ in
     dir = "tailscale1";
   };
 
-  services.printing.enable = true;
+  services.vnstat.enable = true;
 
-  services.netdata.enable = true;
+  services.printing.enable = true;
 
   services.xserver = {
 
     enable = true;
+
     layout = "us";
 
     # Enable touchpad support.
     libinput = {
       enable = true;
       accelSpeed = "0.2";
+      naturalScrolling = false;
     };
 
     desktopManager.xterm.enable = false;
+
     xkbOptions = "ctrl:nocaps";
 
     windowManager.xmonad = {
       enable = true;
       enableContribAndExtras = true;
-      extraPackages = haskellPackages: [
-        haskellPackages.xmonad-contrib
-        haskellPackages.xmonad-extras
-        haskellPackages.xmonad
+      extraPackages = hp: with hp; [
+        xmonad-contrib
+        xmonad-extras
+        xmonad
       ];
     };
     displayManager.defaultSession = "none+xmonad";
@@ -353,7 +401,7 @@ in
              --SetDockType true \
              --SetPartialStrut true \
              --expand true \
-             --width 4 \
+             --width 5 \
              --transparent true \
              --tint 0x000000 \
              --height 20 \
@@ -365,8 +413,30 @@ in
       
       feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
       xcompmgr -c &
+
+      touchegg &
+
+      parcellite &
+
+      xautolock -time 10 -locker /home/rowan/scripts/lock.sh -corners 00-0 &
+
+      xkbcomp /etc/nixos/keymap.xkb $DISPLAY
       '';
-    };
+  };
+
+  services.xserver.wacom.enable = true;
+  # Wacom-driver gstures don't seem to work too well, turn them off
+  # https://askubuntu.com/questions/1122332/one-finger-scrolling-touchscreen-in-firefox
+  environment.etc."X11/xorg.conf.d/50-wacom.conf".text = ''
+    Section "InputClass"
+        Identifier "Wacom class"
+        MatchProduct "Wacom|WACOM|Hanwang|PTK-540WL|ISDv4|ISD-V4|ISDV4"
+        MatchDevicePath "/dev/input/event*"
+    
+        Driver "wacom"
+        Option "Gesture" "off"
+    EndSection
+  '';
 
   # Make the `usb` group for read/write permissions to usb devices
   users.groups.usb = {};
@@ -384,12 +454,6 @@ in
 
   nix.trustedUsers = [ "root" "rowan" ];
 
-  # This value determines the NixOS release with which your system is to be
-  # compatible, in order to avoid breaking some software such as database
-  # servers. You should change this only after NixOS release notes say you
-  # should.
-  system.stateVersion = "19.03"; # Did you read the comment?
-
   services.redshift = {
     enable = true;
   };
@@ -400,13 +464,10 @@ in
     longitude = 144.9631;
   };
 
-  # This X1 won't wake up from sleep, hibernate instead
-  services.logind.lidSwitch = "hibernate";
-
-  systemd.services.lockScreenOnWake = { 
-    description = "Lock screen on wakeup";
-    wantedBy = [ "hibernate.target" ];
-    before = [ "hibernate.target" ];
+  systemd.services.lockScreenBeforeSleep = { 
+    description = "Lock screen before sleep";
+    wantedBy = [ "sleep.target" ];
+    before = [ "sleep.target" ];
     path = with pkgs; [ i3lock ];
     serviceConfig = {
       Environment = "DISPLAY=:0";
@@ -421,26 +482,27 @@ in
   services.restic.backups = {
     remotebackup = {
       dynamicFilesFrom = ''
-        echo "
+        echo '
           /etc/nixos
           /home/rowan/.ssh
-          /home/rowan/mindmaps
-          /home/rowan/projects/knowwhat
-          /home/rowan/projects/purescript-functorial-data-migration-core
-          /home/rowan/projects/purescript-halogen-svg
-          /home/rowan/projects/purescript-knuth-bendix
-          /home/rowan/projects/purescript-string-rewriting
+          /home/rowan/org
+          /home/rowan/library
           /home/rowan/screenshots
           /home/rowan/memes
           /home/rowan/Pictures
+          /home/rowan/drawings
+          /home/rowan/farm
+          /home/rowan/mindmaps
           /home/rowan/backups
-        "
+          /home/rowan/harvest
+          /home/rowan/projects
+        '
         docker exec -it --workdir /data wekan-db mongodump > /dev/null 2>&1
         docker cp wekan-db:/data/dump /home/rowan/backups/wekan/
         echo /home/rowan/backups/wekan
       '';
-      repository = "b2:restic-backups-X1-old-mate";
-      passwordFile = "/etc/nixos/secrets/restic-password";
+      repository = "b2:restic-backups-yoga-260-keenbean";
+      passwordFile = "/etc/nixos/secrets/restic-password-oldmate";
       # s3CredentialsFile just gets loaded as the systemd service 
       # EnvironmentFile, nothing particular to S3
       s3CredentialsFile = "/etc/nixos/secrets/restic-b2-appkey.env";
@@ -450,4 +512,12 @@ in
       initialize = true;
     };
   };
+
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "20.03"; # Did you read the comment?
 }
