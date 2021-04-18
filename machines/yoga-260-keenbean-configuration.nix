@@ -479,6 +479,11 @@ in
     serviceConfig.Type = "forking";
   };
 
+  # Restoring backups:
+  # - get snapshot ID to restore (if not using 'latest') via `rclone lsl b2:restic-backups-yoga-260-keenbean/snapshots | sort`
+  # - export B2_ACCOUNT_ID and B2_ACCOUNT_KEY (here found in the /etc/nixos/secrets/restic-b2-appkey.env file)
+  # - restore <snapshot> from <repo> to <dir> via `restic -r <repo> -p /etc/nixos/secrets/restic-password restore <snapshot> --target <dir>`
+  # e.g. `sudo -E restic -r b2:restic-backups-yoga-260-keenbean -p /etc/nixos/secrets/restic-password restore latest --target ~/restored-backups/2021-04-18'`
   services.restic.backups = {
     remotebackup = {
       dynamicFilesFrom = ''
@@ -496,6 +501,7 @@ in
           /home/rowan/backups
           /home/rowan/harvest
           /home/rowan/projects
+          /home/rowan/Downloads/STG-backups*
         '
         docker exec -it --workdir /data wekan-db mongodump > /dev/null 2>&1
         docker cp wekan-db:/data/dump /home/rowan/backups/wekan/
