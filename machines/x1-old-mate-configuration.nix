@@ -246,6 +246,11 @@ in
     v4l-utils
     ffmpeg
     ####
+    byobu
+    tmux
+    playonlinux
+    unrar
+    wine
   ];
 
   virtualisation.docker.enable = true;
@@ -275,6 +280,10 @@ in
     authorizedKeysFiles = ["/home/rowan/.ssh/id_rsa.pub"];
     passwordAuthentication = false;
     permitRootLogin = "no";
+    extraConfig = ''
+    Protocol 2
+    '';
+    forwardX11 = false;
   };
 
   # Open ports in the firewall.
@@ -313,7 +322,6 @@ in
     };
 
     desktopManager.xterm.enable = false;
-
     xkbOptions = "ctrl:nocaps";
 
     windowManager.xmonad = {
