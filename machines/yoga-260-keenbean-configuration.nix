@@ -9,6 +9,7 @@
 #   - update backup repository for specific machine
 # - clone github.com/rskew/dotfiles into ~/
 # - clone github.com/rskew/bashscripties to ~/scripts
+# - restore restic backups to the locations listed in the restic backup config
 # - add password files to /etc/nixos/secrets/
 #   - restic-password for this machine's restic backup repository
 #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
