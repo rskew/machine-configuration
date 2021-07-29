@@ -238,28 +238,19 @@ in
     easy-ps.purs
     easy-ps.spago
     ####
-    gnumake
-    gcc
     chromium
     redshift
-    iftop
-    nethogs
     vnstat
     binutils-unwrapped
     nix-index
-    nodejs
     unstable.zoom-us
     nix-prefetch-git
-    lolcat
     figlet
     fzf
     gparted
     ripgrep
     file
     patchelf
-    nmap
-    dfu-util
-    ldns
     bashmount
     filelight
     iotop
@@ -267,7 +258,6 @@ in
     docker_compose
     jq
     openvpn
-    plover.stable
     conda
     glxinfo
     qbittorrent
@@ -275,17 +265,11 @@ in
     swiProlog
     usbutils
     ghostscript
-    youtube-dl
     pulsemixer
     brightnessctl
-    ardour
     tailscale
-    shotcut
-    tightvnc
-    arandr
     rclone
     restic
-    lazygit
     direnv
     #### used to rotate webcam via loopback video device
     guvcview
@@ -293,20 +277,15 @@ in
     ffmpeg
     ####
     unstable.xournalpp
-    gnome3.nautilus
     xautolock
-    cachix
-    sshfs
     unstable.signal-desktop
     gv
     parcellite
     unstable.teams
     simplescreenrecorder
     teyjus
-    openscad
     libnotify
     notify-osd
-    freecad
     kubectl
     git-lfs
     k9s
@@ -314,6 +293,7 @@ in
     pythonEnv
     xonsh
     qgis
+    unstable.cloudcompare
   ];
 
   virtualisation.docker.enable = true;
@@ -354,6 +334,7 @@ in
   services.vnstat.enable = true;
 
   services.printing.enable = true;
+  services.printing.drivers = [ pkgs.hplip ];
 
   services.xserver = {
 
@@ -483,7 +464,7 @@ in
   # - get snapshot ID to restore (if not using 'latest') via `rclone lsl b2:restic-backups-yoga-260-keenbean/snapshots | sort`
   # - export B2_ACCOUNT_ID and B2_ACCOUNT_KEY (here found in the /etc/nixos/secrets/restic-b2-appkey.env file)
   # - restore <snapshot> from <repo> to <dir> via `restic -r <repo> -p /etc/nixos/secrets/restic-password restore <snapshot> --target <dir>`
-  # e.g. `sudo -E restic -r b2:restic-backups-yoga-260-keenbean -p /etc/nixos/secrets/restic-password restore latest --target ~/restored-backups/2021-04-18'`
+  # e.g. `sudo -E restic -r b2:restic-backups-yoga-260-keenbean -p /etc/nixos/secrets/restic-password restore latest --target ~/restored-backups/2021-04-18`
   services.restic.backups = {
     remotebackup = {
       dynamicFilesFrom = ''
