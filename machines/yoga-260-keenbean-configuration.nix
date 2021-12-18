@@ -33,7 +33,7 @@ let
 
   # Run multiple tailscale daemons using multiple copies of
   # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/tailscale.nix
-  # but giving them differnet socket folders, state folders, and ports.
+  # but giving them different socket folders, state folders, and ports.
   # After a tailscale daemon is running, authenticate it with `sudo tailscale up --socket=/var/run/${dir}/tailscaled.sock`
   tailscaled = {port ? "41641", dir ? "tailscale"}: {
     description = "Tailscale client daemon";
@@ -154,7 +154,7 @@ in
   time.timeZone = "Australia/Melbourne";
 
   nixpkgs.config = {
-    # for zoom-us, teams
+    # for zoom-us, teams, slack
     allowUnfree = true;
 
     # Create an alias for the unstable channel
@@ -190,13 +190,12 @@ in
   environment.systemPackages = with pkgs; [
     wget
     vim
-    ctags
     bat
     emacs
     git
     tree
     xbindkeys
-    xcompmgr
+    unstable.picom-next
     xlibs.xmodmap
     xlibs.xev
     xlibs.xinput
@@ -205,8 +204,6 @@ in
     sqlite
     rxvt_unicode
     unstable.firefox
-    pandoc
-    feh
     i3lock
     trayer
     networkmanagerapplet
@@ -214,41 +211,23 @@ in
     haskellPackages.xmobar
     pavucontrol
     pinta
-    inkscape
     zip
     unzip
     nmap
     gnupg
-    bc
-    imagemagick
     xorg.xdpyinfo
     killall
     awscli
-    pstree
     sl
     wirelesstools
     cowsay
     htop
     hunspell
     (import (fetchGit "https://github.com/haslersn/fish-nix-shell"))
-    #### Purescript dev stuff
-    nodePackages.bower
-    nodePackages.pulp
-    unstable.nodePackages.parcel-bundler
-    easy-ps.purs
-    easy-ps.spago
-    ####
     chromium
     redshift
-    vnstat
-    binutils-unwrapped
-    nix-index
     unstable.zoom-us
-    nix-prefetch-git
-    figlet
-    fzf
     gparted
-    ripgrep
     file
     patchelf
     bashmount
@@ -262,65 +241,50 @@ in
     glxinfo
     qbittorrent
     libreoffice
-    swiProlog
-    usbutils
-    ghostscript
     pulsemixer
     brightnessctl
     tailscale
     rclone
     restic
     direnv
-    #### used to rotate webcam via loopback video device
-    guvcview
-    v4l-utils
-    ffmpeg
-    ####
     unstable.xournalpp
     xautolock
     unstable.signal-desktop
-    gv
     parcellite
     unstable.teams
     simplescreenrecorder
-    teyjus
     libnotify
     notify-osd
-    kubectl
     git-lfs
-    k9s
-    csvkit
     pythonEnv
     xonsh
-    qgis
-    unstable.cloudcompare
+    unstable.slack
+    ripgrep
+    fzf
   ];
-
-  virtualisation.docker.enable = true;
-  virtualisation.docker.enableOnBoot = true;
 
   fonts.fonts = with pkgs; [
     source-code-pro
   ];
-
-  #fonts.fontconfig.dpi=180;
 
   programs.fish.enable = true;
   programs.fish.promptInit = ''
     fish-nix-shell --info-right | source
   '';
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  programs.mtr.enable = true;
-  programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
-
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
+    19000 # expo
+    19001 # expo
+    8080 # hasura
   ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+  networking.firewall.allowPing = true;
+  networking.firewall.allowedUDPPorts = [ ];
+
+  programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
   systemd.services.tailscale0 = tailscaled { 
     port = "41641";
@@ -331,28 +295,20 @@ in
     dir = "tailscale1";
   };
 
-  services.vnstat.enable = true;
-
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.hplip ];
 
   services.xserver = {
-
     enable = true;
-
     layout = "us";
-
     # Enable touchpad support.
     libinput = {
       enable = true;
       accelSpeed = "0.2";
       naturalScrolling = false;
     };
-
     desktopManager.xterm.enable = false;
-
     xkbOptions = "ctrl:nocaps";
-
     windowManager.xmonad = {
       enable = true;
       enableContribAndExtras = true;
@@ -367,16 +323,12 @@ in
     displayManager.sessionCommands = with pkgs; lib.mkAfter
       ''
       xbindkeys
-      
       xrdb -merge /home/rowan/.Xresources
-      
       # turn off Display Power Management Service (DPMS)
       xset -dpms
       setterm -blank 0 -powerdown 0
-
       # turn off black Screensaver
       xset s off
-      
       trayer --edge bottom \
              --align right \
              --SetDockType true \
@@ -387,20 +339,14 @@ in
              --tint 0x000000 \
              --height 20 \
              --monitor "primary" &
-      
       exec nm-applet &
       exec redshift &
       exec blueman-applet &
-      
-      feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
-      xcompmgr -c &
-
+      ${pkgs.feh}/bin/feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
+      ${unstable.picom-next}/bin/picom --config /home/rowan/.config/picom.conf &
       touchegg &
-
       parcellite &
-
       xautolock -time 10 -locker /home/rowan/scripts/lock.sh -corners 00-0 &
-
       xkbcomp /etc/nixos/keymap.xkb $DISPLAY
       '';
   };
@@ -439,10 +385,10 @@ in
     enable = true;
   };
 
-  # Melbourne
+  # Used by redshift (?)
   location = {
-    latitude = -37.8136;
-    longitude = 144.9631;
+    # Melbourne
+    latitude = -37.8136; longitude = 144.9631;
   };
 
   systemd.services.lockScreenBeforeSleep = { 
