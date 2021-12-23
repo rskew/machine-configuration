@@ -9,7 +9,8 @@
     # For nicer terminal experience over ssh
     rxvt_unicode
     vim
-    byobu # use the byobu-screen command
+    byobu # use the byobu-tmux command
+    tmux
 
     # For querying BIOS settings from inside linux
     dmidecode

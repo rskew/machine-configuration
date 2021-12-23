@@ -48,6 +48,8 @@ in
     jq
     pulsemixer
     brightnessctl
+    emacs
+    sl
   ];
 
   # Enable the OpenSSH daemon.
@@ -94,4 +96,7 @@ in
     partOf = [ "dynamic-dns.service" ];
     timerConfig.OnCalendar = "*-*-* *:*:00";
   };
+
+  hardware.bluetooth.enable = false;
+  services.logind.lidSwitch = "ignore";
 }
