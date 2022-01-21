@@ -2,7 +2,17 @@
 
 let
   machine-url = "farm.rowanskewes.com";
-  dynamic-dns-update-url = "${pkgs.lib.fileContents ../secrets/dynamic-dns-url.txt}?hostname=${machine-url}";
+  ssh-tunnel-service = {
+    description = "persistant ssh session for tunnelled access to ssh";
+    after = [ "network-pre.target" ];
+    wants = [ "network-pre.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Environment = "\"AUTOSSH_GATETIME=0\"";
+      ExecStart = ''${pkgs.autossh}/bin/autossh -M 0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -o "UserKnownHostsFile /home/rowan/.ssh/known_hosts" -R 8822:localhost:22 -o "ExitOnForwardFailure yes" -i /home/rowan/.ssh/id_ed25519_mammoth -N 103.236.163.87'';
+      Restart = "on-failure";
+    };
+  };
 in
 {
   imports =
@@ -59,6 +69,7 @@ in
     permitRootLogin = "no";
     forwardX11 = false;
   };
+  systemd.services.ssh-tunnel = ssh-tunnel-service;
 
   security.sudo.wheelNeedsPassword = false;
 
@@ -82,20 +93,6 @@ in
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "20.03"; # Did you read the comment?
-
-  # Dynamic DNS
-  systemd.services.dynamic-dns = {
-    serviceConfig.Type = "oneshot";
-    script = ''
-        RESPONSE="$(${pkgs.curl}/bin/curl --silent ${dynamic-dns-update-url})"
-        echo "$(date -Iseconds) ''${RESPONSE}" >> /var/log/dynamic-dns.log
-    '';
-  };
-  systemd.timers.dynamic-dns = {
-    wantedBy = [ "timers.target" ];
-    partOf = [ "dynamic-dns.service" ];
-    timerConfig.OnCalendar = "*-*-* *:*:00";
-  };
 
   hardware.bluetooth.enable = false;
   services.logind.lidSwitch = "ignore";
