@@ -5,6 +5,8 @@
     #utilities
     htop
     git
+    wget
+    sl
 
     # For nicer terminal experience over ssh
     rxvt_unicode
