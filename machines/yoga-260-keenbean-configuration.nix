@@ -191,7 +191,7 @@ in
     wget
     vim
     bat
-    emacs
+    unstable.emacs
     git
     tree
     xbindkeys
@@ -259,8 +259,9 @@ in
     pythonEnv
     xonsh
     unstable.slack
-    ripgrep
-    fzf
+    ripgrep # for project search in emacs
+    fzf # for reverse history search in fish shell
+    imagemagick # for screenshots via the 'import' command
   ];
 
   fonts.fonts = with pkgs; [
@@ -274,6 +275,7 @@ in
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [
+    1883 # mqtt
     19000 # expo
     19001 # expo
     8080 # hasura
