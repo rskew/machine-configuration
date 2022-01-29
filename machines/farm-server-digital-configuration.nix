@@ -1,23 +1,5 @@
 { config, pkgs, ... }:
 
-let
-  ssh-tunnel-remote-port = "7722";
-  ssh-tunnel-remote-ip = "103.236.163.87";
-  ssh-tunnel-remote-user = "rowan";
-  ssh-tunnel-id-file = "/home/rowan/.ssh/id_ed25519_mammoth";
-  ssh-tunnel-known-hosts-file = "/home/rowan/.ssh/known_hosts";
-  ssh-tunnel-service = {
-    description = "persistant ssh session for tunnelled access to ssh";
-    after = [ "network-pre.target" ];
-    wants = [ "network-pre.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Environment = "\"AUTOSSH_GATETIME=0\"";
-      ExecStart = ''${pkgs.autossh}/bin/autossh -M 0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -o "UserKnownHostsFile ${ssh-tunnel-known-hosts-file}" -R ${ssh-tunnel-remote-port}:localhost:22 -o "ExitOnForwardFailure yes" -i ${ssh-tunnel-id-file} -N ${ssh-tunnel-remote-user}@${ssh-tunnel-remote-ip}'';
-      Restart = "on-failure";
-    };
-  };
-in
 {
   imports =
     [
@@ -44,7 +26,16 @@ in
     permitRootLogin = "no";
     forwardX11 = false;
   };
-  systemd.services.ssh-tunnel = ssh-tunnel-service;
+  # Persistent SSH tunnel with mammoth vps jump box for remote access
+  systemd.services.ssh-tunnel = import ../persistent-ssh-tunnel.nix {
+    inherit pkgs;
+    local-port = "22";
+    remote-port = "7722";
+    remote-ip = "103.236.163.87";
+    remote-user = "rowan";
+    id-file = "/home/rowan/.ssh/id_ed25519_mammoth";
+    known-hosts-line = "103.236.163.87 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIk/U6LB/hjlBCWtJqHZgKnzOQmmOw4GKntvvdrYYYGLdDoFZomYXwbEWexU/IHR5PiNIU4RuVSXdoPxGVU9YPg=";
+  };
 
   users.users.rowan = {
     isNormalUser = true;
