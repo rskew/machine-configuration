@@ -1,23 +1,8 @@
 { config, pkgs, ... }:
 
-let
-  machine-url = "farm.rowanskewes.com";
-  ssh-tunnel-service = {
-    description = "persistant ssh session for tunnelled access to ssh";
-    after = [ "network-pre.target" ];
-    wants = [ "network-pre.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Environment = "\"AUTOSSH_GATETIME=0\"";
-      ExecStart = ''${pkgs.autossh}/bin/autossh -M 0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -o "UserKnownHostsFile /home/rowan/.ssh/known_hosts" -R 8822:localhost:22 -o "ExitOnForwardFailure yes" -i /home/rowan/.ssh/id_ed25519_mammoth -N 103.236.163.87'';
-      Restart = "on-failure";
-    };
-  };
-in
 {
   imports =
-    [ # Include the results of the hardware scan.
-      ../hardware-configuration.nix
+    [ ../hardware-configuration.nix
       ../terminal-environment.nix
       # This machine is now the farm server
       /home/rowan/projects/autofarm/cns/irrigation-control-configuration.nix
@@ -69,7 +54,15 @@ in
     permitRootLogin = "no";
     forwardX11 = false;
   };
-  systemd.services.ssh-tunnel = ssh-tunnel-service;
+  systemd.services.ssh-tunnel = import ../persistent-ssh-tunnel.nix {
+    inherit pkgs;
+    local-port = "22";
+    remote-ip = "103.236.163.87";
+    remote-port = "8822";
+    remote-user = "rowan";
+    id-file = "/home/rowan/.ssh/id_ed25519_mammoth";
+    known-hosts-line = "103.236.163.87 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIk/U6LB/hjlBCWtJqHZgKnzOQmmOw4GKntvvdrYYYGLdDoFZomYXwbEWexU/IHR5PiNIU4RuVSXdoPxGVU9YPg=";
+  };
 
   security.sudo.wheelNeedsPassword = false;
 
@@ -97,3 +90,4 @@ in
   hardware.bluetooth.enable = false;
   services.logind.lidSwitch = "ignore";
 }
+
