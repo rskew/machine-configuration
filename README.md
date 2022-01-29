@@ -2,7 +2,7 @@
 
 To run one of these machine configs:
 
-- symlink `configuration.nix` to `machines/<the-machine-you-want-to-run>.nix`
+- `ln -s machines/<the-machine-you-want-to-run>.nix configuration.nix`
 - add the unstable channel (if you haven't already) with `nix-channel --add https://nixos.org/channels/nixos-unstable`
 - `nixos-rebuild switch`
 
