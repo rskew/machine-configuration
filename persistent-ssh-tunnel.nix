@@ -12,10 +12,7 @@ let
 in
 
 {
-  description = ''
-    Persistant SSH tunnel.
-    The id-file must not require a password.
-  '';
+  description = "Persistant SSH tunnel. The id-file must not require a password.";
   after = [ "network-pre.target" ];
   wants = [ "network-pre.target" ];
   wantedBy = [ "multi-user.target" ];
