@@ -31,35 +31,11 @@ let
     inherit pkgs;
   };
 
-  # Run multiple tailscale daemons using multiple copies of
-  # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/tailscale.nix
-  # but giving them different socket folders, state folders, and ports.
-  # After a tailscale daemon is running, authenticate it with `sudo tailscale up --socket=/var/run/${dir}/tailscaled.sock`
-  tailscaled = {port ? "41641", dir ? "tailscale"}: {
-    description = "Tailscale client daemon";
-    after = [ "network-pre.target" ];
-    wants = [ "network-pre.target" ];
-    wantedBy = [ "multi-user.target" ];
-    unitConfig = {
-      StartLimitIntervalSec = 0;
-      StartLimitBurst = 0;
-    };
-    serviceConfig = {
-      ExecStart = "${pkgs.tailscale}/bin/tailscaled --port=${port} --socket=/var/run/${dir}/tailscaled.sock --state=/var/lib/${dir}/tailscale.state --tun=${dir}";
-      RuntimeDirectory = dir;
-      RuntimeDirectoryMode = 755;
-      StateDirectory = dir;
-      StateDirectoryMode = 750;
-      CacheDirectory = dir;
-      CacheDirectoryMode = 750;
-      Restart = "on-failure";
-    };
-  };
-
   pythonEnv = pkgs.python38.withPackages(ps: with ps; [ 
     pandas 
     matplotlib
     seaborn
+    pyyaml
   ]);
   # Run xonsh with whatever python environment is active
   xonsh = pkgs.writeShellScriptBin "xonsh" ''
@@ -243,7 +219,6 @@ in
     libreoffice
     pulsemixer
     brightnessctl
-    tailscale
     rclone
     restic
     direnv
@@ -262,6 +237,8 @@ in
     ripgrep # for project search in emacs
     fzf # for reverse history search in fish shell
     imagemagick # for screenshots via the 'import' command
+    unstable.tailscale # for the CLI
+    simplescreenrecorder
   ];
 
   fonts.fonts = with pkgs; [
@@ -288,17 +265,33 @@ in
 
   programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
-  systemd.services.tailscale0 = tailscaled { 
-    port = "41641";
-    dir = "tailscale0";
-  };
-  systemd.services.tailscale1 = tailscaled { 
-    port = "41642";
-    dir = "tailscale1";
+  # Once upgraded nix version, use this directly:
+  # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/networking/tailscale.nix
+  systemd.services.tailscaled = {
+    description = "Tailscale client daemon";
+    after = [ "network-pre.target" ];
+    wants = [ "network-pre.target" ];
+    wantedBy = [ "multi-user.target" ];
+    unitConfig = {
+      StartLimitIntervalSec = 0;
+      StartLimitBurst = 0;
+    };
+    serviceConfig = {
+      ExecStart = "${pkgs.unstable.tailscale}/bin/tailscaled";
+      RuntimeDirectory = "tailscale";
+      RuntimeDirectoryMode = 755;
+      StateDirectory = "tailscale";
+      StateDirectoryMode = 750;
+      CacheDirectory = "tailscale";
+      CacheDirectoryMode = 750;
+      Restart = "on-failure";
+    };
   };
 
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.hplip ];
+
+  virtualisation.docker.enable = true;
 
   services.xserver = {
     enable = true;
