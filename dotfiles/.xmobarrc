@@ -1,0 +1,96 @@
+-- to get xmobar on other screen, do
+-- xrandr --output $DISPLAY --primary
+-- usually $DISPLAY is VGA1
+
+Config { font = "xft:Source Code Pro:size=27"
+       , bgColor = "black"
+       , fgColor = "grey"
+       , position = BottomW L 92
+       , allDesktops =      True    -- show on all desktops
+       , lowerOnStart = True
+       , hideOnStart = False
+       , commands = -- weather monitor
+        --[ Run Weather "YMML" [ "--template", "<skyCondition> | <fc=#4682B4><tempC></fc>°C | <fc=#4682B4><rh></fc>% | <fc=#4682B4><pressure></fc>hPa"
+        --                     ] 36000
+
+        -- network activity monitor (dynamic interface resolution)
+        --, Run DynNetwork     [ "--template" , "<dev>: ip rss <tx>kB/s|<rx>kB/s"
+        --, "--Low"      , "1000"       -- units: B/s
+        --, "--High"     , "5000"       -- units: B/s
+        --, "--low"      , "green"
+        --, "--normal"   , "orange"
+        --, "--high"     , "red"
+        --] 10
+        [ Run Com "/home/rowan/scripts/network-status-ssid.sh" [] "wifi-ssid" 30
+        , Run Com "/home/rowan/scripts/network-status-rss.sh" [] "wifi-rss" 30
+        , Run Com "/home/rowan/scripts/network-status-ipaddr.sh" [] "wifi-ipaddr" 30
+
+        -- bluetooth connectivity/headset status
+        , Run Com "/home/rowan/scripts/bluetooth-status.sh" [] "bluetooth-status" 10
+
+        -- cpu activity monitor
+        , Run MultiCpu       [ "--template" , "<autovbar>"
+                             --, "--Low"      , "50"         -- units: %
+                             --, "--High"     , "85"         -- units: %
+                             --, "--low"      , "green"
+                             --, "--normal"   , "orange"
+                             --, "--high"     , "red"
+                             ] 1
+
+        -- cpu core temperature monitor
+        , Run CoreTemp       [ "--template" , "<core0>°"
+                             , "--Low"      , "70"        -- units: °C
+                             , "--High"     , "80"        -- units: °C
+                             , "--low"      , "green"
+                             , "--normal"   , "orange"
+                             , "--high"     , "red"
+                             ] 10
+
+        -- memory usage monitor
+        , Run Memory         [ "--template" ,"mem:<usedratio>%"
+                             , "--Low"      , "20"        -- units: %
+                             , "--High"     , "90"        -- units: %
+                             , "--low"      , "green"
+                             , "--normal"   , "orange"
+                             , "--high"     , "red"
+                             ] 10
+        , Run Swap           [ "--template" , "swap:<usedratio>%"
+                             ] 20
+
+        , Run DiskU          [("/", "disk:<free>")]
+                             ["-L", "20", "-H", "50", "-m", "1", "-p", "3"]
+                             20
+
+        -- battery monitor
+        , Run Battery        [ "--template" , "batt:<acstatus>"
+                             , "--Low"      , "10"        -- units: %
+                             , "--High"     , "80"        -- units: %
+                             , "--low"      , "red"
+                             , "--normal"   , "orange"
+                             , "--high"     , "green"
+
+                             , "--" -- battery specific options
+                                       -- discharging status
+                                       , "-o"	, "<left>% (<timeleft>)"
+                                       -- AC "on" status
+                                       , "-O"	, "<fc=#dAA520>Charging</fc>"
+                                       -- charged status
+                                       , "-i"	, "<fc=#00f000>Charged</fc>"
+                             ] 20
+
+        -- time and date indicator
+        --   (%F = y-m-d date, %a = day of week, %T = h:m:s time)
+        , Run Date           "<fc=#ABABAB></fc>%F %a %T" "date" 10
+
+
+        -- keyboard layout indicator
+        --, Run Kbd            [ ("us(dvorak)" , "<fc=#00008B>DV</fc>")
+        --                     , ("us"         , "<fc=#8B0000>US</fc>")
+        --                     ]
+        , Run StdinReader
+        ]
+       , sepChar = "%"
+       , alignSep = "}{"
+       -- <fc=#f000ff>%wifi-ipaddr%</fc> 
+       , template = "%StdinReader% }{ %multicpu%%coretemp% %memory% %swap% %disku% %wifi-ssid% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
+       }
