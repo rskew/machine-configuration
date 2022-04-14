@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+echo no-bt
+exit 0
 
 DEVICES=""
 

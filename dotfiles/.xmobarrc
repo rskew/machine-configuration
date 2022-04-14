@@ -14,19 +14,21 @@ Config { font = "xft:Source Code Pro:size=27"
         --                     ] 36000
 
         -- network activity monitor (dynamic interface resolution)
-        --, Run DynNetwork     [ "--template" , "<dev>: ip rss <tx>kB/s|<rx>kB/s"
-        --, "--Low"      , "1000"       -- units: B/s
-        --, "--High"     , "5000"       -- units: B/s
-        --, "--low"      , "green"
-        --, "--normal"   , "orange"
-        --, "--high"     , "red"
-        --] 10
-        [ Run Com "/home/rowan/scripts/network-status-ssid.sh" [] "wifi-ssid" 30
-        , Run Com "/home/rowan/scripts/network-status-rss.sh" [] "wifi-rss" 30
-        , Run Com "/home/rowan/scripts/network-status-ipaddr.sh" [] "wifi-ipaddr" 30
+        [ Run Network "wlp0s20f3"
+          [ "--template" , "<rx>KB↓ <tx>KB↑"
+          , "--Low"      , "12500"       -- units: B/s
+          , "--High"     , "125000"      -- units: B/s
+          , "--low"      , "green"
+          , "--normal"   , "orange"
+          , "--high"     , "red"
+          , "-w"         , "5"
+          ] 10
+        , Run Com "/home/rowan/machine-configuration/scripts/network-status-ssid.sh" [] "wifi-ssid" 30
+        , Run Com "/home/rowan/machine-configuration/scripts/network-status-rss.sh" [] "wifi-rss" 30
+        , Run Com "/home/rowan/machine-configuration/scripts/network-status-ipaddr.sh" [] "wifi-ipaddr" 30
 
         -- bluetooth connectivity/headset status
-        , Run Com "/home/rowan/scripts/bluetooth-status.sh" [] "bluetooth-status" 10
+        , Run Com "/home/rowan/machine-configuration/scripts/bluetooth-status.sh" [] "bluetooth-status" 10
 
         -- cpu activity monitor
         , Run MultiCpu       [ "--template" , "<autovbar>"
@@ -57,7 +59,7 @@ Config { font = "xft:Source Code Pro:size=27"
         , Run Swap           [ "--template" , "swap:<usedratio>%"
                              ] 20
 
-        , Run DiskU          [("/", "disk:<free>")]
+        , Run DiskU          [("/", "<free>")]
                              ["-L", "20", "-H", "50", "-m", "1", "-p", "3"]
                              20
 
@@ -92,5 +94,5 @@ Config { font = "xft:Source Code Pro:size=27"
        , sepChar = "%"
        , alignSep = "}{"
        -- <fc=#f000ff>%wifi-ipaddr%</fc> 
-       , template = "%StdinReader% }{ %multicpu%%coretemp% %memory% %swap% %disku% %wifi-ssid% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
+       , template = "%StdinReader% }{ %multicpu%%coretemp% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
        }
