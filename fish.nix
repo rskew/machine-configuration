@@ -47,6 +47,10 @@
     
     fish_vi_key_bindings
 
+    function nix-develop
+      nix develop $argv --command fish
+    end
+
     ####
     #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af
     ####

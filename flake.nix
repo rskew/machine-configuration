@@ -52,8 +52,9 @@
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    kmonad.url = "github:kmonad/kmonad?dir=nix";
   };
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager }: {
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad }: {
     nixosConfigurations.rowan-p14 =
       let
         pkgs = import nixpkgs {
@@ -66,7 +67,8 @@
         };
       in nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [({config, ...}:
+        specialArgs = {inherit pkgs unstable;};
+        modules = [({config, pkgs, unstable, ...}:
           let
             pythonEnv = pkgs.python39.withPackages(ps: with ps; [
               pandas
@@ -88,7 +90,7 @@
           };
           # Use the systemd-boot EFI boot loader.
           boot.loader.efi.canTouchEfiVariables = true;
-          boot.kernelPackages = pkgs.linuxPackages_5_17;
+          #boot.kernelPackages = pkgs.linuxPackages_5_17;
           boot.loader.grub = {
             enable = true;
             version = 2;
@@ -125,7 +127,7 @@
           services.printing.enable = true;
           services.printing.drivers = [ pkgs.hplip ];
 
-          virtualisation.docker.enable = true;
+          #virtualisation.docker.enable = true;
 
           environment.systemPackages = with pkgs; [
             wget
@@ -134,7 +136,6 @@
             git
             tree
             unstable.picom-next
-            xlibs.xmodmap
             xlibs.xev
             xlibs.xinput
             xlibs.xmessage
@@ -144,7 +145,7 @@
             trayer
             networkmanagerapplet
             vlc
-            haskellPackages.xmobar
+            unstable.haskellPackages.xmobar
             pavucontrol
             pinta
             zip
@@ -183,23 +184,32 @@
             ripgrep # for project-wide search in emacs
             imagemagick # for screenshots via the 'import' command
             unstable.tailscale # for the tailscale CLI
-            xorg.xkbcomp # For applying /home/rowan/keymap.xkb
             rofi # launcher
             ##
             unstable.slack
             unstable.teams
             unstable.zoom-us
             ##
+            (pkgs.writeShellScriptBin "nvidia-offload" ''
+               export __NV_PRIME_RENDER_OFFLOAD=1
+               export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+               export __GLX_VENDOR_LIBRARY_NAME=nvidia
+               export __VK_LAYER_NV_optimus=NVIDIA_only
+               exec -a "$0" "$@"
+             '')
           ];
 
           hardware.pulseaudio.enable = true;
 
-          #hardware.opengl.enable = true;
-          #hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
-          #hardware.opengl.driSupport32Bit = true;
+          services.xserver.videoDrivers = [ "nvidia" ];
+          #hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+          hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+          hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+          hardware.nvidia.prime.offload.enable = true;
+          hardware.opengl.enable = true;
+
           services.xserver = {
             enable = true;
-            #videoDrivers = [ "nvidia" ];
             layout = "us";
             # Enable touchpad support.
             libinput = {
@@ -242,7 +252,7 @@
               exec nm-applet &
               exec blueman-applet &
               ${pkgs.feh}/bin/feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
-              #${unstable.picom-next}/bin/picom --config /home/rowan/.config/picom.conf &
+              ${unstable.picom-next}/bin/picom --experimental-backends &
               ## Synchronise PRIMARY and CLIPBOARD
               ${autocutsel}/bin/autocutsel -fork -selection CLIPBOARD
               ${autocutsel}/bin/autocutsel -fork -selection PRIMARY
@@ -256,6 +266,8 @@
             extraGroups = [ "wheel" "docker" ];
             shell = pkgs.fish;
           };
+          # This is required for lightdm to prefill username on login
+          programs.fish.enable = true;
 
           services.redshift = {
             enable = true;
@@ -326,7 +338,7 @@
           })
 
           home-manager.nixosModules.home-manager
-          ({...}: {
+          ({pkgs, unstable, ...}: {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.users.rowan = {config, ...}: {
@@ -366,22 +378,19 @@
                 fzf # for reverse history search in fish shell
               ];
 
-              services.picom = {
-                enable = true;
-                package = unstable.picom-next;
-                extraOptions = ''
-                  corner-radius = 8
-                '';
-              };
-
               # dotfiles
               home.file.".xmonad/xmonad.hs".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmonad/xmonad.hs";
               home.file.".Xresources".source         = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xresources";
-              home.file.".Xmodmap".source            = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xmodmap";
-              #home.file.".config/picom.conf".source  = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.config/picom.conf";
               home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
               home.file.".doom.d/init.el".source     = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/init.el";
               home.file.".doom.d/packages.el".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/packages.el";
+            };
+          })
+          kmonad.nixosModule ({...}: {
+            services.kmonad = {
+              enable = true;
+              configfiles = [ "/home/rowan/machine-configuration/dotfiles/.config/kmonad/config.kbd" ];
+              package = kmonad.packages.x86_64-linux.kmonad;
             };
           })
         ];

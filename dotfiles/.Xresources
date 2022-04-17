@@ -1,7 +1,7 @@
 URxvt.font: xft:Source Code Pro:size=25
 URxvt.perl-ext-common: selection-to-clipboard
 URxvt.depth: 32
-URxvt.background: rgba:0000/0000/0000/8000
+URxvt.background: [70]#000000
 URxvt.foreground: white
 URxvt*scrollBar:  false
 URxvt*saveLines:10000

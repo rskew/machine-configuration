@@ -1,7 +1,6 @@
 import           Graphics.X11.ExtraTypes.XF86
 import           System.IO
 import           XMonad
-import           XMonad.Actions.KeyRemap
 import           XMonad.Actions.NoBorders
 import           XMonad.Actions.SpawnOn
 import           XMonad.Hooks.DynamicLog
@@ -17,11 +16,7 @@ import qualified XMonad.StackSet                     as W
 import           XMonad.Util.EZConfig                (additionalKeys, removeKeys)
 import           XMonad.Util.Run                     (spawnPipe)
 
-keymap = KeymapTable [ ((controlMask, xK_h), (0, xK_Left))
-                     , ((controlMask, xK_l), (0, xK_Right))
-                     , ((controlMask, xK_k), (0, xK_Up))
-                     , ((controlMask, xK_j), (0, xK_Down))
-                     ]
+windowGap = 10
 
 myWorkspaces = [ (xK_quoteleft, "~")
                , (xK_1, "1")
@@ -48,15 +43,13 @@ main = do
       , normalBorderColor  = "#000"
       , focusedBorderColor = "#0af"
       , workspaces = map snd myWorkspaces
-      --, manageHook = manageSpawn <+> manageDocks <+> manageHook defaultConfig
       , manageHook = mWManager
       , layoutHook = mkToggle (single NBFULL) $ avoidStruts
-                                              $ spacingRaw False (Border 0 6 6 6) True (Border 6 6 6 6) True
+                                              $ spacingWithEdge windowGap
                                               $ layoutHook defaultConfig
       , handleEventHook = fullscreenEventHook
       , startupHook = do
           setWMName "LG3D"
-          setDefaultKeyRemap keymap []
       , logHook = dynamicLogWithPP xmobarPP
                       { ppOutput = hPutStrLn xmproc
                       --, ppTitle = xmobarColor "green" "" . shorten 0 --50
@@ -89,13 +82,11 @@ myKeys =
       , ((mod1Mask .|. shiftMask, xK_space), windows W.swapMaster)
       , ((mod1Mask, xK_r), (spawn "rofi -dpi 1 -show run -show-icons -opacity \"40\" -kb-accept-entry Return -kb-row-down Control+j -kb-remove-to-eol '' -kb-row-up Control+k"))
       , ((mod1Mask, xK_s), (spawn "rofi -dpi 1 -show ssh -show-icons -opacity \"40\" -kb-accept-entry Return -kb-row-down Control+j -kb-remove-to-eol '' -kb-row-up Control+k"))
-      ] ++ buildKeyRemapBindings [keymap] ++
-      [ ((0, xF86XK_AudioLowerVolume   ), spawn "amixer set Master playback 2%-")
+      , ((0, xF86XK_AudioLowerVolume   ), spawn "amixer set Master playback 2%-")
       , ((0, xF86XK_AudioRaiseVolume   ), spawn "amixer set Master playback 2%+")
       , ((0, xF86XK_AudioMute          ), spawn "amixer set Master toggle")
-      , ((0, xF86XK_MonBrightnessUp    ), spawn "brightnessctl s 30+")
-      , ((0, xF86XK_MonBrightnessDown  ), spawn "brightnessctl s 30-")
-      , ((0, xF86XK_MonBrightnessDown  ), spawn "brightnessctl s 30-")
+      , ((0, xF86XK_MonBrightnessUp    ), spawn "brightnessctl s 1000+")
+      , ((0, xF86XK_MonBrightnessDown  ), spawn "brightnessctl s 1000-")
       , ((0, xK_Print                  ), spawn "/home/rowan/machine-configuration/scripts/screenshot.sh")
       , ((mod1Mask, xK_Print           ), spawn "/home/rowan/machine-configuration/scripts/screenshot-region.sh")
       , ((mod1Mask, xK_d               ), spawn "/home/rowan/machine-configuration/scripts/setup_external_monitor.sh")
@@ -110,11 +101,8 @@ nonKeys =
 mWManager :: ManageHook
 mWManager = composeAll . concat $
             [ [manageHook defaultConfig]
+            , [manageSpawn]
             , [manageDocks]
-            -- windows that should be sent to a workspace
-            , [className =? "firefox"     --> doShift "2"]
-            , [resource =? "mainterm"     --> doShift "3"]
-            , [resource =? "pulsemixer"   --> doShift "5"]
             -- Below gets chrome_app_list to properly float
             , [(stringProperty "WM_WINDOW_ROLE") =? "bubble"  --> doFloat]
             , [(stringProperty "WM_WINDOW_ROLE") =? "pop-up"  --> doFloat]

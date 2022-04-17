@@ -15,7 +15,7 @@ Config { font = "xft:Source Code Pro:size=27"
 
         -- network activity monitor (dynamic interface resolution)
         [ Run Network "wlp0s20f3"
-          [ "--template" , "<rx>KB↓ <tx>KB↑"
+          [ "--template" , "<rx>KB/s↓ <tx>KB/s↑"
           , "--Low"      , "12500"       -- units: B/s
           , "--High"     , "125000"      -- units: B/s
           , "--low"      , "green"
@@ -90,9 +90,10 @@ Config { font = "xft:Source Code Pro:size=27"
         --                     , ("us"         , "<fc=#8B0000>US</fc>")
         --                     ]
         , Run StdinReader
+        , Run Com "bash" ["-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv | tail -n1 | tr -d '[:space:]'"] "gpu" 10
         ]
        , sepChar = "%"
        , alignSep = "}{"
        -- <fc=#f000ff>%wifi-ipaddr%</fc> 
-       , template = "%StdinReader% }{ %multicpu%%coretemp% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
+       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
        }
