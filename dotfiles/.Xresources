@@ -1,3 +1,4 @@
+! Big font for hi-res monitor
 URxvt.font: xft:Source Code Pro:size=25
 URxvt.perl-ext-common: selection-to-clipboard
 URxvt.depth: 32

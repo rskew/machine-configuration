@@ -2,13 +2,14 @@
 -- xrandr --output $DISPLAY --primary
 -- usually $DISPLAY is VGA1
 
-Config { font = "xft:Source Code Pro:size=27"
+Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
        , bgColor = "black"
        , fgColor = "grey"
        , position = BottomW L 92
        , allDesktops =      True    -- show on all desktops
        , lowerOnStart = True
        , hideOnStart = False
+       , iconRoot = "/home/rowan/machine-configuration/dotfiles/icons"
        , commands = -- weather monitor
         --[ Run Weather "YMML" [ "--template", "<skyCondition> | <fc=#4682B4><tempC></fc>°C | <fc=#4682B4><rh></fc>% | <fc=#4682B4><pressure></fc>hPa"
         --                     ] 36000
@@ -75,9 +76,9 @@ Config { font = "xft:Source Code Pro:size=27"
                                        -- discharging status
                                        , "-o"	, "<left>% (<timeleft>)"
                                        -- AC "on" status
-                                       , "-O"	, "<fc=#dAA520>Charging</fc>"
+                                       , "-O"	, "<fc=#dAA520>↑</fc>"
                                        -- charged status
-                                       , "-i"	, "<fc=#00f000>Charged</fc>"
+                                       , "-i"	, "<fc=#00f000>F</fc>"
                              ] 20
 
         -- time and date indicator
@@ -91,9 +92,10 @@ Config { font = "xft:Source Code Pro:size=27"
         --                     ]
         , Run StdinReader
         , Run Com "bash" ["-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv | tail -n1 | tr -d '[:space:]'"] "gpu" 10
+        , Run Com "bash" ["-c", "if [ -z \"$(amixer sget Capture | grep off )\" ]; then echo '<fc=#fff,#080> <icon=material_mic.xbm/> </fc>'; else echo ' <icon=material_mic_off.xbm/> '; fi"] "mic_status" 1
         ]
        , sepChar = "%"
        , alignSep = "}{"
        -- <fc=#f000ff>%wifi-ipaddr%</fc> 
-       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
+       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc> %mic_status%"
        }

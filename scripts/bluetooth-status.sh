@@ -1,6 +1,4 @@
 #!/usr/bin/env sh
-echo no-bt
-exit 0
 
 DEVICES=""
 
@@ -27,7 +25,8 @@ else
     HEADSET_CONNECTED=FALSE
 fi
 
-KEYBOARD_MAC_ADDRESS=F5:34:1F:49:35:D4
+#KEYBOARD_MAC_ADDRESS=F5:34:1F:49:35:D4
+KEYBOARD_MAC_ADDRESS=DE:59:95:2F:E2:C8
 if [[ $(bluetoothctl info $KEYBOARD_MAC_ADDRESS | grep "Connected") == *"Connected: yes" ]]; then
     DEVICES="${DEVICES}|kbd"
 fi

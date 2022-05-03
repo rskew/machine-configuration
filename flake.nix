@@ -30,8 +30,10 @@
 #   - nix-shell -p git nixFlakes
 #   - git clone git@github.com:rskew/machine-configuration /mnt/home/users/rowan/machine-configuration
 #   - nixos-install --root /mnt --flake /mnt/home/rowan/machine-configuration#rowan-p14
-# - reboot. subsequent rebuilds via:
-#   - sudo nixos-rebuild switch --flake /home/rowan/machine-configuration#rowan-p14
+# - reboot.
+#   - log in to root, set user password, log out, log in as user
+#   - subsequent rebuilds via:
+#     sudo nixos-rebuild switch --flake /home/rowan/machine-configuration#rowan-p14
 # - enable command-not-found on terminal
 #   - sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos
 #   - sudo nix-channel --update
@@ -52,7 +54,8 @@
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
-    kmonad.url = "github:kmonad/kmonad?dir=nix";
+    #kmonad.url = "github:kmonad/kmonad?dir=nix";
+    kmonad.url = "github:rskew/kmonad?dir=nix";
   };
   outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad }: {
     nixosConfigurations.rowan-p14 =
@@ -108,6 +111,12 @@
 
           networking.hostName = "rowan-p14";
           networking.networkmanager.enable = true;
+          networking.firewall.allowedTCPPorts = [
+            19000 # expo
+            19002 # expo
+            8080 # hasura
+            8089 # hasura
+          ];
 
           time.timeZone = "Australia/Melbourne";
 
@@ -127,7 +136,7 @@
           services.printing.enable = true;
           services.printing.drivers = [ pkgs.hplip ];
 
-          #virtualisation.docker.enable = true;
+          virtualisation.docker.enable = true;
 
           environment.systemPackages = with pkgs; [
             wget
@@ -185,7 +194,7 @@
             imagemagick # for screenshots via the 'import' command
             unstable.tailscale # for the tailscale CLI
             rofi # launcher
-            ##
+            ## work talk
             unstable.slack
             unstable.teams
             unstable.zoom-us
@@ -199,14 +208,40 @@
              '')
           ];
 
-          hardware.pulseaudio.enable = true;
+          hardware.pulseaudio = {
+            enable = true;
+            package = pkgs.pulseaudioFull;
+            extraModules = [ pkgs.pulseaudio-modules-bt ];
+          };
 
-          services.xserver.videoDrivers = [ "nvidia" ];
-          #hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
-          hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-          hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-          hardware.nvidia.prime.offload.enable = true;
-          hardware.opengl.enable = true;
+          hardware.bluetooth.enable = true;
+          services.blueman.enable = true;
+
+          # Bluetooth keyboard config
+          # Kmonad services are configured via the NixOS module at the bottom of the flake
+          services.udev.extraRules = ''
+            ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
+            ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
+            ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-tex-config.service"
+          '';
+          environment.etc."kmonad/config.kbd".source = pkgs.substitute {
+            name = "config.kbd";
+            src = ./dotfiles/.config/kmonad/base.kbd;
+            replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/platform-i8042-serio-0-event-kbd" ];
+          };
+          environment.etc."kmonad/tex-config.kbd".source = pkgs.substitute {
+            name = "tex-config.kbd";
+            src = ./dotfiles/.config/kmonad/base.kbd;
+            # /dev/tex-kbd is created by the SYMLINK command in the udev rule above
+            replacements = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
+          };
+
+          # Comment these lines to disable gpu
+          #services.xserver.videoDrivers = [ "nvidia" ];
+          #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+          #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+          #hardware.nvidia.prime.offload.enable = true;
+          #hardware.opengl.enable = true;
 
           services.xserver = {
             enable = true;
@@ -218,6 +253,8 @@
                 accelSpeed = "1";
                 naturalScrolling = false;
               };
+              mouse.scrollMethod = "button";
+              mouse.scrollButton = 2;
             };
             desktopManager.xterm.enable = false;
             xkbOptions = "ctrl:nocaps";
@@ -233,6 +270,7 @@
             displayManager.defaultSession = "none+xmonad";
             # what used to be .xinitrc
             displayManager.sessionCommands = with pkgs; lib.mkAfter ''
+              /home/rowan/machine-configuration/scripts/setup_external_monitor.sh
               ${pkgs.xorg.xrdb}/bin/xrdb -merge /home/rowan/.Xresources
               # turn off Display Power Management Service (DPMS)
               xset -dpms
@@ -369,7 +407,7 @@
                 font.name = "Sans 20"; # make firefox font big for hi-res monitor
                 cursorTheme = {
                   name = "Adwaita";
-                  size = 50; # make cursor big for hi-res monitor
+                  size = 40; # make cursor big for hi-res monitor
                 };
               };
 
@@ -380,6 +418,7 @@
 
               # dotfiles
               home.file.".xmonad/xmonad.hs".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmonad/xmonad.hs";
+              home.file.".xmobarrc".source           = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmobarrc";
               home.file.".Xresources".source         = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xresources";
               home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
               home.file.".doom.d/init.el".source     = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/init.el";
@@ -389,8 +428,9 @@
           kmonad.nixosModule ({...}: {
             services.kmonad = {
               enable = true;
-              configfiles = [ "/home/rowan/machine-configuration/dotfiles/.config/kmonad/config.kbd" ];
+              configfiles = [ "/etc/kmonad/config.kbd" "/etc/kmonad/tex-config.kbd" ];
               package = kmonad.packages.x86_64-linux.kmonad;
+              make-group = false;
             };
           })
         ];
