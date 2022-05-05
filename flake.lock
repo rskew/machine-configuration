@@ -15,6 +15,24 @@
         "type": "github"
       }
     },
+    "harvest-splash-page": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1651763777,
+        "narHash": "sha256-6iNh71ePQnPQdALuMo8KTHfOIHs7HMkCjF/QRC75nxI=",
+        "ref": "master",
+        "rev": "d855b02dbd4d1f7ec5ea2f5a9b56f108213e403e",
+        "revCount": 1,
+        "type": "git",
+        "url": "ssh://git@github.com/rskew/harvest-splash-page"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rskew/harvest-splash-page"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -38,7 +56,7 @@
     "kmonad": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "dir": "nix",
@@ -58,16 +76,15 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1632418649,
-        "narHash": "sha256-4rZspkiQU7zbsuciRRMgoEPkAF/+FSv2jx/VIPxPVx4=",
+        "lastModified": 1651634615,
+        "narHash": "sha256-VtvcS61bLh5mIBm9cV3idUHdlfPRFus/NwdJfaj5s8o=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "056a3c1fae30d06d14b171b9023743c21a23ec1a",
+        "rev": "abfd31179174133ab8131139d650297bf4da63b7",
         "type": "github"
       },
       "original": {
         "id": "nixpkgs",
-        "ref": "nixos-21.05",
         "type": "indirect"
       }
     },
@@ -89,6 +106,21 @@
     },
     "nixpkgs_2": {
       "locked": {
+        "lastModified": 1632418649,
+        "narHash": "sha256-4rZspkiQU7zbsuciRRMgoEPkAF/+FSv2jx/VIPxPVx4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "056a3c1fae30d06d14b171b9023743c21a23ec1a",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-21.05",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
         "lastModified": 1651310835,
         "narHash": "sha256-MLk/zsLlbPhwFucxL64Fr+oIrvQC2/76Ap2F7ekbPNI=",
         "owner": "nixos",
@@ -105,9 +137,10 @@
     },
     "root": {
       "inputs": {
+        "harvest-splash-page": "harvest-splash-page",
         "home-manager": "home-manager",
         "kmonad": "kmonad",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable"
       }
     }
