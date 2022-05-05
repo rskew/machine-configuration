@@ -86,7 +86,7 @@ myKeys =
       , ((0, xF86XK_AudioRaiseVolume   ), spawn "amixer set Master playback 2%+")
       , ((0, xF86XK_AudioMute          ), spawn "amixer set Master toggle")
       , ((0, xF86XK_AudioMicMute       ), spawn "amixer set Capture toggle")
-      , ((controlMask, xK_space        ), spawn "amixer set Capture toggle")
+      , ((controlMask, xK_m            ), spawn "amixer set Capture toggle")
       , ((0, xF86XK_MonBrightnessUp    ), spawn "brightnessctl s 1000+")
       , ((0, xF86XK_MonBrightnessDown  ), spawn "brightnessctl s 1000-")
       , ((0, xK_Print                  ), spawn "/home/rowan/machine-configuration/scripts/screenshot.sh")

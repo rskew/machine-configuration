@@ -39,4 +39,4 @@ fi
 
 # Reset the wallpaper
 DISPLAY=:0 ~/.fehbg
-xmonad --restart
+DISPLAY=:0 xmonad --restart
