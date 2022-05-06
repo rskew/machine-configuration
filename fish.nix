@@ -1,4 +1,4 @@
-{ pkgs, remote ? false}:
+{ pkgs, isRemote ? false}:
 {
   enable = true;
   plugins = [
@@ -11,7 +11,7 @@
         sha256 = "28QW/WTLckR4lEfHv6dSotwkAKpNJFCShxmKFGQQ1Ew=";
       };
     }
-  ] ++ (if !remote then [{
+  ] ++ (if !isRemote then [{
       name = "batman";
       src = pkgs.fetchFromGitHub {
         owner = "oh-my-fish";

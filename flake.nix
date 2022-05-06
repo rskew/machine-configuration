@@ -97,11 +97,13 @@
               domain = "castlemaineharvest.com.au";
               enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
             })
+
             (staticFileServerModule {
               serverRoot = harvest-front-page;
               domain = "www.castlemaineharvest.com.au";
               enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
             })
+
             ({config, pkgs, unstable, modulesPath, ...}: {
               imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
               boot.loader.grub.device = "/dev/vda";
@@ -137,6 +139,7 @@
               boot.cleanTmpDir = true;
               zramSwap.enable = true;
               services.openssh.enable = true;
+              services.openssh.passwordAuthentication = false;
               users.users.root.openssh.authorizedKeys.keys = [
                 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
               ];
@@ -159,54 +162,14 @@
               networking.hostName = "rowan-mammoth3";
               networking.firewall.allowedTCPPorts = [ 80 443 ];
             })
+
             home-manager.nixosModules.home-manager
             ({pkgs, unstable, ...}: {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.rowan = {config, ...}: {
-                programs.home-manager.enable = true;
-
-                programs.fish = import ./fish.nix { inherit pkgs; remote = true; };
-
-                programs.vim = {
-                  enable = true;
-                  extraConfig = ''
-                    filetype plugin indent on
-                    syntax on
-                    set number relativenumber
-                    set tabstop=4
-                    set softtabstop=4
-                    set expandtab
-                    set shiftwidth=4
-                    set smarttab
-                    set clipboard=unnamed
-                    set noerrorbells
-                    set vb t_vb=
-                    colorscheme torte
-                  '';
-                };
-
-                home.packages = with pkgs; [
-                  fzf # for reverse history search in fish shell
-                  wget
-                  bat
-                  git
-                  tree
-                  rxvt_unicode
-                  zip
-                  unzip
-                  nmap
-                  gnupg
-                  sl
-                  htop
-                  file
-                  iotop
-                  jq
-                  rclone
-                  restic
-                  pythonEnv
-                ];
-              };
+              home-manager.users.rowan =
+                {config, ...}:
+                import ./home.nix {inherit config pkgs; isRemote = true;};
             })
           ];
         };
@@ -276,16 +239,32 @@
               virtualisation.docker.enable = true;
 
               environment.systemPackages = with pkgs; [
+                gnome3.dconf # Required for gtk3 configuration
+                git
+                unstable.emacs
+                ripgrep # for project-wide search in emacs
+                fzf # for reverse history search in fish shell
                 wget
                 bat
-                unstable.emacs
                 git
                 tree
+                rxvt_unicode
+                zip
+                unzip
+                nmap
+                gnupg
+                sl
+                htop
+                file
+                iotop
+                jq
+                rclone
+                restic
+                pythonEnv
                 unstable.picom-next
                 xlibs.xev
                 xlibs.xinput
                 xlibs.xmessage
-                rxvt_unicode
                 firefox
                 i3lock
                 trayer
@@ -294,40 +273,28 @@
                 unstable.haskellPackages.xmobar
                 pavucontrol
                 pinta
-                zip
-                unzip
-                nmap
                 gnupg
                 xorg.xdpyinfo
                 awscli
-                sl
-                htop
                 hunspell
                 chromium
-                file
                 patchelf
                 bashmount
                 filelight
-                iotop
                 docker
                 docker_compose
-                jq
                 openvpn
                 glxinfo
                 qbittorrent
                 libreoffice
                 pulsemixer
                 brightnessctl
-                rclone
-                restic
                 direnv
                 unstable.xournalpp
                 unstable.signal-desktop
                 simplescreenrecorder
                 libnotify
                 notify-osd
-                pythonEnv
-                ripgrep # for project-wide search in emacs
                 imagemagick # for screenshots via the 'import' command
                 unstable.tailscale # for the tailscale CLI
                 rofi # launcher
@@ -518,52 +485,11 @@
             ({pkgs, unstable, ...}: {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.rowan = {config, ...}: {
-                programs.home-manager.enable = true;
-
-                programs.fish = import ./fish.nix { inherit pkgs; };
-
-                programs.vim = {
-                  enable = true;
-                  extraConfig = ''
-                    filetype plugin indent on
-                    syntax on
-                    set number relativenumber
-                    set tabstop=4
-                    set softtabstop=4
-                    set expandtab
-                    set shiftwidth=4
-                    set smarttab
-                    set clipboard=unnamed
-                    set noerrorbells
-                    set vb t_vb=
-                    colorscheme torte
-                  '';
-                };
-
-                gtk = {
-                  enable = true;
-                  font.name = "Sans 20"; # make firefox font big for hi-res monitor
-                  cursorTheme = {
-                    name = "Adwaita";
-                    size = 40; # make cursor big for hi-res monitor
-                  };
-                };
-
-                home.packages = with pkgs; [
-                  gnome3.dconf # Required for gtk3 configuration
-                  fzf # for reverse history search in fish shell
-                ];
-
-                # dotfiles
-                home.file.".xmonad/xmonad.hs".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmonad/xmonad.hs";
-                home.file.".xmobarrc".source           = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmobarrc";
-                home.file.".Xresources".source         = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xresources";
-                home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
-                home.file.".doom.d/init.el".source     = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/init.el";
-                home.file.".doom.d/packages.el".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/packages.el";
-              };
+              home-manager.users.rowan =
+                {config, pkgs, ...}:
+                import ./home.nix {inherit config pkgs; isRemote = false;};
             })
+
             kmonad.nixosModule ({...}: {
               services.kmonad = {
                 enable = true;
