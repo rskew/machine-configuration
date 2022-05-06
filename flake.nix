@@ -56,7 +56,7 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     #kmonad.url = "github:kmonad/kmonad?dir=nix";
     kmonad.url = "github:rskew/kmonad?dir=nix";
-    harvest-front-page.url = "git+ssh://git@github.com/rskew/harvest-front-page";
+    harvest-front-page = {url = "github:rskew/harvest-front-page"; flake = false;};
   };
   outputs =
     { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad, harvest-front-page }:
@@ -93,12 +93,12 @@
           specialArgs = {inherit pkgs unstable;};
           modules = [
             (staticFileServerModule {
-              serverRoot = harvest-front-page.defaultPackage.x86_64-linux.out;
+              serverRoot = harvest-front-page;
               domain = "castlemaineharvest.com.au";
               enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
             })
             (staticFileServerModule {
-              serverRoot = harvest-front-page.defaultPackage.x86_64-linux.out;
+              serverRoot = harvest-front-page;
               domain = "www.castlemaineharvest.com.au";
               enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
             })

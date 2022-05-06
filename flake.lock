@@ -16,21 +16,19 @@
       }
     },
     "harvest-front-page": {
-      "inputs": {
-        "nixpkgs": "nixpkgs"
-      },
+      "flake": false,
       "locked": {
-        "lastModified": 1651841497,
-        "narHash": "sha256-G3Lt0FQXSCnIE+NDKsHlHZJ6zXB7jcqTnWZ4c7gwFEI=",
-        "ref": "master",
-        "rev": "9a8b9278de0d884fab04250b5dddbc6c7388a5c2",
-        "revCount": 4,
-        "type": "git",
-        "url": "ssh://git@github.com/rskew/harvest-front-page"
+        "lastModified": 1651843239,
+        "narHash": "sha256-VzOjgVib/jkPYqWBJAtmibsOFH7NfyE/H6kPE77hE7A=",
+        "owner": "rskew",
+        "repo": "harvest-front-page",
+        "rev": "9affa967b3ae6a63acb138ab31c3e5e3c55d504d",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "ssh://git@github.com/rskew/harvest-front-page"
+        "owner": "rskew",
+        "repo": "harvest-front-page",
+        "type": "github"
       }
     },
     "home-manager": {
@@ -56,7 +54,7 @@
     "kmonad": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs"
       },
       "locked": {
         "dir": "nix",
@@ -76,15 +74,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1651634615,
-        "narHash": "sha256-VtvcS61bLh5mIBm9cV3idUHdlfPRFus/NwdJfaj5s8o=",
+        "lastModified": 1632418649,
+        "narHash": "sha256-4rZspkiQU7zbsuciRRMgoEPkAF/+FSv2jx/VIPxPVx4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "abfd31179174133ab8131139d650297bf4da63b7",
+        "rev": "056a3c1fae30d06d14b171b9023743c21a23ec1a",
         "type": "github"
       },
       "original": {
         "id": "nixpkgs",
+        "ref": "nixos-21.05",
         "type": "indirect"
       }
     },
@@ -106,21 +105,6 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1632418649,
-        "narHash": "sha256-4rZspkiQU7zbsuciRRMgoEPkAF/+FSv2jx/VIPxPVx4=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "056a3c1fae30d06d14b171b9023743c21a23ec1a",
-        "type": "github"
-      },
-      "original": {
-        "id": "nixpkgs",
-        "ref": "nixos-21.05",
-        "type": "indirect"
-      }
-    },
-    "nixpkgs_3": {
-      "locked": {
         "lastModified": 1651310835,
         "narHash": "sha256-MLk/zsLlbPhwFucxL64Fr+oIrvQC2/76Ap2F7ekbPNI=",
         "owner": "nixos",
@@ -140,7 +124,7 @@
         "harvest-front-page": "harvest-front-page",
         "home-manager": "home-manager",
         "kmonad": "kmonad",
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": "nixpkgs_2",
         "nixpkgs-unstable": "nixpkgs-unstable"
       }
     }
