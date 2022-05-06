@@ -161,6 +161,30 @@
               };
               networking.hostName = "rowan-mammoth3";
               networking.firewall.allowedTCPPorts = [ 80 443 ];
+
+              environment.systemPackages = with pkgs; [
+                git
+                unstable.emacs
+                ripgrep # for project-wide search in emacs
+                fzf # for reverse history search in fish shell
+                wget
+                bat
+                git
+                tree
+                rxvt_unicode
+                zip
+                unzip
+                nmap
+                gnupg
+                sl
+                htop
+                file
+                iotop
+                jq
+                rclone
+                restic
+                pythonEnv
+              ];
             })
 
             home-manager.nixosModules.home-manager
