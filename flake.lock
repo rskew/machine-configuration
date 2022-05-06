@@ -15,22 +15,22 @@
         "type": "github"
       }
     },
-    "harvest-splash-page": {
+    "harvest-front-page": {
       "inputs": {
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1651763777,
-        "narHash": "sha256-6iNh71ePQnPQdALuMo8KTHfOIHs7HMkCjF/QRC75nxI=",
+        "lastModified": 1651841497,
+        "narHash": "sha256-G3Lt0FQXSCnIE+NDKsHlHZJ6zXB7jcqTnWZ4c7gwFEI=",
         "ref": "master",
-        "rev": "d855b02dbd4d1f7ec5ea2f5a9b56f108213e403e",
-        "revCount": 1,
+        "rev": "9a8b9278de0d884fab04250b5dddbc6c7388a5c2",
+        "revCount": 4,
         "type": "git",
-        "url": "ssh://git@github.com/rskew/harvest-splash-page"
+        "url": "ssh://git@github.com/rskew/harvest-front-page"
       },
       "original": {
         "type": "git",
-        "url": "ssh://git@github.com/rskew/harvest-splash-page"
+        "url": "ssh://git@github.com/rskew/harvest-front-page"
       }
     },
     "home-manager": {
@@ -137,7 +137,7 @@
     },
     "root": {
       "inputs": {
-        "harvest-splash-page": "harvest-splash-page",
+        "harvest-front-page": "harvest-front-page",
         "home-manager": "home-manager",
         "kmonad": "kmonad",
         "nixpkgs": "nixpkgs_3",

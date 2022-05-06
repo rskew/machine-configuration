@@ -24,6 +24,7 @@
   interactiveShellInit = ''
     set -gx PATH $HOME/machine-configuration/scripts $PATH
     set -gx PATH $HOME/bin $PATH
+    set -gx EDITOR vim
     
     alias rm='rm -i'
     

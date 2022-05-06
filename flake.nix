@@ -56,10 +56,10 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     #kmonad.url = "github:kmonad/kmonad?dir=nix";
     kmonad.url = "github:rskew/kmonad?dir=nix";
-    harvest-splash-page.url = "git+ssh://git@github.com/rskew/harvest-splash-page";
+    harvest-front-page.url = "git+ssh://git@github.com/rskew/harvest-front-page";
   };
   outputs =
-    { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad, harvest-splash-page }:
+    { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad, harvest-front-page }:
     let
       pkgs = import nixpkgs {
           system = "x86_64-linux";
@@ -75,15 +75,34 @@
         seaborn
         pyyaml
       ]);
+      staticFileServerModule =
+        { serverRoot, domain, enableACME ? true, ACMEEmail, forceSSL ? true, ... }:
+        {
+          services.nginx.enable = true;
+          services.nginx.virtualHosts.${domain} = {
+            root = serverRoot; enableACME = enableACME; forceSSL = forceSSL;
+          };
+          security.acme.email = if enableACME then ACMEEmail else null;
+          security.acme.acceptTerms = if enableACME then true else false;
+        };
     in
     {
       nixosConfigurations.mammoth3 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs unstable pythonEnv;};
+          specialArgs = {inherit pkgs unstable;};
           modules = [
-            (harvest-splash-page.nixosModule {enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;})
-            ({config, pkgs, unstable, modulesPath, pythonEnv ,...}: {
+            (staticFileServerModule {
+              serverRoot = harvest-front-page.defaultPackage.x86_64-linux.out;
+              domain = "castlemaineharvest.com.au";
+              enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
+            })
+            (staticFileServerModule {
+              serverRoot = harvest-front-page.defaultPackage.x86_64-linux.out;
+              domain = "www.castlemaineharvest.com.au";
+              enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
+            })
+            ({config, pkgs, unstable, modulesPath, ...}: {
               imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
               boot.loader.grub.device = "/dev/vda";
               boot.initrd.kernelModules = [ "nvme" ];
@@ -196,7 +215,7 @@
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
-            ({config, pkgs, unstable, pythonEnv, ...}: {
+            ({config, pkgs, unstable, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
                   ./machines/p14-hardware-configuration.nix
