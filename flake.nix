@@ -166,7 +166,7 @@
               home-manager.users.rowan = {config, ...}: {
                 programs.home-manager.enable = true;
 
-                programs.fish = import ./fish.nix { inherit pkgs; };
+                programs.fish = import ./fish.nix { inherit pkgs; remote = true; };
 
                 programs.vim = {
                   enable = true;

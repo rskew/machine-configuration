@@ -1,16 +1,7 @@
-{ pkgs }:
+{ pkgs, remote ? false}:
 {
   enable = true;
   plugins = [
-    {
-      name = "batman";
-      src = pkgs.fetchFromGitHub {
-        owner = "oh-my-fish";
-        repo = "theme-batman";
-        rev = "2a76bd81f4805debd7f137cb98828bff34570562";
-        sha256 = "Ko4w9tMnIi17db174FzW44LgUdui/bUzPFEHEHv//t4=";
-      };
-    }
     {
       name = "fzf";
       src = pkgs.fetchFromGitHub {
@@ -20,7 +11,17 @@
         sha256 = "28QW/WTLckR4lEfHv6dSotwkAKpNJFCShxmKFGQQ1Ew=";
       };
     }
-  ];
+  ] ++ (if !remote then [{
+      name = "batman";
+      src = pkgs.fetchFromGitHub {
+        owner = "oh-my-fish";
+        repo = "theme-batman";
+        rev = "2a76bd81f4805debd7f137cb98828bff34570562";
+        sha256 = "Ko4w9tMnIi17db174FzW44LgUdui/bUzPFEHEHv//t4=";
+      };
+    }]
+    else []
+  );
   interactiveShellInit = ''
     set -gx PATH $HOME/machine-configuration/scripts $PATH
     set -gx PATH $HOME/bin $PATH
