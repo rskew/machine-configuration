@@ -38,7 +38,7 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
                              --, "--low"      , "green"
                              --, "--normal"   , "orange"
                              --, "--high"     , "red"
-                             ] 1
+                             ] 5
 
         -- cpu core temperature monitor
         , Run CoreTemp       [ "--template" , "<core0>°"
@@ -97,5 +97,5 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
        , sepChar = "%"
        , alignSep = "}{"
        -- <fc=#f000ff>%wifi-ipaddr%</fc> 
-       , template = "%mic_status% %StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
+       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc> %mic_status%"
        }

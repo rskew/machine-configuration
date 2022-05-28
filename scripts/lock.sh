@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 #i3lock -e -t -i /home/rowan/Pictures/cube.png
 i3lock -e -t -i /home/rowan/Pictures/pixel_powerlines.png

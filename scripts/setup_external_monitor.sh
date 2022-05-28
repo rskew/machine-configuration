@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Use `arandr` to find a configuration and generate the script line.
 
-#POSITION_EXT_TO_LAPPY="right-of"
-POSITION_EXT_TO_LAPPY="above"
+POSITION_EXT_TO_LAPPY="right-of"
+#POSITION_EXT_TO_LAPPY="above"
 
 #LAPPY_RES="1920x1080"
 LAPPY_RES="3840x2160"
@@ -23,11 +23,14 @@ elif [ -n "$(echo $DISPLAY_CONNECTED | grep HDMI-2)" ]; then
 
 elif [ -n "$(echo $DISPLAY_CONNECTED | grep DP-2-3)" ]; then
   DISPLAY=:0 xrandr \
-      --output eDP-1 --mode "$LAPPY_RES" --pos 0x2100 \
-      --output "$DISPLAY_CONNECTED" --primary --scale 2 --pos 0x0 --auto
+      --output eDP-1 --mode "$LAPPY_RES" --pos 0x2100 --primary \
+      --output "$DISPLAY_CONNECTED" --scale 2 --pos 0x0 --auto --"$POSITION_EXT_TO_LAPPY" eDP-1
+  #DISPLAY=:0 xrandr \
+  #    --output eDP-1 --mode "$LAPPY_RES" --pos 0x2100 \
+  #    --output "$DISPLAY_CONNECTED" --scale 2 --pos 0x0 --primary
 
 elif [ -n "$DISPLAY_CONNECTED" ]; then
-  DISPLAY=:0 xrandr --output "$DISPLAY_CONNECTED" --auto --"$POSITION_EXT_TO_LAPPY" eDP-1 --primary --output eDP-1 --mode "$LAPPY_RES"
+  DISPLAY=:0 xrandr --output "$DISPLAY_CONNECTED" --"$POSITION_EXT_TO_LAPPY" eDP-1 --primary --output eDP-1 --mode "$LAPPY_RES"
 
 else
   for DISPLAY in DP-1 DP-1-1 DP-2-2 DP-2-3 DVI-I-1-1 DVI-I-2-2 VGA-1 HDMI-1 HDMI-2

@@ -140,6 +140,13 @@
               zramSwap.enable = true;
               services.openssh.enable = true;
               services.openssh.passwordAuthentication = false;
+              # Drop inactive sessions after 1.5 minutes.
+              # This prevents stale sessions from stopping clients
+              # reconnecting with port forwarding.
+              services.openssh.extraConfig = ''
+                ClientAliveInterval 30
+                ClientAliveCountMax 3
+              '';
               users.users.root.openssh.authorizedKeys.keys = [
                 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
               ];
@@ -239,8 +246,15 @@
                 19002 # expo
                 8080 # hasura
                 8089 # hasura
+                8989 # brainwave websocket
+                1234 # parcel
                 8000
               ];
+              networking.firewall.allowedUDPPorts = [
+                3939 # OSC
+              ];
+
+              services.tailscale.enable = true;
 
               time.timeZone = "Australia/Melbourne";
 
@@ -320,7 +334,6 @@
                 libnotify
                 notify-osd
                 imagemagick # for screenshots via the 'import' command
-                unstable.tailscale # for the tailscale CLI
                 rofi # launcher
                 ## work talk
                 unstable.slack
@@ -334,6 +347,7 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
+                 any-nix-shell
               ];
 
               hardware.pulseaudio = {
@@ -365,11 +379,11 @@
               };
 
               # Comment these lines to disable gpu
-              services.xserver.videoDrivers = [ "nvidia" ];
-              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              hardware.nvidia.prime.offload.enable = true;
-              hardware.opengl.enable = true;
+              #services.xserver.videoDrivers = [ "nvidia" ];
+              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              #hardware.nvidia.prime.offload.enable = true;
+              #hardware.opengl.enable = true;
 
               services.logind.lidSwitchDocked = "suspend";
 
@@ -436,6 +450,9 @@
               };
               # This is required for lightdm to prefill username on login
               programs.fish.enable = true;
+              programs.fish.promptInit = ''
+                any-nix-shell fish --info-right | source
+              '';
 
               services.redshift = {
                 enable = true;
@@ -451,7 +468,7 @@
                 description = "Lock screen before sleep";
                 wantedBy = [ "sleep.target" ];
                 before = [ "sleep.target" ];
-                path = [ pkgs.i3lock ];
+                path = [ pkgs.bash pkgs.i3lock ];
                 serviceConfig = {
                   Environment = "DISPLAY=:0";
                   User = "rowan";
@@ -500,6 +517,16 @@
                   };
                   initialize = true;
                 };
+              };
+
+              systemd.services.step-away = {
+                serviceConfig.Type = "oneshot";
+                script = "${pkgs.systemd}/bin/systemctl suspend";
+              };
+              systemd.timers.step-away = {
+                wantedBy = [ "timers.target" ];
+                partOf = [ "step-away.service" ];
+                timerConfig.OnCalendar = "*-*-* 22:00:00";
               };
 
               system.stateVersion = "21.11"; # Did you read the comment?
