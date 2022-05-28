@@ -147,6 +147,8 @@
                 ClientAliveInterval 30
                 ClientAliveCountMax 3
               '';
+              # Don't allow inbound ssh connections from forwarding ports on 0.0.0.0
+              services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [
                 "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
               ];
