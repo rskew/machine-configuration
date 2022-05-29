@@ -69,18 +69,13 @@
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
-      pythonEnv = pkgs.python39.withPackages(ps: with ps; [
-        pandas
-        matplotlib
-        seaborn
-        pyyaml
-      ]);
       staticFileServerModule =
-        { serverRoot, domain, enableACME ? true, ACMEEmail, forceSSL ? true, ... }:
+        { serverRoot, domainWithoutWWW, enableACME ? true, ACMEEmail, forceSSL ? true, ... }:
         {
           services.nginx.enable = true;
-          services.nginx.virtualHosts.${domain} = {
+          services.nginx.virtualHosts.${domainWithoutWWW} = {
             root = serverRoot; enableACME = enableACME; forceSSL = forceSSL;
+            serverAliases = [domainWithoutWWW "www.${domainWithoutWWW}"];
           };
           security.acme.email = if enableACME then ACMEEmail else null;
           security.acme.acceptTerms = if enableACME then true else false;
@@ -94,13 +89,7 @@
           modules = [
             (staticFileServerModule {
               serverRoot = harvest-front-page;
-              domain = "castlemaineharvest.com.au";
-              enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
-            })
-
-            (staticFileServerModule {
-              serverRoot = harvest-front-page;
-              domain = "www.castlemaineharvest.com.au";
+              domainWithoutWWW = "castlemaineharvest.com.au";
               enableACME = true; ACMEEmail = "rowan.skewes@gmail.com"; forceSSL = true;
             })
 
@@ -170,39 +159,14 @@
               };
               networking.hostName = "rowan-mammoth3";
               networking.firewall.allowedTCPPorts = [ 80 443 ];
-
-              environment.systemPackages = with pkgs; [
-                git
-                unstable.emacs
-                ripgrep # for project-wide search in emacs
-                fzf # for reverse history search in fish shell
-                wget
-                bat
-                git
-                tree
-                rxvt_unicode
-                zip
-                unzip
-                nmap
-                gnupg
-                sl
-                htop
-                file
-                iotop
-                jq
-                rclone
-                restic
-                pythonEnv
-              ];
             })
 
             home-manager.nixosModules.home-manager
             ({pkgs, unstable, ...}: {
               home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
               home-manager.users.rowan =
-                {config, ...}:
-                import ./home.nix {inherit config pkgs; isRemote = true;};
+                {config, pkgs, ...}:
+                import ./home.nix {inherit config pkgs unstable; isGraphical = false;};
             })
           ];
         };
@@ -225,7 +189,6 @@
               };
               # Use the systemd-boot EFI boot loader.
               boot.loader.efi.canTouchEfiVariables = true;
-              #boot.kernelPackages = pkgs.linuxPackages_5_17;
               boot.loader.grub = {
                 enable = true;
                 version = 2;
@@ -279,28 +242,9 @@
               virtualisation.docker.enable = true;
 
               environment.systemPackages = with pkgs; [
-                gnome3.dconf # Required for gtk3 configuration
-                git
-                unstable.emacs
-                ripgrep # for project-wide search in emacs
-                fzf # for reverse history search in fish shell
-                wget
-                bat
-                git
-                tree
-                rxvt_unicode
-                zip
-                unzip
-                nmap
-                gnupg
-                sl
-                htop
-                file
-                iotop
-                jq
                 rclone
                 restic
-                pythonEnv
+                rxvt_unicode
                 unstable.picom-next
                 xlibs.xev
                 xlibs.xinput
@@ -349,7 +293,6 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
-                 any-nix-shell
               ];
 
               hardware.pulseaudio = {
@@ -452,9 +395,6 @@
               };
               # This is required for lightdm to prefill username on login
               programs.fish.enable = true;
-              programs.fish.promptInit = ''
-                any-nix-shell fish --info-right | source
-              '';
 
               services.redshift = {
                 enable = true;
@@ -535,15 +475,15 @@
             })
 
             home-manager.nixosModules.home-manager
-            ({pkgs, unstable, ...}: {
+            ({pkgs, unstable, lib, ...}: {
               home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
               home-manager.users.rowan =
                 {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs; isRemote = false;};
+                import ./home.nix {inherit config pkgs unstable; isGraphical = true;};
             })
 
-            kmonad.nixosModule ({...}: {
+            kmonad.nixosModule
+            ({...}: {
               services.kmonad = {
                 enable = true;
                 configfiles = [

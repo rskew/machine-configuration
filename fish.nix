@@ -1,4 +1,4 @@
-{ pkgs, isRemote ? false}:
+{ pkgs, isGraphical }:
 {
   enable = true;
   plugins = [
@@ -11,7 +11,8 @@
         sha256 = "28QW/WTLckR4lEfHv6dSotwkAKpNJFCShxmKFGQQ1Ew=";
       };
     }
-  ] ++ (if !isRemote then [{
+  ] ++ (if !isGraphical then [] else [
+    {
       name = "batman";
       src = pkgs.fetchFromGitHub {
         owner = "oh-my-fish";
@@ -19,20 +20,19 @@
         rev = "2a76bd81f4805debd7f137cb98828bff34570562";
         sha256 = "Ko4w9tMnIi17db174FzW44LgUdui/bUzPFEHEHv//t4=";
       };
-    }]
-    else []
-  );
+    }
+  ]);
   interactiveShellInit = ''
     set -gx PATH $HOME/machine-configuration/scripts $PATH
     set -gx PATH $HOME/bin $PATH
     set -gx EDITOR vim
-    
+
     alias rm='rm -i'
-    
+
     alias cat=bat
-    
+
     alias sl='sl -l'
-    
+
     function fish_user_key_bindings
         for mode in insert default visual
             bind -M $mode \cf forward-char
@@ -41,22 +41,24 @@
             bind -M $mode \cu up-or-search
         end
     end
-    
+
     alias gerp=grep
     alias grpe=grep
-    
+
     set fish_greeting ""
-    
+
     fish_vi_key_bindings
 
     function nix-develop
       nix develop $argv --command fish
     end
 
+    any-nix-shell fish --info-right | source
+
     ####
     #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af
     ####
-    
+
     abbr gst 'git status'
     abbr gd 'git diff'
     abbr gdc 'git diff --cached'
