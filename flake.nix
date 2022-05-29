@@ -79,6 +79,7 @@
           };
           security.acme.email = if enableACME then ACMEEmail else null;
           security.acme.acceptTerms = if enableACME then true else false;
+          networking.firewall.allowedTCPPorts = [ 80 ] ++ (if enableACME then [ 443 ] else []);
         };
     in
     {
@@ -158,7 +159,6 @@
                 ];
               };
               networking.hostName = "rowan-mammoth3";
-              networking.firewall.allowedTCPPorts = [ 80 443 ];
             })
 
             home-manager.nixosModules.home-manager
