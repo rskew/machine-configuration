@@ -122,7 +122,7 @@
 
               users.users.rowan = {
                 isNormalUser = true;
-                extraGroups = [ "wheel" "docker" ];
+                extraGroups = [ "wheel" "docker" "dialout" ];
                 shell = pkgs.fish;
                 openssh.authorizedKeys.keys = [
                   "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
@@ -176,16 +176,18 @@
               networking.hostName = "rowan-p14";
               networking.networkmanager.enable = true;
               networking.firewall.allowedTCPPorts = [
-                19000 # expo
-                19002 # expo
-                8080 # hasura
-                8089 # hasura
-                8989 # brainwave websocket
-                1234 # parcel
+                9222
+                2001
                 8000
+                8001
+                8002
+                8005
+                8181
+                8080
+                19000
+                9999
               ];
               networking.firewall.allowedUDPPorts = [
-                3939 # OSC
               ];
 
               services.tailscale.enable = true;
@@ -241,13 +243,14 @@
                 qbittorrent
                 libreoffice
                 pulsemixer
+                pulseaudio
+                alsa-utils
                 brightnessctl
                 direnv
                 unstable.xournalpp
                 unstable.signal-desktop
                 simplescreenrecorder
                 libnotify
-                notify-osd
                 imagemagick # for screenshots via the 'import' command
                 rofi # launcher
                 ## work talk
@@ -264,10 +267,18 @@
                  '')
               ];
 
-              hardware.pulseaudio = {
+              #hardware.pulseaudio = {
+              #  enable = true;
+              #  package = pkgs.pulseaudioFull;
+              #  extraModules = [ pkgs.pulseaudio-modules-bt ];
+              #};
+              security.rtkit.enable = true;
+              services.pipewire = {
                 enable = true;
-                package = pkgs.pulseaudioFull;
-                extraModules = [ pkgs.pulseaudio-modules-bt ];
+                alsa.enable = true;
+                alsa.support32Bit = true;
+                pulse.enable = true;
+                jack.enable = true;
               };
 
               hardware.bluetooth.enable = true;
@@ -314,6 +325,8 @@
                   mouse.scrollMethod = "button";
                   mouse.scrollButton = 2;
                 };
+                autoRepeatDelay = 200; # milliseconds
+                autoRepeatInterval = 33; # milliseconds
                 desktopManager.xterm.enable = false;
                 xkbOptions = "ctrl:nocaps";
                 windowManager.xmonad = {
@@ -353,13 +366,13 @@
                   ${autocutsel}/bin/autocutsel -fork -selection CLIPBOARD
                   ${autocutsel}/bin/autocutsel -fork -selection PRIMARY
                   ##
-                  ${xautolock}/bin/xautolock -time 10 -locker /home/rowan/machine-configuration/scripts/lock.sh -corners 00-0 &
+                  ${xautolock}/bin/xautolock -time 15 -locker /home/rowan/machine-configuration/scripts/lock.sh -corners 00-0 &
                 '';
               };
 
               users.users.rowan = {
                 isNormalUser = true;
-                extraGroups = [ "wheel" "docker" ];
+                extraGroups = [ "wheel" "docker" "dialout" ];
                 shell = pkgs.fish;
               };
               # This is required for lightdm to prefill username on login
@@ -428,16 +441,6 @@
                   };
                   initialize = true;
                 };
-              };
-
-              systemd.services.step-away = {
-                serviceConfig.Type = "oneshot";
-                script = "${pkgs.systemd}/bin/systemctl suspend";
-              };
-              systemd.timers.step-away = {
-                wantedBy = [ "timers.target" ];
-                partOf = [ "step-away.service" ];
-                timerConfig.OnCalendar = "*-*-* 22:00:00";
               };
 
               system.stateVersion = "21.11"; # Did you read the comment?

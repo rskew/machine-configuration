@@ -70,4 +70,25 @@ in {
       size = 40; # make cursor big for hi-res monitor
     };
   };
+
+  services.dunst = {
+    enable = true;
+    settings = {
+      global = {
+        width = 600;
+        height = 600;
+        offset = "30x50";
+        origin = "top-right";
+        transparency = 10;
+        frame_color = "#eceff1";
+        font = "Droid Sans 26";
+      };
+
+      urgency_normal = {
+        background = "#37474f";
+        foreground = "#eceff1";
+        timeout = 3;
+      };
+    };
+  };
 }
