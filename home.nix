@@ -49,7 +49,9 @@ in {
     jq
     pythonEnv
     any-nix-shell
-    gnome3.dconf # Required for gtk3 configuration
+    dconf # Required for gtk3 configuration
+    byobu
+    tmux
   ];
 
   # dotfiles

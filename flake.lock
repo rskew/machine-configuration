@@ -15,6 +15,26 @@
         "type": "github"
       }
     },
+    "harvest-admin-app": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-old": "nixpkgs-old",
+        "spago2nixSource": "spago2nixSource"
+      },
+      "locked": {
+        "lastModified": 1662464150,
+        "narHash": "sha256-j1sjorldmw/MR/9060panNHgiUW2nuH8keA5GEcjCrg=",
+        "ref": "master",
+        "rev": "6f7d144fe0bdc4b76ae18e16456eaef6a05cb74e",
+        "revCount": 49,
+        "type": "git",
+        "url": "ssh://git@github.com/rskew/greengrocer-admin-app.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rskew/greengrocer-admin-app.git"
+      }
+    },
     "harvest-front-page": {
       "flake": false,
       "locked": {
@@ -54,7 +74,7 @@
     "kmonad": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "dir": "nix",
@@ -74,16 +94,31 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1632418649,
-        "narHash": "sha256-4rZspkiQU7zbsuciRRMgoEPkAF/+FSv2jx/VIPxPVx4=",
+        "lastModified": 1662099760,
+        "narHash": "sha256-MdZLCTJPeHi/9fg6R9fiunyDwP3XHJqDd51zWWz9px0=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "056a3c1fae30d06d14b171b9023743c21a23ec1a",
+        "rev": "67e45078141102f45eff1589a831aeaa3182b41e",
         "type": "github"
       },
       "original": {
         "id": "nixpkgs",
-        "ref": "nixos-21.05",
+        "ref": "nixos-22.05",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs-old": {
+      "locked": {
+        "lastModified": 1659446231,
+        "narHash": "sha256-hekabNdTdgR/iLsgce5TGWmfIDZ86qjPhxDg/8TlzhE=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "eabc38219184cc3e04a974fe31857d8e0eac098d",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-21.11",
         "type": "indirect"
       }
     },
@@ -105,27 +140,59 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1651310835,
-        "narHash": "sha256-MLk/zsLlbPhwFucxL64Fr+oIrvQC2/76Ap2F7ekbPNI=",
+        "lastModified": 1632418649,
+        "narHash": "sha256-4rZspkiQU7zbsuciRRMgoEPkAF/+FSv2jx/VIPxPVx4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "056a3c1fae30d06d14b171b9023743c21a23ec1a",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-21.05",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1662099760,
+        "narHash": "sha256-MdZLCTJPeHi/9fg6R9fiunyDwP3XHJqDd51zWWz9px0=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "fd3e33d696b81e76b30160dfad2efb7ac1f19879",
+        "rev": "67e45078141102f45eff1589a831aeaa3182b41e",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixos-21.11",
+        "ref": "nixos-22.05",
         "repo": "nixpkgs",
         "type": "github"
       }
     },
     "root": {
       "inputs": {
+        "harvest-admin-app": "harvest-admin-app",
         "harvest-front-page": "harvest-front-page",
         "home-manager": "home-manager",
         "kmonad": "kmonad",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "nixpkgs-unstable": "nixpkgs-unstable"
+      }
+    },
+    "spago2nixSource": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1641236534,
+        "narHash": "sha256-a5cBQdkFg98NC8mpKzfVm5Iv2DtMSLlr9IclWp5D8mI=",
+        "owner": "justinwoo",
+        "repo": "spago2nix",
+        "rev": "1c834738a8216a4c89d9defac9bf1c331d302a6a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "justinwoo",
+        "repo": "spago2nix",
+        "type": "github"
       }
     }
   },
