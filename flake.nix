@@ -52,16 +52,19 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-22.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    #home-manager.url = "github:nix-community/home-manager";
+    home-manager.url = "github:nix-community/home-manager/release-22.05";
+    #home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
     #kmonad.url = "github:kmonad/kmonad?dir=nix";
     kmonad.url = "github:rskew/kmonad?dir=nix";
     harvest-front-page = {url = "github:rskew/harvest-front-page"; flake = false;};
     #admin-app.url = "/home/rowan/admin-app-eftpos-controller";
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
+    coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
   };
   outputs =
-    { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad, harvest-front-page, harvest-admin-app }:
+    { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad, harvest-front-page, harvest-admin-app, coolroom-monitor }:
     let
       pkgs = import nixpkgs {
           system = "x86_64-linux";
@@ -256,6 +259,28 @@
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
+
+            home-manager.nixosModules.home-manager
+            ({pkgs, unstable, lib, ...}: {
+              home-manager.useGlobalPkgs = true;
+              home-manager.users.rowan =
+                {config, pkgs, ...}:
+                import ./home.nix {inherit config pkgs unstable; isGraphical = true;};
+            })
+
+            kmonad.nixosModule
+            ({...}: {
+              services.kmonad = {
+                enable = true;
+                configfiles = [
+                  "/etc/kmonad/config.kbd"
+                  "/etc/kmonad/tex-config.kbd"
+                ];
+                package = kmonad.packages.x86_64-linux.kmonad;
+                make-group = false;
+              };
+            })
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
@@ -324,15 +349,18 @@
 
               virtualisation.docker.enable = true;
 
+              virtualisation.virtualbox.host.enable = true;
+
               environment.systemPackages = with pkgs; [
+                gping
                 rclone
                 restic
                 rxvt_unicode
                 unstable.picom-next
-                xlibs.xev
-                xlibs.xinput
-                xlibs.xmessage
-                firefox
+                xorg.xev
+                xorg.xinput
+                xorg.xmessage
+                unstable.firefox
                 i3lock
                 trayer
                 networkmanagerapplet
@@ -349,7 +377,7 @@
                 bashmount
                 filelight
                 docker
-                docker_compose
+                docker-compose
                 openvpn
                 glxinfo
                 qbittorrent
@@ -490,9 +518,7 @@
               # This is required for lightdm to prefill username on login
               programs.fish.enable = true;
 
-              services.redshift = {
-                enable = true;
-              };
+              services.redshift.enable = true;
               # Used by redshift
               location = {
                 # Melbourne
@@ -556,27 +582,6 @@
               };
 
               system.stateVersion = "21.11"; # Did you read the comment?
-            })
-
-            home-manager.nixosModules.home-manager
-            ({pkgs, unstable, lib, ...}: {
-              home-manager.useGlobalPkgs = true;
-              home-manager.users.rowan =
-                {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable; isGraphical = true;};
-            })
-
-            kmonad.nixosModule
-            ({...}: {
-              services.kmonad = {
-                enable = true;
-                configfiles = [
-                  "/etc/kmonad/config.kbd"
-                  "/etc/kmonad/tex-config.kbd"
-                ];
-                package = kmonad.packages.x86_64-linux.kmonad;
-                make-group = false;
-              };
             })
           ];
       };

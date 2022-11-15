@@ -64,14 +64,14 @@ in {
   home.file.".xmobarrc".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmobarrc";
   home.file.".Xresources".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xresources";
 
-  gtk = {
-    enable = true;
-    font.name = "Sans 20"; # make firefox font big for hi-res monitor
-    cursorTheme = {
-      name = "Adwaita";
-      size = 40; # make cursor big for hi-res monitor
-    };
-  };
+  #gtk = {
+  #  enable = true;
+  #  font.name = "Sans 16"; # make firefox font big for hi-res monitor
+  #  cursorTheme = {
+  #    name = "Adwaita";
+  #    size = 40; # make cursor big for hi-res monitor
+  #  };
+  #};
 
   services.dunst = {
     enable = true;

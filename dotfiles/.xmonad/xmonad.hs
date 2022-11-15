@@ -36,7 +36,7 @@ myWorkspaces = [ (xK_quoteleft, "~")
 
 main = do
   xmproc <- spawnPipe "xmobar /home/rowan/machine-configuration/dotfiles/.xmobarrc"
-  xmonad $ withUrgencyHook NoUrgencyHook $ docks defaultConfig
+  xmonad $ withUrgencyHook NoUrgencyHook $ docks $ ewmhFullscreen $ def
       { modMask            = mod1Mask
       , borderWidth        = 1
       , terminal           = "urxvt -cd \"$PWD\""
@@ -46,8 +46,7 @@ main = do
       , manageHook = mWManager
       , layoutHook = mkToggle (single NBFULL) $ avoidStruts
                                               $ spacingWithEdge windowGap
-                                              $ layoutHook defaultConfig
-      , handleEventHook = fullscreenEventHook
+                                              $ layoutHook def
       , startupHook = do
           setWMName "LG3D"
       , logHook = dynamicLogWithPP xmobarPP
@@ -102,7 +101,7 @@ nonKeys =
 
 mWManager :: ManageHook
 mWManager = composeAll . concat $
-            [ [manageHook defaultConfig]
+            [ [manageHook def]
             , [manageSpawn]
             , [manageDocks]
             -- Below gets chrome_app_list to properly float

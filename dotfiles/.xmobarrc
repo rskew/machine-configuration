@@ -93,9 +93,10 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
         , Run StdinReader
         , Run Com "bash" ["-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv | tail -n1 | tr -d '[:space:]'"] "gpu" 10
         , Run Com "bash" ["-c", "if [ -n \"$(pactl list source-outputs)\" ]; then if [ -z \"$(amixer sget Capture | grep off )\" ]; then echo '<fc=#000,#0f0> <icon=material_mic.xbm/> </fc>'; else echo ' <icon=material_mic_off.xbm/> '; fi; fi"] "mic_status" 1
+        , Run DiskIO [("/", "<read>↑<write>↓")] [ "-w", "4" ] 10
         ]
        , sepChar = "%"
        , alignSep = "}{"
        -- <fc=#f000ff>%wifi-ipaddr%</fc> 
-       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc> %mic_status%"
+       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %diskio% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc> %mic_status%"
        }
