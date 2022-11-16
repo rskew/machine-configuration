@@ -90,7 +90,19 @@
                 root = harvest-front-page; enableACME = true; forceSSL = true;
                 serverAliases = ["castlemaineharvest.com.au" "www.castlemaineharvest.com.au"];
               };
-              security.acme.email = "rowan.skewes@gmail.com";
+              services.nginx.virtualHosts."coolroom.castlemaineharvest.com.au" = {
+                enableACME = true;
+                forceSSL = true;
+                locations."/".proxyPass = "http://127.0.0.1:3000/";
+                serverAliases = ["www.coolroom.castlemaineharvest.com.au"];
+              };
+              services.nginx.virtualHosts."coolroom-sensor.castlemaineharvest.com.au" = {
+                enableACME = true;
+                forceSSL = true;
+                locations."/".proxyPass = "http://127.0.0.1:8086/";
+              };
+              services.nginx.recommendedProxySettings = true;
+              security.acme.defaults.email = "rowan.skewes@gmail.com";
               security.acme.acceptTerms = true;
               networking.firewall.allowedTCPPorts = [ 80 443 ];
             })
