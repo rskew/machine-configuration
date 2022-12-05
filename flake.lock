@@ -56,11 +56,11 @@
     "harvest-front-page": {
       "flake": false,
       "locked": {
-        "lastModified": 1651843239,
-        "narHash": "sha256-VzOjgVib/jkPYqWBJAtmibsOFH7NfyE/H6kPE77hE7A=",
+        "lastModified": 1670237994,
+        "narHash": "sha256-s+hPAhBy+a30njvZBF6nffHJZ3HsyqDcn/OMcf66aGw=",
         "owner": "rskew",
         "repo": "harvest-front-page",
-        "rev": "9affa967b3ae6a63acb138ab31c3e5e3c55d504d",
+        "rev": "4a9ec1df5360eaba063ce233cedc0bc52009a008",
         "type": "github"
       },
       "original": {
