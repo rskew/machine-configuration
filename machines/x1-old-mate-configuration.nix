@@ -57,8 +57,8 @@
   systemd.services.ssh-tunnel = import ../persistent-ssh-tunnel.nix {
     inherit pkgs;
     local-port = "22";
-    remote-ip = "103.236.163.87";
-    remote-port = "8822";
+    remote-ip = "45.124.52.135";
+    remote-port = "6622";
     remote-user = "rowan";
     id-file = "/home/rowan/.ssh/id_ed25519_mammoth";
     known-hosts-line = "103.236.163.87 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIk/U6LB/hjlBCWtJqHZgKnzOQmmOw4GKntvvdrYYYGLdDoFZomYXwbEWexU/IHR5PiNIU4RuVSXdoPxGVU9YPg=";
@@ -79,12 +79,6 @@
 
   nix.trustedUsers = [ "root" "rowan" ];
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "20.03"; # Did you read the comment?
 
   hardware.bluetooth.enable = false;

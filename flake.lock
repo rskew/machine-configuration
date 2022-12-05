@@ -1,24 +1,57 @@
 {
   "nodes": {
+    "agenix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1665870395,
+        "narHash": "sha256-Tsbqb27LDNxOoPLh0gw2hIb6L/6Ow/6lIBvqcHzEKBI=",
+        "owner": "ryantm",
+        "repo": "agenix",
+        "rev": "a630400067c6d03c9b3e0455347dc8559db14288",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ryantm",
+        "repo": "agenix",
+        "type": "github"
+      }
+    },
     "coolroom-monitor": {
       "inputs": {
+        "nix-rebar3": "nix-rebar3",
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1668518132,
-        "narHash": "sha256-ptmHIrOPUrmlPn7DsSTiuaWsqr2SJv199aH9YWJv1sM=",
-        "ref": "master",
-        "rev": "d38d6c2b39d4dfe2af0ddf06196b99d78f2060b7",
-        "revCount": 1,
+        "lastModified": 1668782599,
+        "narHash": "sha256-Ka3inkLhH+iAy2EMWhPeXHt9tiByIue92Q2eIKXbjqU=",
         "type": "git",
-        "url": "ssh://git@github.com/rskew/coolroom-monitor.git"
+        "url": "file:///home/rowan/harvest/coolroom-monitor"
       },
       "original": {
         "type": "git",
-        "url": "ssh://git@github.com/rskew/coolroom-monitor.git"
+        "url": "file:///home/rowan/harvest/coolroom-monitor"
       }
     },
     "flake-utils": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flake-utils_2": {
       "locked": {
         "lastModified": 1631561581,
         "narHash": "sha256-3VQMV5zvxaVLvqqUrNz3iJelLw30mIVSfZmAaauM3dA=",
@@ -92,7 +125,7 @@
     },
     "kmonad": {
       "inputs": {
-        "flake-utils": "flake-utils",
+        "flake-utils": "flake-utils_2",
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
@@ -108,6 +141,28 @@
         "dir": "nix",
         "owner": "rskew",
         "repo": "kmonad",
+        "type": "github"
+      }
+    },
+    "nix-rebar3": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": [
+          "coolroom-monitor",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1668516809,
+        "narHash": "sha256-amqFlz04lw88XRtbRTQe5XSDHHUV0Wf1zDtIQ6XNhM8=",
+        "owner": "axelf4",
+        "repo": "nix-rebar3",
+        "rev": "a9eeef712bcaf1f01cf47cdef24260d7137d79d2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "axelf4",
+        "repo": "nix-rebar3",
         "type": "github"
       }
     },
@@ -205,6 +260,7 @@
     },
     "root": {
       "inputs": {
+        "agenix": "agenix",
         "coolroom-monitor": "coolroom-monitor",
         "harvest-admin-app": "harvest-admin-app",
         "harvest-front-page": "harvest-front-page",

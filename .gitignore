@@ -1,6 +1,5 @@
 hardware-configuration.nix
 *.swp
-secrets
 cachix
 cachix.nix
 configuration.nix

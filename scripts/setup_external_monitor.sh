@@ -16,7 +16,7 @@ if [ -n "$(echo $DISPLAY_CONNECTED | grep VGA-1)" ]; then
   DISPLAY=:0 xrandr --output VGA-1 --auto --"$POSITION_EXT_TO_LAPPY" eDP-1 --primary --output eDP-1 --mode "$LAPPY_RES"
 
 elif [ -n "$(echo $DISPLAY_CONNECTED | grep HDMI-1)" ]; then
-  DISPLAY=:0 xrandr --output eDP-1 --rotate normal --output HDMI-1 --primary --mode 1680x1050 --rotate normal --"$POSITION_EXT_TO_LAPPY" eDP-1 --output eDP-1 --mode "$LAPPY_RES"
+  DISPLAY=:0 xrandr --output eDP-1 --rotate normal --output HDMI-1 --mode 1920x1200 --scale 2 --rotate normal --auto --"$POSITION_EXT_TO_LAPPY" eDP-1 --output eDP-1 --mode "$LAPPY_RES" --primary
 
 elif [ -n "$(echo $DISPLAY_CONNECTED | grep HDMI-2)" ]; then
   DISPLAY=:0 xrandr --output eDP-1 --rotate normal --output HDMI-2 --primary --mode 1920x1080 --rotate normal --"$POSITION_EXT_TO_LAPPY" eDP-1 --ouptut eDP-1 --mode "$LAPPY_RES"
