@@ -61,13 +61,25 @@
     harvest-front-page = {url = "github:rskew/harvest-front-page"; flake = false;};
     #admin-app.url = "/home/rowan/admin-app-eftpos-controller";
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
-    #coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
-    coolroom-monitor.url = "/home/rowan/harvest/coolroom-monitor";
+    coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
+    #coolroom-monitor.url = "/home/rowan/harvest/coolroom-monitor";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
+    autofarm.url = "github:rskew/autofarm";
+    #autofarm.url = "/home/rowan/projects/autofarm";
   };
   outputs =
-    { self, nixpkgs, nixpkgs-unstable, home-manager, kmonad, harvest-front-page, harvest-admin-app, coolroom-monitor, agenix }:
+    { self,
+      nixpkgs,
+      nixpkgs-unstable,
+      home-manager,
+      kmonad,
+      harvest-front-page,
+      harvest-admin-app,
+      coolroom-monitor,
+      agenix,
+      autofarm,
+    }:
     let
       pkgs = import nixpkgs {
           system = "x86_64-linux";
@@ -131,7 +143,7 @@
               # Don't allow inbound ssh connections from forwarding ports on 0.0.0.0
               services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [
-                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean" # id_ed25519_mammoth.pub
               ];
 
               nix = {
@@ -146,7 +158,8 @@
                 extraGroups = [ "wheel" "docker" "dialout" ];
                 shell = pkgs.fish;
                 openssh.authorizedKeys.keys = [
-                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
+                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean" # id_ed25519_mammoth.pub
+                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14" # id_to_deploy_to_servers1.pub
                 ];
               };
               system.stateVersion = "22.05";
@@ -201,7 +214,7 @@
               # Don't allow inbound ssh connections from forwarding ports on 0.0.0.0
               services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [
-                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14" # id_to_deploy_to_servers1.pub
               ];
 
               nix = {
@@ -216,7 +229,7 @@
                 extraGroups = [ "wheel" "docker" "dialout" ];
                 shell = pkgs.fish;
                 openssh.authorizedKeys.keys = [
-                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"
+                  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean" # id_ed25519_mammoth.pub
                 ];
               };
               system.stateVersion = "22.05";
@@ -319,6 +332,7 @@
                 ];
                 openssh.authorizedKeys.keys = [
                     "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3oUx8oe0xQDKP9sw602ku4wOhP9AKLXNsGDARyLdw+MbBzGJTNFUvh6fj77fWYTqHlDnrfgoBlc5mS0uY9KUP/28PjfyqdIkGdhbfE403+vp4a1JMAnVv7xV6n3PYtiUYIF5hwCSzeiibIhQsCTsJGtMoiECdRpOvqCD11m6kTA1j5xlajEnvnNg7k7W+MaZWaqeuvEn0Vi7tu+Ia6xvnfkKwph9VpVuMsTrAy0y36pSpglax2yKEV53lt8ZGnasJiOu2fv2yT6np9qGizU2I8ccC5G9nNCkYHJsE2q1ogjdltva6oexCOJzLwMVZCC6UVTHej0494ipY35JSJmh3TW6oG8ddhdUdurPQNaw/w5tiUZwEG3640Ts3TbIJ0sagi1+l5TBRpW7wsgU8VbTyBvsMszXj46xri4jleESPVjr820CRnt27l2Dt/DGpdZHvhbB3endb0NkEqfMb/44SP6mXceT10GIBiCl110/7n7qehXyr1qt88VZ6QVbige9ts9NVkoNYkBrxaHq4ooa8IV9leO52m0X7BLDYSEUYBMFWx3lc7vbyvCV382gsfTQA/CtBHmEUTlljSQS7ZDOXwiSZYXeDKtafDTRNBrWr3HikgjnqMK2OjLU/y3nyoVtE9FzLANWuxwhJIld9S44QWZA82LsnrW/hQfXp7Y4VyQ== rowan@rowanX220"
+                    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean" # id_ed25519_mammoth.pub
                 ];
                 shell = pkgs.fish;
               };
@@ -347,31 +361,36 @@
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
+
+            autofarm.nixosModule
+            ({config, ...}: {
+              services.autofarm = {
+                deviceListenerPort = 9222;
+                ecronServerEcrontab = "/home/rowan/.autofarm/ecrontab";
+                frontendServerBasicAuthCredentialsFile = config.age.secrets."autofarm-frontend-server-basic-auth-credentials".path;
+              };
+            })
+            agenix.nixosModule
+            ({...}: {
+              age.secrets."autofarm-frontend-server-basic-auth-credentials".file = ./secrets/autofarm-frontend-server-basic-auth-credentials.age;
+              age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
+            })
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [./machines/farm-server-digital-hardware-configuration.nix
                 ];
               networking.hostName = "farm-server-digital";
-
               networking.networkmanager.enable = true;
-
-              # This machine is not on the public internet
-              networking.firewall.allowedTCPPorts = [
-                9222 # Farm device manager
-                80 # Farm admin app
-                3000 # Grafana
-              ];
+              networking.useDHCP = false;
+              networking.interfaces.enp3s0.useDHCP = true;
 
               # Use the systemd-boot EFI boot loader.
               boot.loader.systemd-boot.enable = true;
               boot.loader.efi.canTouchEfiVariables = true;
 
-              networking.useDHCP = false;
-              networking.interfaces.enp3s0.useDHCP = true;
-
               # Select internationalisation properties.
               i18n.defaultLocale = "en_AU.UTF-8";
-
               # Set your time zone.
               time.timeZone = "Australia/Melbourne";
 
@@ -388,7 +407,7 @@
                 remote-port = "7722";
                 remote-ip = jump-box-ip;
                 remote-user = "rowan";
-                id-file = "/home/rowan/.ssh/id_ed25519_mammoth";
+                id-file = "/home/rowan/.ssh/id_to_deploy_to_servers1";
                 known-hosts-line = jump-box-known-hosts-line;
               };
 
@@ -401,6 +420,7 @@
                 ];
                 openssh.authorizedKeys.keys = [
                     "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3oUx8oe0xQDKP9sw602ku4wOhP9AKLXNsGDARyLdw+MbBzGJTNFUvh6fj77fWYTqHlDnrfgoBlc5mS0uY9KUP/28PjfyqdIkGdhbfE403+vp4a1JMAnVv7xV6n3PYtiUYIF5hwCSzeiibIhQsCTsJGtMoiECdRpOvqCD11m6kTA1j5xlajEnvnNg7k7W+MaZWaqeuvEn0Vi7tu+Ia6xvnfkKwph9VpVuMsTrAy0y36pSpglax2yKEV53lt8ZGnasJiOu2fv2yT6np9qGizU2I8ccC5G9nNCkYHJsE2q1ogjdltva6oexCOJzLwMVZCC6UVTHej0494ipY35JSJmh3TW6oG8ddhdUdurPQNaw/w5tiUZwEG3640Ts3TbIJ0sagi1+l5TBRpW7wsgU8VbTyBvsMszXj46xri4jleESPVjr820CRnt27l2Dt/DGpdZHvhbB3endb0NkEqfMb/44SP6mXceT10GIBiCl110/7n7qehXyr1qt88VZ6QVbige9ts9NVkoNYkBrxaHq4ooa8IV9leO52m0X7BLDYSEUYBMFWx3lc7vbyvCV382gsfTQA/CtBHmEUTlljSQS7ZDOXwiSZYXeDKtafDTRNBrWr3HikgjnqMK2OjLU/y3nyoVtE9FzLANWuxwhJIld9S44QWZA82LsnrW/hQfXp7Y4VyQ== rowan@rowanX220"
+                    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean" # id_ed25519_mammoth.pub
                 ];
                 shell = pkgs.fish;
               };
@@ -583,6 +603,7 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
+                agenix.defaultPackage.${system}
               ];
 
               security.rtkit.enable = true;

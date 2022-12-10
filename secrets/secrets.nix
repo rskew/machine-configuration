@@ -5,4 +5,5 @@ let
 in
 {
   "coolroom-monitor-relay-sys.config.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
+  "autofarm-frontend-server-basic-auth-credentials.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
 }
