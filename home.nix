@@ -52,6 +52,7 @@ in {
     dconf # Required for gtk3 configuration
     byobu
     tmux
+    rxvt_unicode
   ];
 
   # dotfiles
