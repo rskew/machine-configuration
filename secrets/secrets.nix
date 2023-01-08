@@ -4,6 +4,6 @@ let
   id-to-deploy-to-servers = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14";
 in
 {
-  "coolroom-monitor-relay-sys.config.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
+  "coolroom-monitor-influxdb-password.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
   "autofarm-frontend-server-basic-auth-credentials.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
 }

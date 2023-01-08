@@ -519,7 +519,7 @@
               networking.firewall.allowedTCPPorts = [
                 2001
                 8181
-                9222 # autofarm device_monitor
+                9222 # autofarm device_monitor dev
               ];
               networking.firewall.allowedUDPPorts = [
                 8085 # coolroom_monitor relay
