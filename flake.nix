@@ -59,7 +59,6 @@
     #kmonad.url = "github:kmonad/kmonad?dir=nix";
     kmonad.url = "github:rskew/kmonad?dir=nix";
     harvest-front-page = {url = "github:rskew/harvest-front-page"; flake = false;};
-    #admin-app.url = "/home/rowan/admin-app-eftpos-controller";
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
     coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
     #coolroom-monitor.url = "/home/rowan/harvest/coolroom-monitor";
@@ -252,6 +251,20 @@
           modules = [
 
             harvest-admin-app.nixosModules.admin-app-services
+            #({config, pkgs, unstable, ...}: {
+            #  networking.firewall.allowedTCPPorts = [8005];
+            #})
+
+            coolroom-monitor.nixosModules.coolroom-monitor-relay
+            ({config, ...}: {
+              services.coolroom-monitor-relay.influxdb-password-file = config.age.secrets."coolroom-monitor-influxdb-password".path;
+            })
+
+            agenix.nixosModule
+            ({...}: {
+              age.secrets."coolroom-monitor-influxdb-password".file = ./secrets/coolroom-monitor-influxdb-password.age;
+              age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
+            })
 
             ({config, pkgs, unstable, ...}: {
 
@@ -267,6 +280,7 @@
               networking.firewall.allowedTCPPorts = [
                 8080 # Hasura
                 80 443 # test admin app
+                8005
               ];
 
               virtualisation.docker.enable = true;
@@ -451,18 +465,6 @@
           modules = [
 
             agenix.nixosModule
-            ({...}: {
-              age.secrets."coolroom-monitor-relay-sys.config".file = ./secrets/coolroom-monitor-relay-sys.config.age;
-              age.identityPaths = [ "/home/rowan/.ssh/id_ed25519_mammoth" ];
-            })
-
-            coolroom-monitor.nixosModules.coolroom-monitor-relay
-            ({config, ...}: {
-              services.coolroom-monitor-relay = {
-                sys-config = config.age.secrets."coolroom-monitor-relay-sys.config".path;
-                udp-port = 8085;
-              };
-            })
 
             home-manager.nixosModules.home-manager
             ({pkgs, unstable, lib, ...}: {
@@ -517,12 +519,11 @@
               networking.hostName = "rowan-p14";
               networking.networkmanager.enable = true;
               networking.firewall.allowedTCPPorts = [
-                2001
-                8181
+                2001 # notify-send server
                 9222 # autofarm device_monitor dev
               ];
               networking.firewall.allowedUDPPorts = [
-                8085 # coolroom_monitor relay
+                8085 # coolroom_monitor relay dev
               ];
 
               services.tailscale.enable = true;

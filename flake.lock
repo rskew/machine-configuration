@@ -42,20 +42,38 @@
     "coolroom-monitor": {
       "inputs": {
         "nix-rebar3": "nix-rebar3_2",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "nixpkgs-purerl": "nixpkgs-purerl",
+        "spago2nix": "spago2nix"
       },
       "locked": {
-        "lastModified": 1669064154,
-        "narHash": "sha256-qvn6QFaR4njJ2oIYOQosCsPRPIogxMaGM1y7tXl+PVU=",
+        "lastModified": 1673175025,
+        "narHash": "sha256-iP4okTDonrQV/SmhLsD/vXw01aD9m3WcO9QuqQ2XQjM=",
         "ref": "master",
-        "rev": "853091c5adf07f8fea7657ee977320317af5fcef",
-        "revCount": 3,
+        "rev": "60aa4a21831f318e76bdfa43da6f51cf1e46a95a",
+        "revCount": 8,
         "type": "git",
         "url": "ssh://git@github.com/rskew/coolroom-monitor.git"
       },
       "original": {
         "type": "git",
         "url": "ssh://git@github.com/rskew/coolroom-monitor.git"
+      }
+    },
+    "easy-purescript-nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1670198178,
+        "narHash": "sha256-5KkyNpPakv4xIP2ba0S5GX+dcmd3AcO9kPhwa482BbA=",
+        "owner": "justinwoo",
+        "repo": "easy-purescript-nix",
+        "rev": "7a4cb3cd6ca53566ea1675692eab0aa13907ff09",
+        "type": "github"
+      },
+      "original": {
+        "owner": "justinwoo",
+        "repo": "easy-purescript-nix",
+        "type": "github"
       }
     },
     "flake-utils": {
@@ -89,6 +107,36 @@
       }
     },
     "flake-utils_3": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flake-utils_4": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flake-utils_5": {
       "locked": {
         "lastModified": 1631561581,
         "narHash": "sha256-3VQMV5zvxaVLvqqUrNz3iJelLw30mIVSfZmAaauM3dA=",
@@ -162,7 +210,7 @@
     },
     "kmonad": {
       "inputs": {
-        "flake-utils": "flake-utils_3",
+        "flake-utils": "flake-utils_5",
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
@@ -212,15 +260,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1668516809,
-        "narHash": "sha256-amqFlz04lw88XRtbRTQe5XSDHHUV0Wf1zDtIQ6XNhM8=",
-        "owner": "axelf4",
+        "lastModified": 1673167847,
+        "narHash": "sha256-LjCFq4Zq4Qww/yY9TUDQJ457ukkaplIKxSamVXSdzrk=",
+        "owner": "rskew",
         "repo": "nix-rebar3",
-        "rev": "a9eeef712bcaf1f01cf47cdef24260d7137d79d2",
+        "rev": "5eed2d4f97c1f9d9a801e6408dae1e6ebd1f168e",
         "type": "github"
       },
       "original": {
-        "owner": "axelf4",
+        "owner": "rskew",
         "repo": "nix-rebar3",
         "type": "github"
       }
@@ -255,6 +303,28 @@
         "type": "indirect"
       }
     },
+    "nixpkgs-purerl": {
+      "inputs": {
+        "flake-utils": "flake-utils_3",
+        "nixpkgs": [
+          "coolroom-monitor",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1673167500,
+        "narHash": "sha256-TnkOx+gy6Nh608oseqoFYqmNnpkspCbK67UyuuyxvL4=",
+        "owner": "rskew",
+        "repo": "nixpkgs-purerl",
+        "rev": "b8e316e9458f79ccbb71a1fbd2d99e7ab504836b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rskew",
+        "repo": "nixpkgs-purerl",
+        "type": "github"
+      }
+    },
     "nixpkgs-unstable": {
       "locked": {
         "lastModified": 1666109165,
@@ -273,16 +343,16 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1668281765,
-        "narHash": "sha256-6Tuj9CZ9HacMk7FJ8sF9XSVTBnUhVzlSY40Jo1krIaQ=",
+        "lastModified": 1672844754,
+        "narHash": "sha256-o26WabuHABQsaHxxmIrR3AQRqDFUEdLckLXkVCpIjSU=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "c5091eec689acc45d4d818109236da31d3685ca2",
+        "rev": "e9ade2c8240e00a4784fac282a502efff2786bdc",
         "type": "github"
       },
       "original": {
         "id": "nixpkgs",
-        "ref": "nixos-22.05",
+        "ref": "nixos-22.11",
         "type": "indirect"
       }
     },
@@ -343,6 +413,29 @@
         "kmonad": "kmonad",
         "nixpkgs": "nixpkgs_5",
         "nixpkgs-unstable": "nixpkgs-unstable"
+      }
+    },
+    "spago2nix": {
+      "inputs": {
+        "easy-purescript-nix": "easy-purescript-nix",
+        "flake-utils": "flake-utils_4",
+        "nixpkgs": [
+          "coolroom-monitor",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1671225584,
+        "narHash": "sha256-h9r67pmvDuA3TV9299L4CN60XSm8RRtX1EwUoKu9Pyw=",
+        "owner": "justinwoo",
+        "repo": "spago2nix",
+        "rev": "1b8ec352bc7eac077b934d6b9f6efa0129926e59",
+        "type": "github"
+      },
+      "original": {
+        "owner": "justinwoo",
+        "repo": "spago2nix",
+        "type": "github"
       }
     },
     "spago2nixSource": {
