@@ -50,22 +50,18 @@
 
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-22.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-22.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    #home-manager.url = "github:nix-community/home-manager";
-    home-manager.url = "github:nix-community/home-manager/release-22.05";
-    #home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager/release-22.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    #kmonad.url = "github:kmonad/kmonad?dir=nix";
     kmonad.url = "github:rskew/kmonad?dir=nix";
-    harvest-front-page = {url = "github:rskew/harvest-front-page"; flake = false;};
+    harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
     coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
-    #coolroom-monitor.url = "/home/rowan/harvest/coolroom-monitor";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
-    #autofarm.url = "/home/rowan/projects/autofarm";
+    notification-server.url = "git+ssh://git@github.com/rskew/notification-server.git";
   };
   outputs =
     { self,
@@ -78,6 +74,7 @@
       coolroom-monitor,
       agenix,
       autofarm,
+      notification-server,
     }:
     let
       pkgs = import nixpkgs {
@@ -88,7 +85,7 @@
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
-      jump-box-ip = "45.124.52.135"; # Mammoth vps
+      jump-box-ip = "45.124.52.135";
       jump-box-known-hosts-line = "45.124.52.135 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJehgSBLKF43klph+tEMBGxYt0+P/6cL/eMdvLlR4Kad";
     in
     {
@@ -463,6 +460,11 @@
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
+
+            notification-server.nixosModule
+            ({...}: {
+              services.notification-server.port = 2001;
+            })
 
             agenix.nixosModule
 

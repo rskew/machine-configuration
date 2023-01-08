@@ -151,6 +151,21 @@
         "type": "github"
       }
     },
+    "flake-utils_6": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "harvest-admin-app": {
       "inputs": {
         "nixpkgs": "nixpkgs_3",
@@ -191,19 +206,20 @@
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
-        ]
+        ],
+        "utils": "utils"
       },
       "locked": {
-        "lastModified": 1665996265,
-        "narHash": "sha256-/k9og6LDBQwT+f/tJ5ClcWiUl8kCX5m6ognhsAxOiCY=",
+        "lastModified": 1672244468,
+        "narHash": "sha256-xaZb8AZqoXRCSqPusCk4ouf+fUNP8UJdafmMTF1Ltlw=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "b81e128fc053ab3159d7b464d9b7dedc9d6a6891",
+        "rev": "89a8ba0b5b43b3350ff2e3ef37b66736b2ef8706",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
-        "ref": "release-22.05",
+        "ref": "release-22.11",
         "repo": "home-manager",
         "type": "github"
       }
@@ -269,6 +285,28 @@
       },
       "original": {
         "owner": "rskew",
+        "repo": "nix-rebar3",
+        "type": "github"
+      }
+    },
+    "nix-rebar3_3": {
+      "inputs": {
+        "flake-utils": "flake-utils_6",
+        "nixpkgs": [
+          "notification-server",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1673169539,
+        "narHash": "sha256-u83KCFZ92JG0MioUCw7By5E6yQRipR/C8JsoMfuA1h0=",
+        "owner": "axelf4",
+        "repo": "nix-rebar3",
+        "rev": "53342af69f1d20b767b9bcbc10a535bd7a64d13a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "axelf4",
         "repo": "nix-rebar3",
         "type": "github"
       }
@@ -388,18 +426,52 @@
     },
     "nixpkgs_5": {
       "locked": {
-        "lastModified": 1666056570,
-        "narHash": "sha256-e7EkIY68Tp7NKyp9JSHh6CgPPdsKYYWxiL4wZQN8Cwg=",
+        "lastModified": 1672968032,
+        "narHash": "sha256-26Jns3GmHem44a06UN5Rj/KOD9qNJThyQrom02Ijur8=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "47edaa313fc3767ce3026037a5b62352f22f3602",
+        "rev": "2dea8991d89b9f1e78d874945f78ca15f6954289",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixos-22.05",
+        "ref": "nixos-22.11",
         "repo": "nixpkgs",
         "type": "github"
+      }
+    },
+    "nixpkgs_6": {
+      "locked": {
+        "lastModified": 1672968032,
+        "narHash": "sha256-26Jns3GmHem44a06UN5Rj/KOD9qNJThyQrom02Ijur8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2dea8991d89b9f1e78d874945f78ca15f6954289",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-22.11",
+        "type": "indirect"
+      }
+    },
+    "notification-server": {
+      "inputs": {
+        "nix-rebar3": "nix-rebar3_3",
+        "nixpkgs": "nixpkgs_6"
+      },
+      "locked": {
+        "lastModified": 1673187348,
+        "narHash": "sha256-exaXz32cOi4gO1p/rCzlDShJVT44RbMkOVmM9SQBLiM=",
+        "ref": "refs/heads/master",
+        "rev": "66ec157fe241268d0a16d18802848f808e6bd877",
+        "revCount": 2,
+        "type": "git",
+        "url": "ssh://git@github.com/rskew/notification-server.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rskew/notification-server.git"
       }
     },
     "root": {
@@ -412,7 +484,8 @@
         "home-manager": "home-manager",
         "kmonad": "kmonad",
         "nixpkgs": "nixpkgs_5",
-        "nixpkgs-unstable": "nixpkgs-unstable"
+        "nixpkgs-unstable": "nixpkgs-unstable",
+        "notification-server": "notification-server"
       }
     },
     "spago2nix": {
@@ -451,6 +524,21 @@
       "original": {
         "owner": "justinwoo",
         "repo": "spago2nix",
+        "type": "github"
+      }
+    },
+    "utils": {
+      "locked": {
+        "lastModified": 1667395993,
+        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
         "type": "github"
       }
     }
