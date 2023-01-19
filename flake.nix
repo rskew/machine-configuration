@@ -61,6 +61,7 @@
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
+    #autofarm.url = "/home/rowan/autofarm";
     notification-server.url = "git+ssh://git@github.com/rskew/notification-server.git";
   };
   outputs =
@@ -381,9 +382,10 @@
             autofarm.nixosModule
             ({config, ...}: {
               services.autofarm = {
-                deviceListenerPort = 9222;
+                deviceMonitorDeviceListenerPort = 9222;
                 ecronServerEcrontab = "/home/rowan/.autofarm/ecrontab";
                 frontendServerBasicAuthCredentialsFile = config.age.secrets."autofarm-frontend-server-basic-auth-credentials".path;
+                deviceMonitorInfluxdbPort = 8086;
               };
             })
             agenix.nixosModule
@@ -421,6 +423,15 @@
                 inherit pkgs;
                 local-port = "22";
                 remote-port = "7722";
+                remote-ip = jump-box-ip;
+                remote-user = "rowan";
+                id-file = "/home/rowan/.ssh/id_to_deploy_to_servers1";
+                known-hosts-line = jump-box-known-hosts-line;
+              };
+              systemd.services.grafana-tunnel = import ./persistent-ssh-tunnel.nix {
+                inherit pkgs;
+                local-port = "3000";
+                remote-port = "3001";
                 remote-ip = jump-box-ip;
                 remote-user = "rowan";
                 id-file = "/home/rowan/.ssh/id_to_deploy_to_servers1";
@@ -561,7 +572,6 @@
                 gping
                 rclone
                 restic
-                rxvt_unicode
                 unstable.picom-next
                 xorg.xev
                 xorg.xinput
