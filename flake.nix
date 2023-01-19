@@ -61,8 +61,6 @@
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
-    #autofarm.url = "/home/rowan/autofarm";
-    notification-server.url = "git+ssh://git@github.com/rskew/notification-server.git";
   };
   outputs =
     { self,
@@ -75,7 +73,6 @@
       coolroom-monitor,
       agenix,
       autofarm,
-      notification-server,
     }:
     let
       pkgs = import nixpkgs {
@@ -477,11 +474,6 @@
           specialArgs = {inherit pkgs unstable;};
           modules = [
 
-            notification-server.nixosModule
-            ({...}: {
-              services.notification-server.port = 2001;
-            })
-
             agenix.nixosModule
 
             home-manager.nixosModules.home-manager
@@ -622,6 +614,7 @@
                    exec -a "$0" "$@"
                  '')
                 agenix.defaultPackage.${system}
+                nix-tree
               ];
 
               security.rtkit.enable = true;

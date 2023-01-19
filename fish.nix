@@ -55,6 +55,14 @@
 
     any-nix-shell fish --info-right | source
 
+    function notify-me
+        curl localhost:2001/$status/$argv[1]/$argv[2]
+        if test ! $status -eq 0
+            echo "notification server not running, run with:"
+            echo "    nix run /home/rowan/projects/notify_send_server"
+        end
+    end
+
     ####
     #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af
     ####

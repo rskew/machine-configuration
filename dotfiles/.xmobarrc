@@ -2,24 +2,21 @@
 -- xrandr --output $DISPLAY --primary
 -- usually $DISPLAY is VGA1
 
-Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
+Config { font = "Source Code Pro 27" -- Big font for hi-res monitor
        , bgColor = "black"
        , fgColor = "grey"
-       , position = BottomW L 92
-       , allDesktops =      True    -- show on all desktops
+       , position = BottomSize L 92 50
+       , allDesktops = True    -- show on all desktops
        , lowerOnStart = True
        , hideOnStart = False
        , iconRoot = "/home/rowan/machine-configuration/dotfiles/icons"
-       , commands = -- weather monitor
-        --[ Run Weather "YMML" [ "--template", "<skyCondition> | <fc=#4682B4><tempC></fc>°C | <fc=#4682B4><rh></fc>% | <fc=#4682B4><pressure></fc>hPa"
-        --                     ] 36000
-
+       , commands =
         -- network activity monitor (dynamic interface resolution)
         [ Run Network "wlp0s20f3"
           [ "--template" , "<rx>KB/s↓ <tx>KB/s↑"
           , "--Low"      , "12500"       -- units: B/s
           , "--High"     , "125000"      -- units: B/s
-          , "--low"      , "green"
+          , "--low"      , "#0f0"
           , "--normal"   , "orange"
           , "--high"     , "red"
           , "-w"         , "5"
@@ -35,7 +32,7 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
         , Run MultiCpu       [ "--template" , "<autovbar>"
                              --, "--Low"      , "50"         -- units: %
                              --, "--High"     , "85"         -- units: %
-                             --, "--low"      , "green"
+                             --, "--low"      , "#0f0"
                              --, "--normal"   , "orange"
                              --, "--high"     , "red"
                              ] 5
@@ -44,7 +41,7 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
         , Run CoreTemp       [ "--template" , "<core0>°"
                              , "--Low"      , "70"        -- units: °C
                              , "--High"     , "80"        -- units: °C
-                             , "--low"      , "green"
+                             , "--low"      , "#0f0"
                              , "--normal"   , "orange"
                              , "--high"     , "red"
                              ] 10
@@ -53,7 +50,7 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
         , Run Memory         [ "--template" ,"mem:<usedratio>%"
                              , "--Low"      , "20"        -- units: %
                              , "--High"     , "90"        -- units: %
-                             , "--low"      , "green"
+                             , "--low"      , "#0f0"
                              , "--normal"   , "orange"
                              , "--high"     , "red"
                              ] 10
@@ -70,7 +67,7 @@ Config { font = "xft:Source Code Pro:size=27" -- Big font for hi-res monitor
                              , "--High"     , "80"        -- units: %
                              , "--low"      , "red"
                              , "--normal"   , "orange"
-                             , "--high"     , "green"
+                             , "--high"     , "#0f0"
 
                              , "--" -- battery specific options
                                        -- discharging status
