@@ -61,6 +61,7 @@
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
+    #autofarm.url = "/home/rowan/autofarm";
   };
   outputs =
     { self,
