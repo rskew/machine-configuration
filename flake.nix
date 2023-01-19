@@ -114,6 +114,11 @@
                 forceSSL = true;
                 locations."/".proxyPass = "http://127.0.0.1:8086/";
               };
+              services.nginx.virtualHosts."top-tank.objectionable.farm" = {
+                enableACME = true;
+                forceSSL = true;
+                locations."/".proxyPass = "http://127.0.0.1:3001/";
+              };
               services.nginx.recommendedProxySettings = true;
               security.acme.defaults.email = "rowan.skewes@gmail.com";
               security.acme.acceptTerms = true;
