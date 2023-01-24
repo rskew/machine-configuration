@@ -100,7 +100,7 @@
               services.nginx.enable = true;
               services.nginx.virtualHosts."castlemaineharvest.com.au" = {
                 root = harvest-front-page; enableACME = true; forceSSL = true;
-                serverAliases = ["castlemaineharvest.com.au" "www.castlemaineharvest.com.au"];
+                serverAliases = ["www.castlemaineharvest.com.au"];
               };
               services.nginx.virtualHosts."coolroom.castlemaineharvest.com.au" = {
                 enableACME = true;
@@ -118,6 +118,12 @@
                 forceSSL = true;
                 locations."/".proxyPass = "http://127.0.0.1:3001/";
               };
+              services.nginx.virtualHosts."objectionable.farm" = {
+                enableACME = true;
+                forceSSL = true;
+                locations."/".proxyPass = "http://127.0.0.1:3001/";
+                #serverAliases = ["www.objectionable.farm"];
+              };
               services.nginx.recommendedProxySettings = true;
               security.acme.defaults.email = "rowan.skewes@gmail.com";
               security.acme.acceptTerms = true;
@@ -128,6 +134,7 @@
             ({...}: {
               services.influxdb.dataDir = "/home/rowan/.influxdb-data";
               services.influxdb.user = "rowan";
+              services.grafana.settings = {};
             })
 
             ({pkgs, ...}: {
