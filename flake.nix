@@ -393,6 +393,12 @@
                 deviceMonitorInfluxdbPort = 8086;
               };
             })
+            # FTDI USB thingo as GPIO for flicking relays that control irrigation solenoids
+            ({...}: {
+              services.udev.extraRules = ''
+                SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="dialout", MODE="0664", SYMLINK+="ftdi-thingo"
+              '';
+            })
             agenix.nixosModule
             ({...}: {
               age.secrets."autofarm-frontend-server-basic-auth-credentials".file = ./secrets/autofarm-frontend-server-basic-auth-credentials.age;
