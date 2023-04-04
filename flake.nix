@@ -145,7 +145,7 @@
               services.coolroom-monitor-relay.influxdb-password-file = config.age.secrets."coolroom-monitor-influxdb-password".path;
             })
 
-            agenix.nixosModule
+            agenix.nixosModules.age
             ({...}: {
               age.secrets."coolroom-monitor-influxdb-password".file = ./secrets/coolroom-monitor-influxdb-password.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
@@ -397,7 +397,7 @@
           specialArgs = {inherit pkgs unstable;};
           modules = [
 
-            agenix.nixosModule
+            agenix.nixosModules.age
 
             home-manager.nixosModules.home-manager
             ({pkgs, unstable, lib, ...}: {
@@ -415,6 +415,7 @@
                 configfiles = [
                   "/etc/kmonad/config.kbd"
                   "/etc/kmonad/tex-config.kbd"
+                  "/etc/kmonad/mac-kbd-config.kbd"
                 ];
                 package = kmonad.packages.x86_64-linux.kmonad;
                 make-group = false;
@@ -429,6 +430,12 @@
                 src = ./dotfiles/.config/kmonad/base.kbd;
                 # /dev/tex-kbd is created by the SYMLINK command in the udev rule below
                 replacements = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
+              };
+              # Mum's keyboard
+              environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
+                name = "mac-kbd-config.kbd";
+                src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
+                replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usb-0:5.1.2.1:1.0-event-kbd" ]; # Built-in keyboard
               };
               services.udev.extraRules = ''
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
@@ -464,6 +471,7 @@
               networking.firewall.allowedTCPPorts = [
                 2001 # notification server
                 9222 # autofarm device_monitor dev
+                8181 # shop admin app dev
               ];
 
               services.tailscale.enable = true;
@@ -539,7 +547,7 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
-                agenix.defaultPackage.${system}
+                agenix.packages.${system}.agenix
                 nix-tree
               ];
 
@@ -612,7 +620,7 @@
                          --monitor "primary" &
                   exec nm-applet &
                   exec blueman-applet &
-                  ${pkgs.feh}/bin/feh --bg-scale ~/Pictures/jupyter_near_north_pole.jpg &
+                  ${pkgs.feh}/bin/feh --bg-scale ~/Pictures/Jupyter_full_flat.png &
                   ${unstable.picom-next}/bin/picom --experimental-backends &
                   ## Synchronise PRIMARY and CLIPBOARD
                   ${autocutsel}/bin/autocutsel -fork -selection CLIPBOARD

@@ -70,6 +70,9 @@ myKeys =
         ((mod1Mask .|. shiftMask, key), (windows $ W.shift ws))
         | (key,ws) <- myWorkspaces
       ] ++ [
+        ((mod1Mask, key), screenWorkspace screen >>= flip whenJust (windows . W.view))
+        | (key, screen) <- zip [xK_q, xK_w, xK_e] [0, 0, 1]
+      ] ++ [
         ((mod1Mask .|. shiftMask, xK_i),
          (do
              spawnOn "2" "firefox"

@@ -2,16 +2,17 @@
   "nodes": {
     "agenix": {
       "inputs": {
+        "darwin": "darwin",
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1665870395,
-        "narHash": "sha256-Tsbqb27LDNxOoPLh0gw2hIb6L/6Ow/6lIBvqcHzEKBI=",
+        "lastModified": 1677969766,
+        "narHash": "sha256-AIp/ZYZMNLDZR/H7iiAlaGpu4lcXsVt9JQpBlf43HRY=",
         "owner": "ryantm",
         "repo": "agenix",
-        "rev": "a630400067c6d03c9b3e0455347dc8559db14288",
+        "rev": "03b51fe8e459a946c4b88dcfb6446e45efb2c24e",
         "type": "github"
       },
       "original": {
@@ -28,11 +29,11 @@
         "spago2nix": "spago2nix"
       },
       "locked": {
-        "lastModified": 1674134875,
-        "narHash": "sha256-W14GBasT3d6ahNLfBWUZsDI6Z3IRhnYiOdUDF9H36T0=",
+        "lastModified": 1674920510,
+        "narHash": "sha256-yQmFN/SQOHDfIPFDLzLd1oom1Em+e6cDf5vjixQmRnE=",
         "owner": "rskew",
         "repo": "autofarm",
-        "rev": "64cf0f78a2e5da8858aed97414422ea6d92a3d1e",
+        "rev": "d3cdd22c4f5f36368cb7f9eb109f5dd587d763e2",
         "type": "github"
       },
       "original": {
@@ -51,7 +52,7 @@
       "locked": {
         "lastModified": 1673175025,
         "narHash": "sha256-iP4okTDonrQV/SmhLsD/vXw01aD9m3WcO9QuqQ2XQjM=",
-        "ref": "master",
+        "ref": "refs/heads/master",
         "rev": "60aa4a21831f318e76bdfa43da6f51cf1e46a95a",
         "revCount": 8,
         "type": "git",
@@ -60,6 +61,28 @@
       "original": {
         "type": "git",
         "url": "ssh://git@github.com/rskew/coolroom-monitor.git"
+      }
+    },
+    "darwin": {
+      "inputs": {
+        "nixpkgs": [
+          "agenix",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1673295039,
+        "narHash": "sha256-AsdYgE8/GPwcelGgrntlijMg4t3hLFJFCRF3tL5WVjA=",
+        "owner": "lnl7",
+        "repo": "nix-darwin",
+        "rev": "87b9d090ad39b25b2400029c64825fc2a8868943",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lnl7",
+        "ref": "master",
+        "repo": "nix-darwin",
+        "type": "github"
       }
     },
     "easy-purescript-nix": {
@@ -206,11 +229,11 @@
         "spago2nixSource": "spago2nixSource"
       },
       "locked": {
-        "lastModified": 1664605858,
-        "narHash": "sha256-FpfvmSVvuxuWq7sygI3aWQ8r3menieNKlmk4fou6bTI=",
-        "ref": "master",
-        "rev": "a0b732bf42d94099a2a549cab009d2f68685550d",
-        "revCount": 72,
+        "lastModified": 1676304891,
+        "narHash": "sha256-y5c+CYvRoLa3LLXklPr2rh2IZcFphGyqdg249oP+Rck=",
+        "ref": "refs/heads/master",
+        "rev": "1d6a66b4393273e4ce13880773ada754f561ade2",
+        "revCount": 103,
         "type": "git",
         "url": "ssh://git@github.com/rskew/greengrocer-admin-app.git"
       },
@@ -243,11 +266,11 @@
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1672244468,
-        "narHash": "sha256-xaZb8AZqoXRCSqPusCk4ouf+fUNP8UJdafmMTF1Ltlw=",
+        "lastModified": 1678285456,
+        "narHash": "sha256-2rIk5OFGQmoFX1MWntKGPVCZvy5yQMX3ZCYz7i8+yb0=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "89a8ba0b5b43b3350ff2e3ef37b66736b2ef8706",
+        "rev": "b0be47978de5cfd729a79c3f57ace4c86364ff45",
         "type": "github"
       },
       "original": {
@@ -376,11 +399,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1673450908,
-        "narHash": "sha256-b8em+kwrNtnB7gR8SyVf6WuTyQ+6tHS6dzt9D9wgKF0=",
+        "lastModified": 1678654296,
+        "narHash": "sha256-aVfw3ThpY7vkUeF1rFy10NAkpKDS2imj3IakrzT0Occ=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "6c8644fc37b6e141cbfa6c7dc8d98846c4ff0c2e",
+        "rev": "5a1dc8acd977ff3dccd1328b7c4a6995429a656b",
         "type": "github"
       },
       "original": {
@@ -437,11 +460,11 @@
     },
     "nixpkgs_5": {
       "locked": {
-        "lastModified": 1672968032,
-        "narHash": "sha256-26Jns3GmHem44a06UN5Rj/KOD9qNJThyQrom02Ijur8=",
+        "lastModified": 1678703398,
+        "narHash": "sha256-Y1mW3dBsoWLHpYm+UIHb5VZ7rx024NNHaF16oZBx++o=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "2dea8991d89b9f1e78d874945f78ca15f6954289",
+        "rev": "67f26c1cfc5d5783628231e776a81c1ade623e0b",
         "type": "github"
       },
       "original": {
@@ -530,6 +553,7 @@
         "easy-purescript-nix": "easy-purescript-nix_2",
         "flake-utils": "flake-utils_6",
         "nixpkgs": [
+          "coolroom-monitor",
           "nixpkgs"
         ]
       },
