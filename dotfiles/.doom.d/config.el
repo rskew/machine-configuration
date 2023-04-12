@@ -54,21 +54,12 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
-(use-package! dante
-  :ensure t
-  :after haskell-mode
-  :commands 'dante-mode
-  :init
-  (add-hook 'haskell-mode-hook 'flycheck-mode)
-  ;; OR:
-  ;; (add-hook 'haskell-mode-hook 'flymake-mode)
-  (add-hook 'haskell-mode-hook 'dante-mode)
-  )
 
 ;; Use Prolog major mode for .pl files (not Perl mode)
 (add-to-list 'auto-mode-alist '("\\.pl\\'" . prolog-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode))
 (add-to-list 'auto-mode-alist '("\\.erl\\'" . erlang-mode))
+(add-to-list 'auto-mode-alist '("\\.u\\'" . unison-mode))
 
 (map!
   :map smartparens-mode-map
@@ -76,5 +67,3 @@
   :nvie "C-SPC C-}" #'sp-forward-barf-sexp
   :nvie "C-SPC C-(" #'sp-backward-slurp-sexp
   :nvie "C-SPC C-{" #'sp-backward-barf-sexp)
-
-(add-to-list 'auto-mode-alist '("\\.u\\'" . unison-mode))

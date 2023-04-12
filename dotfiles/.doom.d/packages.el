@@ -63,5 +63,3 @@
 (package! magit-section)
 
 (package! exwm)
-
-(package! unison-mode)
