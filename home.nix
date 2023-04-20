@@ -6,28 +6,52 @@ let
     seaborn
     pyyaml
   ]);
+  vim-with-custom-rc = pkgs.vim_configurable.customize {
+    vimrcConfig = {
+      customRC = ''
+        filetype plugin indent on
+        syntax on
+        set number relativenumber
+        set tabstop=4
+        set softtabstop=4
+        set expandtab
+        set shiftwidth=4
+        set smarttab
+        set clipboard=unnamed
+        set noerrorbells
+        set vb t_vb=
+        colorscheme torte
+      '';
+    };
+  };
+  set-theme-dark = pkgs.writeShellScriptBin "dark" ''
+    printf '\033]10;white\007' # urxvt set foreground
+    printf '\033]11;black\007' # urxvt set background
+    sed -i --follow-symlinks 's/^\(URxvt.background\).*$/URxvt.background: black/' ~/.Xresources
+    sed -i --follow-symlinks 's/^\(URxvt.foreground\).*$/URxvt.foreground: white/' ~/.Xresources
+    xrdb -load ~/.Xresources
+    echo dark > ~/.current-theme
+  '';
+  set-theme-light = pkgs.writeShellScriptBin "light" ''
+    printf '\033]10;#383a42\007' # urxvt set foreground
+    printf '\033]11;#f9f9f9\007' # urxvt set background
+    sed -i --follow-symlinks 's/^\(URxvt.background\).*$/URxvt.background: #f9f9f9/' ~/.Xresources
+    sed -i --follow-symlinks 's/^\(URxvt.foreground\).*$/URxvt.foreground: #383a42/' ~/.Xresources
+    xrdb -load ~/.Xresources
+    echo light > ~/.current-theme
+  '';
+  vim = pkgs.writeShellScriptBin "vim" ''
+    if `grep light ~/.current-theme`
+    then
+      ${vim-with-custom-rc}/bin/vim -c 'colorscheme zellner' $@
+    else
+      ${vim-with-custom-rc}/bin/vim $@
+    fi
+  '';
 in {
   programs.home-manager.enable = true;
 
   programs.fish = import ./fish.nix {inherit pkgs isGraphical;};
-
-  programs.vim = {
-    enable = true;
-    extraConfig = ''
-      filetype plugin indent on
-      syntax on
-      set number relativenumber
-      set tabstop=4
-      set softtabstop=4
-      set expandtab
-      set shiftwidth=4
-      set smarttab
-      set clipboard=unnamed
-      set noerrorbells
-      set vb t_vb=
-      colorscheme torte
-    '';
-  };
 
   home.packages = with pkgs; [
     git
@@ -53,6 +77,9 @@ in {
     byobu
     tmux
     rxvt_unicode
+    set-theme-dark
+    set-theme-light
+    vim
   ];
 
   # dotfiles

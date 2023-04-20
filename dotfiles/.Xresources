@@ -2,8 +2,7 @@
 URxvt.font: xft:Source Code Pro:size=25
 URxvt.perl-ext-common: selection-to-clipboard
 URxvt.depth: 32
-URxvt.background: [70]#000000
-URxvt.foreground: white
+
 URxvt*scrollBar:  false
 URxvt*saveLines:10000
 
@@ -31,3 +30,6 @@ URxvt.keysym.M-b: searchable-scrollback:start
 *color13: #AD7FA8
 *color14: #fcaf3e
 *color15: #EEEEEC
+
+URxvt.background: black
+URxvt.foreground: white
