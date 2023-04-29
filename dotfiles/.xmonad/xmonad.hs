@@ -38,8 +38,8 @@ main = do
   xmproc <- spawnPipe "xmobar /home/rowan/machine-configuration/dotfiles/.xmobarrc"
   xmonad $ withUrgencyHook NoUrgencyHook $ docks $ ewmhFullscreen $ def
       { modMask            = mod1Mask
-      , borderWidth        = 1
-      , terminal           = "urxvt -cd \"$PWD\""
+      , borderWidth        = 6
+      , terminal           = "urxvt -cd \"$PWD\"" -- NOTE this doesn't work
       , normalBorderColor  = "#000"
       , focusedBorderColor = "#0af"
       , workspaces = map snd myWorkspaces

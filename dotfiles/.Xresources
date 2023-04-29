@@ -1,6 +1,7 @@
 ! Big font for hi-res monitor
 URxvt.font: xft:Source Code Pro:size=25
-URxvt.perl-ext-common: selection-to-clipboard
+!URxvt.font: xft:gallant12x22:size=25
+URxvt.perl-ext-common: selection-to-clipboard,searchable-scrollback
 URxvt.depth: 32
 
 URxvt*scrollBar:  false
@@ -12,7 +13,7 @@ URxvt*scrollTtyOutput:      false
 URxvt*scrollWithBuffer:     false
 URxvt*scrollTtyKeypress:    true
 
-URxvt.keysym.M-b: searchable-scrollback:start
+URxvt.keysym.C-b: searchable-scrollback:start
 
 *color0:  #2E3436
 *color1:  #a40000
@@ -33,3 +34,4 @@ URxvt.keysym.M-b: searchable-scrollback:start
 
 URxvt.background: black
 URxvt.foreground: white
+URxvt.pointerColor2: #000000

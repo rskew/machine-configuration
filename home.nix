@@ -48,6 +48,14 @@ let
       ${vim-with-custom-rc}/bin/vim $@
     fi
   '';
+  bat-themed = pkgs.writeShellScriptBin "bat" ''
+    if `grep light ~/.current-theme`
+    then
+      ${pkgs.bat}/bin/bat --theme 'Monokai Extended Light' $@
+    else
+      ${pkgs.bat}/bin/bat $@
+    fi
+  '';
 in {
   programs.home-manager.enable = true;
 
@@ -59,7 +67,7 @@ in {
     ripgrep # for project-wide search in emacs
     fzf # for reverse history search in fish shell
     wget
-    bat
+    bat-themed
     git
     tree
     zip

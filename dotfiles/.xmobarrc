@@ -2,7 +2,8 @@
 -- xrandr --output $DISPLAY --primary
 -- usually $DISPLAY is VGA1
 
-Config { font = "Source Code Pro 27" -- Big font for hi-res monitor
+--Config { font = "Source Code Pro 25"
+Config { font = "gallant12x22 27"
        , bgColor = "black"
        , fgColor = "grey"
        , position = BottomSize L 92 50
@@ -80,7 +81,7 @@ Config { font = "Source Code Pro 27" -- Big font for hi-res monitor
 
         -- time and date indicator
         --   (%F = y-m-d date, %a = day of week, %T = h:m:s time)
-        , Run Date           "<fc=#ABABAB></fc>%F %a %T" "date" 10
+        , Run Date           "<fc=#ABABAB></fc>%T %a %F" "date" 10
 
 
         -- keyboard layout indicator
@@ -95,5 +96,7 @@ Config { font = "Source Code Pro 27" -- Big font for hi-res monitor
        , sepChar = "%"
        , alignSep = "}{"
        -- <fc=#f000ff>%wifi-ipaddr%</fc> 
-       , template = "%StdinReader% }{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %diskio% %wifi-ssid% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc> %mic_status%"
+       -- %wifi-ssid%
+       , template = "%StdinReader% %mic_status%}{ %multicpu%%coretemp% gpu:%gpu% %memory% %swap% %disku% %diskio% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
+       --, template = "%StdinReader% %mic_status%}{ %multicpu%%coretemp% %memory% %swap% %disku% %wlp0s20f3% <fc=#0df>%bluetooth-status%</fc> %battery% <fc=#0df>%date%</fc>"
        }

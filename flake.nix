@@ -431,7 +431,6 @@
                 # /dev/tex-kbd is created by the SYMLINK command in the udev rule below
                 replacements = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
               };
-              # Mum's keyboard
               environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
                 name = "mac-kbd-config.kbd";
                 src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
@@ -564,11 +563,11 @@
               services.blueman.enable = true;
 
               # Comment these lines to disable gpu
-              #services.xserver.videoDrivers = [ "nvidia" ];
-              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              #hardware.nvidia.prime.offload.enable = true;
-              #hardware.opengl.enable = true;
+              services.xserver.videoDrivers = [ "nvidia" ];
+              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              hardware.nvidia.prime.offload.enable = true;
+              hardware.opengl.enable = true;
 
               services.logind.lidSwitchDocked = "suspend";
 
@@ -637,6 +636,9 @@
               };
               # This is required for lightdm to prefill username on login
               programs.fish.enable = true;
+              # This is required to use completions that come from
+              # installed packages
+              programs.fish.vendor.completions.enable = true;
 
               services.redshift.enable = true;
               # Used by redshift
