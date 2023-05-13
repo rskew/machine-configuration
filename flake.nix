@@ -40,6 +40,63 @@
       pubkey-to-deploy-to-vps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
     in
     {
+      nixosConfigurations.binarylane =
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {inherit pkgs unstable;};
+          modules = [
+            # Hardware and networking configuration created when host is provisioned, not commited to repo
+            # See scripts/nixify-vps.sh for how these are created (wip)
+            (import ./this-vps/hardware-configuration.nix)
+            (import ./this-vps/networking.nix)
+
+            #({pkgs, ...}: {
+            #  services.postgresql = {
+            #    enable = true;
+            #    package = pkgs.postgresql;
+            #    extraPlugins = [ pkgs.postgresPackages.postgis ];
+            #    enableTCPIP = true;
+            #  };
+            #})
+
+            ({pkgs, ...}: {
+              networking.hostName = "rowan-binarylane";
+
+              # Drop inactive sessions after 1.5 minutes.
+              # This prevents stale sessions from stopping clients
+              # reconnecting with port forwarding.
+              services.openssh.extraConfig = ''
+                ClientAliveInterval 30
+                ClientAliveCountMax 3
+              '';
+              # Don't allow inbound ssh connections to forwarded ports on 0.0.0.0
+              services.openssh.gatewayPorts = "no";
+              users.users.root.openssh.authorizedKeys.keys = [ vps-management-pubkey ];
+
+              users.users.rowan = {
+                isNormalUser = true;
+                extraGroups = [ "wheel" "docker" "dialout" ];
+                shell = pkgs.fish;
+                openssh.authorizedKeys.keys = [
+                  vps-management-pubkey
+                ];
+              };
+
+              nix.package = pkgs.nixFlakes;
+              nix.extraOptions = "experimental-features = nix-command flakes";
+              system.stateVersion = "22.05";
+            })
+
+            home-manager.nixosModules.home-manager
+            ({pkgs, unstable, ...}: {
+              home-manager.useGlobalPkgs = true;
+              home-manager.users.rowan =
+                {config, pkgs, ...}:
+                import ./home.nix {inherit config pkgs unstable; isGraphical = false;};
+            })
+          ];
+        };
+
       nixosConfigurations.mammoth3 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
