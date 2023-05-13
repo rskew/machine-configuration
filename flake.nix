@@ -415,7 +415,7 @@
                 configfiles = [
                   "/etc/kmonad/config.kbd"
                   "/etc/kmonad/tex-config.kbd"
-                  "/etc/kmonad/mac-kbd-config.kbd"
+                  #"/etc/kmonad/mac-kbd-config.kbd"
                 ];
                 package = kmonad.packages.x86_64-linux.kmonad;
                 make-group = false;
@@ -431,11 +431,11 @@
                 # /dev/tex-kbd is created by the SYMLINK command in the udev rule below
                 replacements = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
               };
-              environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
-                name = "mac-kbd-config.kbd";
-                src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-                replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usb-0:5.1.2.1:1.0-event-kbd" ]; # Built-in keyboard
-              };
+              #environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
+              #  name = "mac-kbd-config.kbd";
+              #  src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
+              #  replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usb-0:5.1.2.1:1.0-event-kbd" ]; # Built-in keyboard
+              #};
               services.udev.extraRules = ''
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
@@ -563,11 +563,11 @@
               services.blueman.enable = true;
 
               # Comment these lines to disable gpu
-              services.xserver.videoDrivers = [ "nvidia" ];
-              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              hardware.nvidia.prime.offload.enable = true;
-              hardware.opengl.enable = true;
+              #services.xserver.videoDrivers = [ "nvidia" ];
+              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              #hardware.nvidia.prime.offload.enable = true;
+              #hardware.opengl.enable = true;
 
               services.logind.lidSwitchDocked = "suspend";
 

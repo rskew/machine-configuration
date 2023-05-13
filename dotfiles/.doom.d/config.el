@@ -19,8 +19,8 @@
 ;;
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
-;; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
-;;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
+; (setq doom-font (font-spec :family "monospace" :size 12 :weight 'semi-light)
+;       doom-variable-pitch-font (font-spec :family "sans" :size 13))
 (setq doom-font (font-spec :family "Source Code Pro" :size 32))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
@@ -61,6 +61,7 @@
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-mode))
 (add-to-list 'auto-mode-alist '("\\.erl\\'" . erlang-mode))
 (add-to-list 'auto-mode-alist '("\\.u\\'" . unison-mode))
+(add-to-list 'auto-mode-alist '("\\.journal\\'" . ledger-mode))
 
 (map!
   :map smartparens-mode-map
@@ -68,3 +69,8 @@
   :nvie "C-SPC C-}" #'sp-forward-barf-sexp
   :nvie "C-SPC C-(" #'sp-backward-slurp-sexp
   :nvie "C-SPC C-{" #'sp-backward-barf-sexp)
+
+;(org-babel-do-load-languages
+; 'org-babel-load-languages
+; '((python . t))
+; '((jupyter . t)))

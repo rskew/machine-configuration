@@ -29,6 +29,7 @@ let
     printf '\033]11;black\007' # urxvt set background
     sed -i --follow-symlinks 's/^\(URxvt.background\).*$/URxvt.background: black/' ~/.Xresources
     sed -i --follow-symlinks 's/^\(URxvt.foreground\).*$/URxvt.foreground: white/' ~/.Xresources
+    sed -i --follow-symlinks 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #ffffff/' ~/.Xresources
     xrdb -load ~/.Xresources
     echo dark > ~/.current-theme
   '';
@@ -37,6 +38,7 @@ let
     printf '\033]11;#f9f9f9\007' # urxvt set background
     sed -i --follow-symlinks 's/^\(URxvt.background\).*$/URxvt.background: #f9f9f9/' ~/.Xresources
     sed -i --follow-symlinks 's/^\(URxvt.foreground\).*$/URxvt.foreground: #383a42/' ~/.Xresources
+    sed -i --follow-symlinks 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #000000/' ~/.Xresources
     xrdb -load ~/.Xresources
     echo light > ~/.current-theme
   '';
@@ -88,6 +90,10 @@ in {
     set-theme-dark
     set-theme-light
     vim
+    arandr
+    broot
+    unstable.pandoc
+    unstable.zellij
   ];
 
   # dotfiles
