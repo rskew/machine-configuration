@@ -83,18 +83,19 @@ in {
     jq
     pythonEnv
     any-nix-shell
-    dconf # Required for gtk3 configuration
     byobu
     tmux
     rxvt_unicode
     set-theme-dark
     set-theme-light
     vim
-    arandr
     broot
     unstable.pandoc
     unstable.zellij
-  ];
+  ] ++ (if isGraphical then [
+    arandr
+    dconf # Required for gtk3 configuration
+  ] else []);
 
   # dotfiles
   home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
@@ -116,7 +117,7 @@ in {
   #};
 
   services.dunst = {
-    enable = true;
+    enable = isGraphical;
     settings = {
       global = {
         width = 600;
