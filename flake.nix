@@ -73,6 +73,13 @@
               services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [ vps-management-pubkey ];
 
+              services.openssh = {
+                enable = true;
+                passwordAuthentication = false;
+                permitRootLogin = "no";
+                forwardX11 = false;
+              };
+
               users.users.rowan = {
                 isNormalUser = true;
                 extraGroups = [ "wheel" "docker" "dialout" ];
@@ -163,6 +170,13 @@
               # Don't allow inbound ssh connections from forwarding ports on 0.0.0.0
               services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [ vps-management-pubkey ];
+
+              services.openssh = {
+                enable = true;
+                passwordAuthentication = false;
+                permitRootLogin = "no";
+                forwardX11 = false;
+              };
 
               users.users.rowan = {
                 isNormalUser = true;
