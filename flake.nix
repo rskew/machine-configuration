@@ -68,11 +68,6 @@
             #      forceSSL = true;
             #      locations."/".proxyPass = "http://127.0.0.1:8086/";
             #    };
-            #    "top-tank.objectionable.farm" = {
-            #      enableACME = true;
-            #      forceSSL = true;
-            #      locations."/".proxyPass = "http://127.0.0.1:3001/";
-            #    };
             #    "objectionable.farm" = {
             #      enableACME = true;
             #      forceSSL = true;
@@ -86,6 +81,9 @@
             #  networking.firewall.allowedTCPPorts = [ 80 443 ];
             #})
 
+            # WARNING: This configuration is insecure by default.
+            # You must activate influxdb-and-grafana without exposing publicly (i.e. comment out the nginx config above)
+            # then set the admin password for influxdb and for grafana
             coolroom-monitor.nixosModules.influxdb-and-grafana
             ({...}: {
               services.influxdb.dataDir = "/home/rowan/.influxdb-data";
@@ -96,16 +94,16 @@
             ({pkgs, config, ...}: {
               security.acme = {
                 acceptTerms = true;
-                certs."spatial.objectionable.farm" = {
+                certs."objectionable.farm" = {
                   listenHTTP = ":80";
                   email = "certs+rowan.skewes@gmail.com";
                   group = "postgres";
                   postRun = ''
-                    cp ${config.security.acme.certs."spatial.objectionable.farm".directory}/fullchain.pem /postgres-fullchain.pem
+                    cp ${config.security.acme.certs."objectionable.farm".directory}/fullchain.pem /postgres-fullchain.pem
                     chown postgres:postgres /postgres-fullchain.pem
                     # Need to set to 600 otherwise get SSL error code 2147483661
                     chmod 600 /postgres-fullchain.pem
-                    cp ${config.security.acme.certs."spatial.objectionable.farm".directory}/key.pem /postgres-key.pem
+                    cp ${config.security.acme.certs."objectionable.farm".directory}/key.pem /postgres-key.pem
                     chown postgres:postgres /postgres-key.pem
                     chmod 600 /postgres-key.pem
                   '';
@@ -133,7 +131,7 @@
                   hostssl all all ::0/0     md5
                 '';
               };
-              systemd.services.postgresql.requires = [ "acme-finished-spatial.objectionable.farm.target" ];
+              systemd.services.postgresql.requires = [ "acme-finished-objectionable.farm.target" ];
               # We need to open port 80 for the letsencrypt challenge server
               networking.firewall.allowedTCPPorts = [ 80 5432 ];
             })
@@ -155,7 +153,7 @@
               swapDevices = pkgs.lib.mkOverride 5 [
                 {
                   device = "/swapfile";
-                  size = 1000; # MB
+                  size = 3000; # MB
                 }
               ];
 

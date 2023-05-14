@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# binarylane:
+# - create instance
+# - switch off port blocking via web control panel
+# - add entry to ssh config
+# - scp ~/.ssh/id_to_deploy_to_servers1* newhost:/home/rowan/.ssh/
 
 set -euxo pipefail
 
