@@ -50,6 +50,49 @@
             (import ./this-vps/hardware-configuration.nix)
             (import ./this-vps/networking.nix)
 
+            #({
+            #  services.nginx.enable = true;
+            #  services.nginx.virtualHosts = {
+            #    "castlemaineharvest.com.au" = {
+            #      root = harvest-front-page; enableACME = true; forceSSL = true;
+            #      serverAliases = ["www.castlemaineharvest.com.au"];
+            #    };
+            #    "coolroom.castlemaineharvest.com.au" = {
+            #      enableACME = true;
+            #      forceSSL = true;
+            #      locations."/".proxyPass = "http://127.0.0.1:3000/";
+            #      serverAliases = ["www.coolroom.castlemaineharvest.com.au"];
+            #    };
+            #    "coolroom-sensor.castlemaineharvest.com.au" = {
+            #      enableACME = true;
+            #      forceSSL = true;
+            #      locations."/".proxyPass = "http://127.0.0.1:8086/";
+            #    };
+            #    "top-tank.objectionable.farm" = {
+            #      enableACME = true;
+            #      forceSSL = true;
+            #      locations."/".proxyPass = "http://127.0.0.1:3001/";
+            #    };
+            #    "objectionable.farm" = {
+            #      enableACME = true;
+            #      forceSSL = true;
+            #      locations."/".proxyPass = "http://127.0.0.1:3001/";
+            #      #serverAliases = ["www.objectionable.farm"];
+            #    };
+            #  };
+            #  services.nginx.recommendedProxySettings = true;
+            #  security.acme.defaults.email = "rowan.skewes@gmail.com";
+            #  security.acme.acceptTerms = true;
+            #  networking.firewall.allowedTCPPorts = [ 80 443 ];
+            #})
+
+            coolroom-monitor.nixosModules.influxdb-and-grafana
+            ({...}: {
+              services.influxdb.dataDir = "/home/rowan/.influxdb-data";
+              services.influxdb.user = "rowan";
+              services.grafana.settings = {};
+            })
+
             ({pkgs, config, ...}: {
               security.acme = {
                 acceptTerms = true;
@@ -60,6 +103,7 @@
                   postRun = ''
                     cp ${config.security.acme.certs."spatial.objectionable.farm".directory}/fullchain.pem /postgres-fullchain.pem
                     chown postgres:postgres /postgres-fullchain.pem
+                    # Need to set to 600 otherwise get SSL error code 2147483661
                     chmod 600 /postgres-fullchain.pem
                     cp ${config.security.acme.certs."spatial.objectionable.farm".directory}/key.pem /postgres-key.pem
                     chown postgres:postgres /postgres-key.pem
@@ -79,13 +123,15 @@
                   ssl_cert_file = "/postgres-fullchain.pem";
                   ssl_key_file = "/postgres-key.pem";
                 };
-                enableTCPIP = true;
+                enableTCPIP = true; # Listen on 0.0.0.0
                 authentication = ''
+                  # Force SSL by only having 'hostssl' and no 'host' lines
                   hostssl all all 0.0.0.0/0 md5
                   hostssl all all ::0/0     md5
                 '';
               };
               systemd.services.postgresql.after = [ "network.target" "acme-finished-spatial.objectionable.farm.target" ];
+              # We need to open port 80 for the letsencrypt challenge server
               networking.firewall.allowedTCPPorts = [ 80 5432 ];
             })
 
@@ -127,6 +173,8 @@
                 permitRootLogin = "no";
                 forwardX11 = false;
               };
+
+              services.journald.extraConfig = "SystemMaxUse=1G";
 
               users.users.rowan = {
                 isNormalUser = true;
