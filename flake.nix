@@ -51,33 +51,64 @@
             (import ./this-vps/networking.nix)
 
             ({pkgs, config, ...}: {
-              #services.nginx = {
-              #  enable = true;
-              #  streamConfig = ''
-              #    server {
-              #        listen 5443;
-              #        proxy_pass localhost:5432;
-              #    }
-              #  '';
-              #};
+              security.acme = {
+                acceptTerms = true;
+                certs."spatial.objectionable.farm" = {
+                  listenHTTP = ":80";
+                  email = "certs+rowan.skewes@gmail.com";
+                  group = "postgres";
+                  postRun = ''
+                    cp ${config.security.acme.certs."spatial.objectionable.farm".directory}/fullchain.pem /postgres-fullchain.pem
+                    chown postgres:postgres /postgres-fullchain.pem
+                    chmod 600 /postgres-fullchain.pem
+                    cp ${config.security.acme.certs."spatial.objectionable.farm".directory}/key.pem /postgres-key.pem
+                    chown postgres:postgres /postgres-key.pem
+                    chmod 600 /postgres-key.pem
+                  '';
+                };
+              };
               services.postgresql = {
                 enable = true;
                 package = pkgs.postgresql;
-                extraPlugins = [ pkgs.postgresPackages.postgis ];
-                #enableTCPIP = true;
+                extraPlugins = [ pkgs.postgresqlPackages.postgis ];
                 port = 5432;
+                initdbArgs = ["--pwfile=${config.age.secrets.farm-gis-pgpassword.path}"];
+                initialScript = pkgs.writeText "initialScript" "CREATE EXTENSION postgis;";
+                settings = {
+                  ssl = "on";
+                  ssl_cert_file = "/postgres-fullchain.pem";
+                  ssl_key_file = "/postgres-key.pem";
+                };
+                enableTCPIP = true;
+                authentication = ''
+                  host all all 0.0.0.0/0 md5
+                  host all all ::0/0     md5
+                '';
               };
-              systemd.services.postgresql.environment.PGPASSFILE = config.age.secrets."farm-gis-pgpassfile".path;
+              systemd.services.postgresql.after = [ "network.target" "acme-finished-spatial.objectionable.farm.target" ];
+              networking.firewall.allowedTCPPorts = [ 80 5432 ];
             })
 
             agenix.nixosModules.age
             ({...}: {
-              age.secrets."farm-gis-pgpassfile".file = ./secrets/farm-gis-pgpassfile.age;
+              age.secrets.farm-gis-pgpassword.file = ./secrets/farm-gis-pgpassword.age;
+              age.secrets.farm-gis-pgpassword.mode = "770";
+              age.secrets.farm-gis-pgpassword.owner = "postgres";
+              age.secrets.farm-gis-pgpassword.group = "postgres";
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
             ({pkgs, ...}: {
               networking.hostName = "rowan-binarylane";
+
+              # Default hardware-configuration has no swap device,
+              # causing nixos-rebuilt to crash
+              swapDevices = pkgs.lib.mkOverride 5 [
+                {
+                  device = "/swapfile";
+                  size = 1000; # MB
+                }
+              ];
 
               # Drop inactive sessions after 1.5 minutes.
               # This prevents stale sessions from stopping clients

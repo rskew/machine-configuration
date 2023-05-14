@@ -6,5 +6,5 @@ in
 {
   "coolroom-monitor-influxdb-password.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
   "autofarm-frontend-server-basic-auth-credentials.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
-  "farm-gis-pgpassfile.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
+  "farm-gis-pgpassword.age".publicKeys = [ vps-management id-to-deploy-to-servers ];
 }
