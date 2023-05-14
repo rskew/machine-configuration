@@ -50,9 +50,29 @@
             (import ./this-vps/hardware-configuration.nix)
             (import ./this-vps/networking.nix)
 
+            ({pkgs, config, ...}: {
+              #services.nginx = {
+              #  enable = true;
+              #  streamConfig = ''
+              #    server {
+              #        listen 5443;
+              #        proxy_pass localhost:5432;
+              #    }
+              #  '';
+              #};
+              services.postgresql = {
+                enable = true;
+                package = pkgs.postgresql;
+                extraPlugins = [ pkgs.postgresPackages.postgis ];
+                #enableTCPIP = true;
+                port = 5432;
+              };
+              systemd.services.postgresql.environment.PGPASSFILE = config.age.secrets."farm-gis-pgpassfile".path;
+            })
+
             agenix.nixosModules.age
             ({...}: {
-              age.secrets."farm-spatial-pgpassfile".file = ./secrets/farm-spatial-pgpassfile.age;
+              age.secrets."farm-gis-pgpassfile".file = ./secrets/farm-gis-pgpassfile.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
