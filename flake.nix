@@ -81,8 +81,8 @@
                 };
                 enableTCPIP = true;
                 authentication = ''
-                  host all all 0.0.0.0/0 md5
-                  host all all ::0/0     md5
+                  hostssl all all 0.0.0.0/0 md5
+                  hostssl all all ::0/0     md5
                 '';
               };
               systemd.services.postgresql.after = [ "network.target" "acme-finished-spatial.objectionable.farm.target" ];
