@@ -50,14 +50,11 @@
             (import ./this-vps/hardware-configuration.nix)
             (import ./this-vps/networking.nix)
 
-            #({pkgs, ...}: {
-            #  services.postgresql = {
-            #    enable = true;
-            #    package = pkgs.postgresql;
-            #    extraPlugins = [ pkgs.postgresPackages.postgis ];
-            #    enableTCPIP = true;
-            #  };
-            #})
+            agenix.nixosModules.age
+            ({...}: {
+              age.secrets."farm-spatial-pgpassfile".file = ./secrets/farm-spatial-pgpassfile.age;
+              age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
+            })
 
             ({pkgs, ...}: {
               networking.hostName = "rowan-binarylane";

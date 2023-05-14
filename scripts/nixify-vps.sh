@@ -13,7 +13,7 @@ if [ -z "$SSH_HOST" ]; then
     exit 1
 fi
 
-###ssh $SSH_HOST git clone https://github.com/elitak/nixos-infect.git
+ssh $SSH_HOST git clone https://github.com/elitak/nixos-infect.git
 
 # Using PROVIDER=digitalocean causes nixos-infect to create a detailed
 # networking config, also required by mammoth/binarylane.
@@ -22,6 +22,7 @@ fi
 ssh $SSH_HOST "cd nixos-infect; chmod +x nixos-infect; PROVIDER=digitalocean ./nixos-infect"
 
 ################# The Rest Needs Testing #####################
+####### For now just run the following stuff manually ########
 
 #sleep 10 # wait for network services to restart on the remote server after nixos installation
 #
