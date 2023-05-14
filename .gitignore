@@ -3,3 +3,4 @@ hardware-configuration.nix
 cachix
 cachix.nix
 configuration.nix
+this-vps
