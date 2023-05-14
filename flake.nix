@@ -105,6 +105,7 @@
                   vps-management-pubkey
                 ];
               };
+              security.sudo.wheelNeedsPassword = false;
 
               nix.package = pkgs.nixFlakes;
               nix.extraOptions = "experimental-features = nix-command flakes";
