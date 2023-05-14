@@ -117,7 +117,10 @@
                 extraPlugins = [ pkgs.postgresqlPackages.postgis ];
                 port = 5432;
                 initdbArgs = ["--pwfile=${config.age.secrets.farm-gis-pgpassword.path}"];
-                initialScript = pkgs.writeText "initialScript" "CREATE EXTENSION postgis;";
+                initialScript = pkgs.writeText "initialScript" ''
+                  CREATE EXTENSION postgis;
+                  CREATE EXTENSION postgis_raster;
+                '';
                 settings = {
                   ssl = "on";
                   ssl_cert_file = "/postgres-fullchain.pem";
@@ -130,7 +133,7 @@
                   hostssl all all ::0/0     md5
                 '';
               };
-              systemd.services.postgresql.after = [ "network.target" "acme-finished-spatial.objectionable.farm.target" ];
+              systemd.services.postgresql.requires = [ "acme-finished-spatial.objectionable.farm.target" ];
               # We need to open port 80 for the letsencrypt challenge server
               networking.firewall.allowedTCPPorts = [ 80 5432 ];
             })
