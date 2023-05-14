@@ -50,36 +50,37 @@
             (import ./this-vps/hardware-configuration.nix)
             (import ./this-vps/networking.nix)
 
-            #({
-            #  services.nginx.enable = true;
-            #  services.nginx.virtualHosts = {
-            #    "castlemaineharvest.com.au" = {
-            #      root = harvest-front-page; enableACME = true; forceSSL = true;
-            #      serverAliases = ["www.castlemaineharvest.com.au"];
-            #    };
-            #    "coolroom.castlemaineharvest.com.au" = {
-            #      enableACME = true;
-            #      forceSSL = true;
-            #      locations."/".proxyPass = "http://127.0.0.1:3000/";
-            #      serverAliases = ["www.coolroom.castlemaineharvest.com.au"];
-            #    };
-            #    "coolroom-sensor.castlemaineharvest.com.au" = {
-            #      enableACME = true;
-            #      forceSSL = true;
-            #      locations."/".proxyPass = "http://127.0.0.1:8086/";
-            #    };
-            #    "objectionable.farm" = {
-            #      enableACME = true;
-            #      forceSSL = true;
-            #      locations."/".proxyPass = "http://127.0.0.1:3001/";
-            #      #serverAliases = ["www.objectionable.farm"];
-            #    };
-            #  };
-            #  services.nginx.recommendedProxySettings = true;
-            #  security.acme.defaults.email = "rowan.skewes@gmail.com";
-            #  security.acme.acceptTerms = true;
-            #  networking.firewall.allowedTCPPorts = [ 80 443 ];
-            #})
+            ({
+              services.nginx.enable = true;
+              services.nginx.virtualHosts = {
+                "castlemaineharvest.com.au" = {
+                  root = harvest-front-page; enableACME = true; forceSSL = true;
+                  serverAliases = ["www.castlemaineharvest.com.au"];
+                };
+                "coolroom.castlemaineharvest.com.au" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/".proxyPass = "http://127.0.0.1:3000/";
+                  serverAliases = ["www.coolroom.castlemaineharvest.com.au"];
+                };
+                "coolroom-sensor.castlemaineharvest.com.au" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/".proxyPass = "http://127.0.0.1:8086/";
+                };
+                "objectionable.farm" = {
+                  enableACME = true;
+                  acmeRoot = null;
+                  forceSSL = true;
+                  locations."/".proxyPass = "http://127.0.0.1:3001/";
+                  #serverAliases = ["www.objectionable.farm"];
+                };
+              };
+              services.nginx.recommendedProxySettings = true;
+              security.acme.defaults.email = "rowan.skewes@gmail.com";
+              security.acme.acceptTerms = true;
+              networking.firewall.allowedTCPPorts = [ 80 443 ];
+            })
 
             # WARNING: This configuration is insecure by default.
             # You must activate influxdb-and-grafana without exposing publicly (i.e. comment out the nginx config above)
@@ -97,9 +98,10 @@
                 certs."objectionable.farm" = {
                   listenHTTP = ":80";
                   email = "certs+rowan.skewes@gmail.com";
-                  group = "postgres";
+                  group = "nginx";
                   postRun = ''
                     cp ${config.security.acme.certs."objectionable.farm".directory}/fullchain.pem /postgres-fullchain.pem
+                    # The cert must be owned by postgres user
                     chown postgres:postgres /postgres-fullchain.pem
                     # Need to set to 600 otherwise get SSL error code 2147483661
                     chmod 600 /postgres-fullchain.pem
