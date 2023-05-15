@@ -40,15 +40,15 @@
       pubkeyToDeployToVps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
     in
     {
-      nixosConfigurations.binarylane =
+      nixosConfigurations.vps1 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
             # Hardware and networking configuration created when host is provisioned, not commited to repo
             # See scripts/nixify-vps.sh for how these are created (wip)
-            (import ./machines/binarylane/hardware-configuration.nix)
-            (import ./machines/binarylane/networking.nix)
+            (import ./machines/vps1/hardware-configuration.nix)
+            (import ./machines/vps1/networking.nix)
 
             ({
               services.nginx.enable = true;
@@ -148,7 +148,7 @@
             })
 
             ({pkgs, ...}: {
-              networking.hostName = "rowan-binarylane";
+              networking.hostName = "rowan-vps1";
 
               # Default hardware-configuration has no swap device,
               # causing nixos-rebuilt to crash
