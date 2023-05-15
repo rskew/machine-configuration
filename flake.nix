@@ -34,10 +34,10 @@
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
-      jump-box-ip = "45.124.52.135";
-      jump-box-known-hosts-line = "45.124.52.135 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJehgSBLKF43klph+tEMBGxYt0+P/6cL/eMdvLlR4Kad";
-      vps-management-pubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"; # id_ed25519_mammoth.pub
-      pubkey-to-deploy-to-vps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
+      jumpBoxIp = "45.124.54.206";
+      jumpBoxKnownHostsLine = "45.124.52.135 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJehgSBLKF43klph+tEMBGxYt0+P/6cL/eMdvLlR4Kad";
+      vpsManagementPubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"; # id_ed25519_mammoth.pub
+      g = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
     in
     {
       nixosConfigurations.binarylane =
@@ -168,7 +168,7 @@
               '';
               # Don't allow inbound ssh connections to forwarded ports on 0.0.0.0
               services.openssh.gatewayPorts = "no";
-              users.users.root.openssh.authorizedKeys.keys = [ vps-management-pubkey ];
+              users.users.root.openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
 
               services.openssh = {
                 enable = true;
@@ -184,7 +184,7 @@
                 extraGroups = [ "wheel" "docker" "dialout" ];
                 shell = pkgs.fish;
                 openssh.authorizedKeys.keys = [
-                  vps-management-pubkey
+                  vpsManagementPubkey
                 ];
               };
               security.sudo.wheelNeedsPassword = false;
@@ -223,6 +223,23 @@
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
+            # Forward the port of the register DB to the cloud server
+            # so the shop admin app database can connect directly to the
+            # register database for keeping prices up-to-date
+            (import ./persistent-ssh-tunnel.nix)
+            ({...}: {
+              services.persistentSSHTunnel = {
+                enable = true;
+                remoteIp = jumpBoxIp;
+                remoteUser = "rowan";
+                idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
+                knownHostsLine = jumpBoxKnownHostsLine;
+                remoteForwards = [
+                  { localIp = "192.168.0.121"; localPort = 8001; remotePort = 5001; }
+                ];
+              };
+            })
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [./machines/shop-server-z230-hardware-configuration.nix
@@ -232,7 +249,7 @@
 
               networking.networkmanager.enable = true;
 
-              # This machine is not on the public internet
+              # This machine is behind a router NAT
               networking.firewall.allowedTCPPorts = [
                 8080 # Hasura
                 80 443 # test admin app
@@ -297,7 +314,7 @@
                   "wheel"  # Enable ‘sudo’ for the user.
                   "docker"
                 ];
-                openssh.authorizedKeys.keys = [ vps-management-pubkey ];
+                openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
                 shell = pkgs.fish;
               };
 
@@ -343,6 +360,21 @@
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
+            (import ./persistent-ssh-tunnel.nix)
+            ({...}: {
+              services.persistentSSHTunnel = {
+                enable = true;
+                remoteIp = jumpBoxIp;
+                remoteUser = "rowan";
+                idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
+                knownHostsLine = jumpBoxKnownHostsLine;
+                remoteForwards = [
+                  { localPort = 22; remotePort = 7722; } # SSH
+                  { localPort = 3000; remotePort = 3001; } # Grafana
+                ];
+              };
+            })
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [./machines/farm-server-digital-hardware-configuration.nix
@@ -368,26 +400,6 @@
                 forwardX11 = false;
               };
 
-              systemd.services.ssh-tunnel = import ./persistent-ssh-tunnel.nix {
-                inherit pkgs;
-                local-port = "22";
-                remote-port = "7722";
-                remote-ip = jump-box-ip;
-                remote-user = "rowan";
-                id-file = "/home/rowan/.ssh/id_to_deploy_to_servers1";
-                known-hosts-line = jump-box-known-hosts-line;
-              };
-              # TODO enable multiple forwarded ports from ./persistent-ssh-tunnel
-              systemd.services.grafana-tunnel = import ./persistent-ssh-tunnel.nix {
-                inherit pkgs;
-                local-port = "3000";
-                remote-port = "3001";
-                remote-ip = jump-box-ip;
-                remote-user = "rowan";
-                id-file = "/home/rowan/.ssh/id_to_deploy_to_servers1";
-                known-hosts-line = jump-box-known-hosts-line;
-              };
-
               users.users.rowan = {
                 isNormalUser = true;
                 extraGroups = [
@@ -395,7 +407,7 @@
                   "docker"
                   "usb" "dialout" "uucp"
                 ];
-                openssh.authorizedKeys.keys = [ vps-management-pubkey ];
+                openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
                 shell = pkgs.fish;
               };
 
