@@ -35,9 +35,9 @@
           config.allowUnfree = true;
       };
       jumpBoxIp = "45.124.54.206";
-      jumpBoxKnownHostsLine = "45.124.52.135 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJehgSBLKF43klph+tEMBGxYt0+P/6cL/eMdvLlR4Kad";
+      jumpBoxKnownHostsLine = "45.124.54.206 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBBiOw+sB106FeeF6wp52n5FQt3s+8zOmCRZHcvhUsq3";
       vpsManagementPubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"; # id_ed25519_mammoth.pub
-      g = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
+      pubkeyToDeployToVps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
     in
     {
       nixosConfigurations.binarylane =
@@ -185,6 +185,7 @@
                 shell = pkgs.fish;
                 openssh.authorizedKeys.keys = [
                   vpsManagementPubkey
+                  pubkeyToDeployToVps # Allow other servers to SSH to this server
                 ];
               };
               security.sudo.wheelNeedsPassword = false;
@@ -354,7 +355,7 @@
                 SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="dialout", MODE="0664", SYMLINK+="ftdi-thingo"
               '';
             })
-            agenix.nixosModule
+            agenix.nixosModules.age
             ({...}: {
               age.secrets."autofarm-frontend-server-basic-auth-credentials".file = ./secrets/autofarm-frontend-server-basic-auth-credentials.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
