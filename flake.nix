@@ -79,7 +79,7 @@
               services.nginx.recommendedProxySettings = true;
               security.acme.defaults.email = "rowan.skewes@gmail.com";
               security.acme.acceptTerms = true;
-              networking.firewall.allowedTCPPorts = [ 80 443 ];
+              networking.firewall.allowedTCPPorts = [ 443 ];
             })
 
             # WARNING: This configuration is insecure by default.
@@ -96,7 +96,6 @@
               security.acme = {
                 acceptTerms = true;
                 certs."objectionable.farm" = {
-                  listenHTTP = ":80";
                   email = "certs+rowan.skewes@gmail.com";
                   group = "nginx";
                   postRun = ''
@@ -109,6 +108,9 @@
                     chown postgres:postgres /postgres-key.pem
                     chmod 600 /postgres-key.pem
                   '';
+                  dnsProvider = "namecheap";
+                  dnsPropagationCheck = false;
+                  credentialsFile = config.age.secrets.namecheap-api-creds-for-acme-dns-challenge.path;
                 };
               };
               services.postgresql = {
@@ -134,8 +136,7 @@
                 '';
               };
               systemd.services.postgresql.requires = [ "acme-finished-objectionable.farm.target" ];
-              # We need to open port 80 for the letsencrypt challenge server
-              networking.firewall.allowedTCPPorts = [ 80 5432 ];
+              networking.firewall.allowedTCPPorts = [ 5432 ];
             })
 
             agenix.nixosModules.age
@@ -145,6 +146,7 @@
               age.secrets.farm-gis-pgpassword.owner = "postgres";
               age.secrets.farm-gis-pgpassword.group = "postgres";
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
+              age.secrets.namecheap-api-creds-for-acme-dns-challenge.file = ./secrets/namecheap-api-creds-for-acme-dns-challenge.age;
             })
 
             ({pkgs, ...}: {
