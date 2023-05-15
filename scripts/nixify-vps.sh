@@ -8,7 +8,7 @@
 set -euxo pipefail
 
 function usage {
-    echo "Usage: nixify-mammoth-vps.sh name-of-host-in-ssh-config name-of-nixos-configuration-in-flake"
+    echo "Usage: nixify-vps.sh name-of-host-in-ssh-config name-of-nixos-configuration-in-flake"
 }
 
 
@@ -39,9 +39,9 @@ if [ -z "$NIXOS_CONFIGURATION" ]; then
 fi
 
 ssh root@"$SSH_HOST" nix-shell -p git --command '"git clone https://github.com/rskew/machine-configuration.git"'
-ssh root@"$SSH_HOST" mkdir -p /root/machine-configuration/this-vps
-ssh root@"$SSH_HOST" cp /etc/nixos/hardware-configuration.nix /etc/nixos/networking.nix /root/machine-configuration/this-vps
-ssh root@"$SSH_HOST" nix-shell -p git --command '"cd machine-configuration/this-vps; git add hardware-configuration.nix networking.nix -f"'
+ssh root@"$SSH_HOST" mkdir -p /root/machine-configuration/machines/"$NIXOS_CONFIGURATION"
+ssh root@"$SSH_HOST" cp /etc/nixos/hardware-configuration.nix /etc/nixos/networking.nix /root/machine-configuration/machines/"$NIXOS_CONFIGURATION"
+ssh root@"$SSH_HOST" nix-shell -p git --command '"cd machine-configuration/machines/'$NIXOS_CONFIGURATION'; git add hardware-configuration.nix networking.nix -f"'
 
 ssh root@"$SSH_HOST" mkdir /root/.ssh
 ssh root@"$SSH_HOST" "cat - > /root/.ssh/known_hosts" << EOF

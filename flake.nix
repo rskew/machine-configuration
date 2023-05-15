@@ -47,8 +47,8 @@
           modules = [
             # Hardware and networking configuration created when host is provisioned, not commited to repo
             # See scripts/nixify-vps.sh for how these are created (wip)
-            (import ./this-vps/hardware-configuration.nix)
-            (import ./this-vps/networking.nix)
+            (import ./machines/binarylane/hardware-configuration.nix)
+            (import ./machines/binarylane/networking.nix)
 
             ({
               services.nginx.enable = true;
