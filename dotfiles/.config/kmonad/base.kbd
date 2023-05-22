@@ -13,7 +13,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [     ]    \
   caps a    s    d    f    g    h    j    k    l    ;    '          ret
   lsft z    x    c    v    b    n    m    ,    .    /               rsft
-  wkup lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
+  lctl lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
                                                                 left down rght
 )
 
@@ -23,7 +23,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [     ]    \
   @ctlarrows a    s    d    f    g    h    j    k    l    ;    '          ret
   lsft z    x    c    v    b    n    m    ,    .    /               rsft
-  wkup lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
+  lctl lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
                                                                 left down rght
 )
 
@@ -48,7 +48,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
   _    a    s    d    f    g    left down up   rght ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  wkup lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
+  lctl lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
                                                                 left down rght
 )
 
@@ -59,6 +59,6 @@
   C-tab  C-q    C-w    C-e    C-r    C-t    C-y    C-u    C-i    C-o    C-p    C-[    C-]    C-\
   _      C-a    C-s    C-d    C-f    C-g    left   down   up     rght   C-;    C-'           C-ret
   C-lsft C-z    C-x    C-c    C-v    C-b    C-n    C-m    C-,    C-.    C-/                  C-rsft
-  C-wkup C-lctl C-lmet C-lalt           C-spc             C-ralt C-prnt  C-rctl  C-pgup C-up   C-pgdn
+  C-lctl C-lctl C-lmet C-lalt           C-spc             C-ralt C-prnt  C-rctl  C-pgup C-up   C-pgdn
                                                                                  C-left C-down C-rght
 )

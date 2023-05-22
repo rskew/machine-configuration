@@ -40,13 +40,12 @@
       pubkeyToDeployToVps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
     in
     {
+
       nixosConfigurations.vps1 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
-            # Hardware and networking configuration created when host is provisioned, not commited to repo
-            # See scripts/nixify-vps.sh for how these are created (wip)
             (import ./machines/vps1/hardware-configuration.nix)
             (import ./machines/vps1/networking.nix)
 
@@ -54,26 +53,28 @@
               services.nginx.enable = true;
               services.nginx.virtualHosts = {
                 "castlemaineharvest.com.au" = {
-                  root = harvest-front-page; enableACME = true; forceSSL = true;
+                  root = harvest-front-page;
+                  enableACME = true;
+                  forceSSL = true;
                   serverAliases = ["www.castlemaineharvest.com.au"];
                 };
                 "coolroom.castlemaineharvest.com.au" = {
+                  locations."/".proxyPass = "http://127.0.0.1:3000/";
                   enableACME = true;
                   forceSSL = true;
-                  locations."/".proxyPass = "http://127.0.0.1:3000/";
                   serverAliases = ["www.coolroom.castlemaineharvest.com.au"];
                 };
                 "coolroom-sensor.castlemaineharvest.com.au" = {
+                  locations."/".proxyPass = "http://127.0.0.1:8086/";
                   enableACME = true;
                   forceSSL = true;
-                  locations."/".proxyPass = "http://127.0.0.1:8086/";
                 };
                 "objectionable.farm" = {
+                  locations."/".proxyPass = "http://127.0.0.1:3001/";
                   enableACME = true;
                   acmeRoot = null;
                   forceSSL = true;
-                  locations."/".proxyPass = "http://127.0.0.1:3001/";
-                  #serverAliases = ["www.objectionable.farm"];
+                  serverAliases = ["www.objectionable.farm"];
                 };
               };
               services.nginx.recommendedProxySettings = true;
@@ -82,8 +83,8 @@
               networking.firewall.allowedTCPPorts = [ 443 ];
             })
 
-            # WARNING: This configuration is insecure by default.
-            # You must activate influxdb-and-grafana without exposing publicly (i.e. comment out the nginx config above)
+            # WARNING: This configuration is insecure for fresh deployments.
+            # You must activate influxdb-and-grafana **without exposing publicly** (i.e. comment out the nginx config above)
             # then set the admin password for influxdb and for grafana
             coolroom-monitor.nixosModules.influxdb-and-grafana
             ({...}: {
@@ -110,7 +111,7 @@
                   '';
                   dnsProvider = "namecheap";
                   dnsPropagationCheck = false;
-                  credentialsFile = config.age.secrets.namecheap-api-creds-for-acme-dns-challenge.path;
+                  credentialsFile = config.age.secrets.namecheap-api-credentials.path;
                 };
               };
               services.postgresql = {
@@ -118,7 +119,7 @@
                 package = pkgs.postgresql;
                 extraPlugins = [ pkgs.postgresqlPackages.postgis ];
                 port = 5432;
-                initdbArgs = ["--pwfile=${config.age.secrets.farm-gis-pgpassword.path}"];
+                initdbArgs = ["--pwfile=${config.age.secrets.farmdb-pgpassword.path}"];
                 initialScript = pkgs.writeText "initialScript" ''
                   CREATE EXTENSION postgis;
                   CREATE EXTENSION postgis_raster;
@@ -127,6 +128,9 @@
                   ssl = "on";
                   ssl_cert_file = "/postgres-fullchain.pem";
                   ssl_key_file = "/postgres-key.pem";
+                  archive_mode = "on";
+                  archive_command = "env /run/agenix/b2-credentials ${pkgs.pgbackrest}/bin/pgbackrest --stanza=farmdb archive-push %p";
+                  archive_timeout = 300;
                 };
                 enableTCPIP = true; # Listen on 0.0.0.0
                 authentication = ''
@@ -137,16 +141,83 @@
               };
               systemd.services.postgresql.requires = [ "acme-finished-objectionable.farm.target" ];
               networking.firewall.allowedTCPPorts = [ 5432 ];
+              # TODO make pgbackrest service
+              # TODO put postgres + pgbackrest configuration in autofarm with a few parameters
+              # Creating backup repository
+              # - cd ~/machine-configuration/secrets
+              # - env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       aws --endpoint-url https://s3.us-west-000.backblazeb2.com s3api create-bucket --bucket farmdb-backup
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest --stanza=farmdb --log-level-console=info stanza-create
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest --stanza=farmdb --log-level-console=info check
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest --stanza=farmdb check
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest info
+              # Take first backup:
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest --stanza=farmdb --log-level-console=info backup
+              # Restoring backups:
+              # - stop the database
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest --stanza=farmdb --delta --log-level-console=detail restore
+              # - start the database
+              # Restore dev db from backup:
+              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
+              #       pgbackrest --stanza=farmdb --delta --pg-host-config=/path-to-config restore
+              #         --pg-database=postgres
+              #         --pg-host=vps1
+              #         --pg-host-user=rowan
+              environment.etc."pgbackrest/pgbackrest.conf".source = ''
+                [farmdb]
+                pg1-path=/var/lib/postgresql/14
+                repo1-retention-full=2 # keep only the last 2 full backups
+                repo1-type=s3
+                repo1-path=/postgres
+                repo1-s3-bucket=farmdb-backup
+                repo1-s3-endpoint=s3.us-west-000.backblazeb2.com
+                repo1-s3-region=us-west-000
+                repo1-cipher-type=aes-256-cbc
+                # Force a checkpoint to start backup immediately.
+                start-fast=y
+                # Use delta restore.
+                delta=y
+                compress-type=zst
+                compress-level=6
+              '';
+              systemd.services.postgres-backup-full = {
+                path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
+                user = "postgres";
+                script = "env /run/agenix/b2-credentials pgbackrest --stanza=farmdb --type=full backup";
+              };
+              systemd.timers.postgres-backup-full = {
+                partOf      = [ "postgres-backup-full.service" ];
+                wantedBy    = [ "timers.target" ];
+                timerConfig.OnCalendar = "Wed, 2:15";
+              };
+              systemd.services.postgres-backup-incr = {
+                path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
+                user = "postgres";
+                script = "env /run/agenix/b2-credentials pgbackrest --stanza=farmdb --type=incr backup";
+              };
+              systemd.timers.postgres-backup-incr = {
+                partOf      = [ "postgres-backup-incr.service" ];
+                wantedBy    = [ "timers.target" ];
+                timerConfig.OnCalendar = "Mon,Tue,Thu,Fri,Sat,Sun, 2:15";
+              };
             })
 
             agenix.nixosModules.age
             ({...}: {
-              age.secrets.farm-gis-pgpassword.file = ./secrets/farm-gis-pgpassword.age;
-              age.secrets.farm-gis-pgpassword.mode = "770";
-              age.secrets.farm-gis-pgpassword.owner = "postgres";
-              age.secrets.farm-gis-pgpassword.group = "postgres";
+              age.secrets.farmdb-pgpassword.file = ./secrets/farmdb-pgpassword.age;
+              age.secrets.farmdb-pgpassword.mode = "770";
+              age.secrets.farmdb-pgpassword.owner = "postgres";
+              age.secrets.farmdb-pgpassword.group = "postgres";
+              age.secrets."b2-credentials".file = ./secrets/b2-credentials.age;
+              age.secrets."b2-credentials".group = "postgres";
+              age.secrets.namecheap-api-credentials.file = ./secrets/namecheap-api-credentials.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
-              age.secrets.namecheap-api-creds-for-acme-dns-challenge.file = ./secrets/namecheap-api-creds-for-acme-dns-challenge.age;
             })
 
             ({pkgs, ...}: {
@@ -168,7 +239,7 @@
                 ClientAliveInterval 30
                 ClientAliveCountMax 3
               '';
-              # Don't allow inbound ssh connections to forwarded ports on 0.0.0.0
+              # Don't allow inbound ssh connections to forward ports on 0.0.0.0
               services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
 
@@ -485,6 +556,11 @@
           modules = [
 
             agenix.nixosModules.age
+            ({...}: {
+              age.secrets."b2-credentials".file = ./secrets/b2-credentials.age;
+              age.secrets."restic-password".file = ./secrets/restic-password.age;
+              age.identityPaths = [ "/home/rowan/.ssh/id_rowan2" ];
+            })
 
             home-manager.nixosModules.home-manager
             ({pkgs, unstable, lib, ...}: {
@@ -494,15 +570,15 @@
                 import ./home.nix {inherit config pkgs unstable; isGraphical = true;};
             })
 
-            # Bluetooth keyboard config
             kmonad.nixosModule
-            ({...}: {
+            # Bluetooth keyboard config
+            ({lib, ...}: {
               services.kmonad = {
                 enable = true;
                 configfiles = [
                   "/etc/kmonad/config.kbd"
                   "/etc/kmonad/tex-config.kbd"
-                  #"/etc/kmonad/mac-kbd-config.kbd"
+                  "/etc/kmonad/mac-kbd-config.kbd"
                 ];
                 package = kmonad.packages.x86_64-linux.kmonad;
                 make-group = false;
@@ -518,16 +594,21 @@
                 # /dev/tex-kbd is created by the SYMLINK command in the udev rule below
                 replacements = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
               };
-              #environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
-              #  name = "mac-kbd-config.kbd";
-              #  src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-              #  replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usb-0:5.1.2.1:1.0-event-kbd" ]; # Built-in keyboard
-              #};
+              environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
+                name = "mac-kbd-config.kbd";
+                src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
+                replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usb-0:5.1.2.1:1.0-event-kbd" ]; # Usb mac keyboard
+              };
               services.udev.extraRules = ''
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-tex-config.service"
               '';
+              # Disable the unit for external keyboards so they don't start automatically.
+              # The udev rules will start the unit for the bluetooth keyboard when the keyboard connects.
+              # When enabled, sometimes these service use 100% of all CPU cores on boot :/
+              systemd.services.kmonad-tex-config.wantedBy = lib.mkForce [];
+              systemd.services.kmonad-mac-kbd-config.wantedBy = lib.mkForce [];
             })
 
             ({config, pkgs, unstable, ...}: {
@@ -750,19 +831,17 @@
                 serviceConfig.Type = "forking";
               };
 
-              # Initialise rclone for working with backups on backblaze b2
-              # - copy rclone.conf containing credentials for backblaze b2 from gdrive to ~/.config/rclone/rclone.conf
-              # - copy restic-b2-appkey.env containing credentials for backblaze b2 from gdrive to ~/secrets/restic-b2-appkey.env
-              # - create ~/secrets/restic-password containing the plaintext password for the restic repository
+              # Backups
               # Creating backup repository
-              # - rclone mkdir b2:restic-backups-rowan-p14
-              # - source secrets/restic-b2-appkey.env
-              # - restic init --repo b2:restic-backups-rowan-p14 --password-file ~/secrets/restic-password
+              # - cd ~/machine-configuration/secrets
+              # - env (agenix -i ~/.ssh/id_rowan2 -d b2-credentials.age) RESTIC_PASSWORD=(agenix -i ~/.ssh/id_rowan2 -d restic-password.age) fish
+              # - aws --endpoint-url https://s3.us-west-000.backblazeb2.com s3api create-bucket --bucket restic-backups-rowan-p14
+              # - restic init --repo s3:https://s3.us-west-000.backblazeb2.com/restic-backups-rowan-p14
               # Restoring backups:
-              # - get snapshot ID to restore (if not using 'latest') via `rclone lsl b2:restic-backups-rowan-p14/snapshots | awk 's/^[ ]*//' | cut -d' ' --complement -f1  | sort -r | head`
-              # - source ~/secrets/restic-b2-appkey.env
-              # - restic -r <repo> -p /home/rowan/secrets/restic-password restore <snapshot> --target <dir>
-              # e.g. `sudo -E restic -r b2:restic-backups-rowan-p14 -p /home/rowan/secrets/restic-password restore latest --target ~/restored-backups/2022-04-10`
+              # - get snapshot ID to restore (if not using 'latest') via:
+              #       aws --endpoint-url https://s3.us-west-000.backblazeb2.com s3 ls s3://restic-backups-rowan-p14/snapshots/ | sed 's/^[ ]*//' | cut -d' ' --complement -f1  | sort -r
+              # - restic -r <repo> restore <snapshot> --target <dir>
+              # e.g. restic -r s3:https://s3.us-west-000.backblazeb2.com/restic-backups-rowan-p14 restore latest --target ~/restored-backups/2022-04-10
               services.restic.backups = {
                 remotebackup = {
                   dynamicFilesFrom = ''
@@ -780,9 +859,9 @@
                       /home/rowan/Downloads/STG-backups*
                     '
                   '';
-                  repository = "b2:restic-backups-rowan-p14";
-                  passwordFile = "/home/rowan/secrets/restic-password-p14";
-                  environmentFile = "/home/rowan/secrets/restic-b2-appkey.env";
+                  repository = "s3:https://s3.us-west-000.backblazeb2.com/restic-backups-rowan-p14";
+                  passwordFile = config.age.secrets.restic-password.path;
+                  environmentFile = config.age.secrets.b2-credentials.path;
                   timerConfig = {
                     OnCalendar = "daily";
                   };

@@ -92,6 +92,7 @@ in {
     broot
     unstable.pandoc
     unstable.zellij
+    pgbackrest
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration
