@@ -38,8 +38,10 @@
       jumpBoxKnownHostsLine = "45.124.54.206 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBBiOw+sB106FeeF6wp52n5FQt3s+8zOmCRZHcvhUsq3";
       vpsManagementPubkey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMP6vikXvdj0wt9/WFCceeOPwimT1LqQcEItLXPTq7ye rowan@rowan-yoga-260-keenbean"; # id_ed25519_mammoth.pub
       pubkeyToDeployToVps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
+      shedPowerMonitorDeviceSymlink = "vedirect-usb";
+      shedPowerMonitor = import ./applications/shed-power-monitor { inherit pkgs; device_path = "/dev/${shedPowerMonitorDeviceSymlink}"; };
     in
-    {
+    rec {
 
       nixosConfigurations.vps1 =
         nixpkgs.lib.nixosSystem {
@@ -407,6 +409,13 @@
           ];
         };
 
+      packages.x86_64-linux.shedPowerMonitor = shedPowerMonitor.package;
+      devShells.x86_64-linux.shedPowerMonitor = pkgs.mkShell {
+        buildInputs = [ pkgs.nodejs pkgs.nodePackages.node2nix ];
+        NODE_PATH = shedPowerMonitor.NODE_PATH;
+        shellHook = "cd applications/shed-power-monitor";
+      };
+
       nixosConfigurations.farm-server =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
@@ -428,10 +437,18 @@
                 SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="dialout", MODE="0664", SYMLINK+="ftdi-thingo"
               '';
             })
+
             agenix.nixosModules.age
             ({...}: {
               age.secrets."autofarm-frontend-server-basic-auth-credentials".file = ./secrets/autofarm-frontend-server-basic-auth-credentials.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
+            })
+
+            shedPowerMonitor.module
+            ({...}: {
+              services.udev.extraRules = ''
+                SUBSYSTEM=="tty", ATTRS{idProduct}=="6015", ATTRS{idVendor}=="0403", ATTRS{serial}=="VE6INUFY", GROUP="dialout", MODE="0664", SYMLINK+="${shedPowerMonitorDeviceSymlink}"
+              '';
             })
 
             (import ./persistent-ssh-tunnel.nix)

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@signalk/vedirect-serial-usb": ">=1.3.0"
+  },
+  "name": "shed-power-monitor",
+  "version": "1.0.0",
+  "main": "index.js"
+}
