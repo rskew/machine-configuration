@@ -76,7 +76,7 @@
                   enableACME = true;
                   acmeRoot = null;
                   forceSSL = true;
-                  serverAliases = ["www.objectionable.farm"];
+                  serverAliases = ["top-tank.objectionable.farm"];
                 };
               };
               services.nginx.recommendedProxySettings = true;
@@ -131,7 +131,7 @@
                   ssl_cert_file = "/postgres-fullchain.pem";
                   ssl_key_file = "/postgres-key.pem";
                   archive_mode = "on";
-                  archive_command = "env /run/agenix/b2-credentials ${pkgs.pgbackrest}/bin/pgbackrest --stanza=farmdb archive-push %p";
+                  archive_command = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) ${pkgs.pgbackrest}/bin/pgbackrest --stanza=farmdb archive-push %p";
                   archive_timeout = 300;
                 };
                 enableTCPIP = true; # Listen on 0.0.0.0
@@ -149,32 +149,40 @@
               # - cd ~/machine-configuration/secrets
               # - env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
               #       aws --endpoint-url https://s3.us-west-000.backblazeb2.com s3api create-bucket --bucket farmdb-backup
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest --stanza=farmdb --log-level-console=info stanza-create
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest --stanza=farmdb --log-level-console=info check
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest --stanza=farmdb check
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest info
+              # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=info stanza-create
+              # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=info check
+              # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=info info
               # Take first backup:
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest --stanza=farmdb --log-level-console=info backup
+              # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=info --type=full backup
               # Restoring backups:
               # - stop the database
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest --stanza=farmdb --delta --log-level-console=detail restore
+              # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=detail --delta restore
               # - start the database
               # Restore dev db from backup:
-              # - sudo -u postgres env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d b2-credentials.age) \
-              #       pgbackrest --stanza=farmdb --delta --pg-host-config=/path-to-config restore
+              # - env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d pgbackrest-credentials-env.age) \
+              #       pgbackrest\
+              #         --pg1-path=.db-data
+              #         --pg1-user=postgres
+              #         --repo1-type=s3
+              #         --repo1-path=postgres
+              #         --repo1-s3-bucket=farmdb-backup
+              #         --repo1-s3-endpoint=s3.us-west-000.backblazeb2.com
+              #         --repo1-s3-region=us-west-000
+              #         --repo1-cipher-type=aes-256-cbc
+              #         --delta=y
+              #         --compress-type=zst
+              #         --compress-level=6
+              #         restore
+              # - env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d pgbackrest-credentials-env.age) \
+              #       pgbackrest --stanza=farmdb --delta --pg1-host-config=/etc/pgbackrest/pgbackrest.conf restore
               #         --pg-database=postgres
-              #         --pg-host=vps1
+              #         --pg-host=objectionable.farm
               #         --pg-host-user=rowan
-              environment.etc."pgbackrest/pgbackrest.conf".source = ''
+              environment.etc."pgbackrest/pgbackrest.conf".text = ''
                 [farmdb]
                 pg1-path=/var/lib/postgresql/14
-                repo1-retention-full=2 # keep only the last 2 full backups
+                pg1-user=postgres
+                repo1-retention-full=2
                 repo1-type=s3
                 repo1-path=/postgres
                 repo1-s3-bucket=farmdb-backup
@@ -188,20 +196,20 @@
                 compress-type=zst
                 compress-level=6
               '';
-              systemd.services.postgres-backup-full = {
+              systemd.services.postgres-backup-full.serviceConfig = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
                 user = "postgres";
-                script = "env /run/agenix/b2-credentials pgbackrest --stanza=farmdb --type=full backup";
+                script = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=full backup";
               };
               systemd.timers.postgres-backup-full = {
                 partOf      = [ "postgres-backup-full.service" ];
                 wantedBy    = [ "timers.target" ];
                 timerConfig.OnCalendar = "Wed, 2:15";
               };
-              systemd.services.postgres-backup-incr = {
+              systemd.services.postgres-backup-incr.serviceConfig = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
                 user = "postgres";
-                script = "env /run/agenix/b2-credentials pgbackrest --stanza=farmdb --type=incr backup";
+                script = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=incr backup";
               };
               systemd.timers.postgres-backup-incr = {
                 partOf      = [ "postgres-backup-incr.service" ];
@@ -216,8 +224,11 @@
               age.secrets.farmdb-pgpassword.mode = "770";
               age.secrets.farmdb-pgpassword.owner = "postgres";
               age.secrets.farmdb-pgpassword.group = "postgres";
-              age.secrets."b2-credentials".file = ./secrets/b2-credentials.age;
-              age.secrets."b2-credentials".group = "postgres";
+              age.secrets."pgbackrest-credentials-env".file = ./secrets/pgbackrest-credentials-env.age;
+              age.secrets."pgbackrest-credentials-env".mode = "440";
+              age.secrets."pgbackrest-credentials-env".owner = "postgres";
+              age.secrets."pgbackrest-credentials-env".group = "postgres";
+              age.secrets.b2-credentials.file = ./secrets/b2-credentials.age;
               age.secrets.namecheap-api-credentials.file = ./secrets/namecheap-api-credentials.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
@@ -256,7 +267,7 @@
 
               users.users.rowan = {
                 isNormalUser = true;
-                extraGroups = [ "wheel" "docker" "dialout" ];
+                extraGroups = [ "wheel" "docker" "dialout" "postgres" ];
                 shell = pkgs.fish;
                 openssh.authorizedKeys.keys = [
                   vpsManagementPubkey
@@ -275,7 +286,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
                 {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable; isGraphical = false;};
+                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = false;};
             })
           ];
         };
@@ -731,7 +742,6 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
-                agenix.packages.${system}.agenix
                 nix-tree
               ];
 

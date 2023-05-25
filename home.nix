@@ -1,4 +1,4 @@
-{config, pkgs, unstable, isGraphical, ...}:
+{config, pkgs, unstable, isGraphical, agenix, ...}:
 let
   pythonEnv = pkgs.python39.withPackages(ps: with ps; [
     pandas
@@ -93,6 +93,7 @@ in {
     unstable.pandoc
     unstable.zellij
     pgbackrest
+    agenix.packages.${system}.agenix
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration

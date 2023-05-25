@@ -11,4 +11,5 @@ in
   "restic-password.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "b2-credentials.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "pgbackrest-cipher-pass.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "pgbackrest-credentials-env.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
 }
