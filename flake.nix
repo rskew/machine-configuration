@@ -196,25 +196,25 @@
                 compress-type=zst
                 compress-level=6
               '';
-              systemd.services.postgres-backup-full.serviceConfig = {
+              systemd.services.postgres-backup-full = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
-                user = "postgres";
                 script = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=full backup";
+                serviceConfig.User = "postgres";
               };
               systemd.timers.postgres-backup-full = {
                 partOf      = [ "postgres-backup-full.service" ];
                 wantedBy    = [ "timers.target" ];
-                timerConfig.OnCalendar = "Wed, 2:15";
+                timerConfig.OnCalendar = "Wed 2:33 Australia/Melbourne";
               };
-              systemd.services.postgres-backup-incr.serviceConfig = {
+              systemd.services.postgres-backup-incr = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
-                user = "postgres";
                 script = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=incr backup";
+                serviceConfig.User = "postgres";
               };
               systemd.timers.postgres-backup-incr = {
                 partOf      = [ "postgres-backup-incr.service" ];
                 wantedBy    = [ "timers.target" ];
-                timerConfig.OnCalendar = "Mon,Tue,Thu,Fri,Sat,Sun, 2:15";
+                timerConfig.OnCalendar = "Mon,Tue,Thu,Fri,Sat,Sun 2:33 Australia/Melbourne";
               };
             })
 
