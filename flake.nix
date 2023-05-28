@@ -433,7 +433,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
                 {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable; isGraphical = false;};
+                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = false;};
             })
           ];
         };
@@ -541,7 +541,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
                 {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable; isGraphical = false;};
+                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = false;};
             })
           ];
         };
@@ -613,7 +613,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
                 {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable; isGraphical = true;};
+                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = true;};
             })
 
             kmonad.nixosModule
@@ -643,12 +643,15 @@
               environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
                 name = "mac-kbd-config.kbd";
                 src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-                replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usb-0:5.1.2.1:1.0-event-kbd" ]; # Usb mac keyboard
+                replacements = [ "--replace" "keyboard-device" "/dev/mac-kbd" ]; # Usb mac keyboard
               };
               services.udev.extraRules = ''
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-tex-config.service"
+                SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", SYMLINK+="mac-kbd"
+                SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-mac-kbd-config.service"
+                SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-mac-kbd-config.service"
               '';
               # Disable the unit for external keyboards so they don't start automatically.
               # The udev rules will start the unit for the bluetooth keyboard when the keyboard connects.
