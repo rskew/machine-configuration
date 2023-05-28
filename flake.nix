@@ -184,7 +184,7 @@
               #   - rm pgbackrest.conf
               environment.etc."pgbackrest/pgbackrest.conf".text = ''
                 [farmdb]
-                pg1-path=${config.postgresql.datadir}
+                pg1-path=${config.services.postgresql.dataDir}
                 pg1-user=postgres
                 repo1-retention-full=2
                 repo1-type=s3
@@ -203,10 +203,11 @@
               systemd.services.postgres-backup-full = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
                 script = ''
-                  if readlink ${config.postgresql.datadir}; then
+                  confpath=${config.services.postgresql.dataDir}/postgresql.conf
+                  if readlink "$confpath"; then
                     echo Copying postgresql.conf out of nix store so that it can have writable mode, required for restore
-                    cp "$(readlink ${config.postgresql.datadir})" ${config.postgresql.datadir}
-                    chmod +w ${config.postgresql.datadir}
+                    cp --remove-destination "$(readlink "$confpath")" "$confpath"
+                    chmod +w "$confpath"
                   fi
                   env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=full backup
                 '';
@@ -220,10 +221,11 @@
               systemd.services.postgres-backup-incr = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
                 script = ''
-                  if readlink ${config.postgresql.datadir}; then
+                  confpath=${config.services.postgresql.dataDir}/postgresql.conf
+                  if readlink "$confpath"; then
                     echo Copying postgresql.conf out of nix store so that it can have writable mode, required for restore
-                    cp "$(readlink ${config.postgresql.datadir})" ${config.postgresql.datadir}
-                    chmod +w ${config.postgresql.datadir}
+                    cp --remove-destination "$(readlink "$confpath")" "$confpath"
+                    chmod +w "$confpath"
                   fi
                   env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=incr backup
                 '';
