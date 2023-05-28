@@ -143,7 +143,7 @@
               };
               systemd.services.postgresql.requires = [ "acme-finished-objectionable.farm.target" ];
               networking.firewall.allowedTCPPorts = [ 5432 ];
-              # TODO make pgbackrest service
+              # TODO make pgbackrest service module
               # TODO put postgres + pgbackrest configuration in autofarm with a few parameters
               # Creating backup repository
               # - cd ~/machine-configuration/secrets
@@ -159,28 +159,32 @@
               # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=detail --delta restore
               # - start the database
               # Restore dev db from backup:
-              # - env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d pgbackrest-credentials-env.age) \
-              #       pgbackrest\
-              #         --pg1-path=.db-data
-              #         --pg1-user=postgres
-              #         --repo1-type=s3
-              #         --repo1-path=postgres
-              #         --repo1-s3-bucket=farmdb-backup
-              #         --repo1-s3-endpoint=s3.us-west-000.backblazeb2.com
-              #         --repo1-s3-region=us-west-000
-              #         --repo1-cipher-type=aes-256-cbc
-              #         --delta=y
-              #         --compress-type=zst
-              #         --compress-level=6
+              #   - cd /home/rowan/machine-configuration/secrets
+              #   - cat <<EOF > pgbackrest.conf
+              #     [farmdb]
+              #     pg1-path=/home/rowan/farm/autofarm/db/.db-data
+              #     pg1-user=postgres
+              #     repo1-retention-full=2
+              #     repo1-type=s3
+              #     repo1-path=/postgres
+              #     repo1-s3-bucket=farmdb-backup
+              #     repo1-s3-endpoint=s3.us-west-000.backblazeb2.com
+              #     repo1-s3-region=us-west-000
+              #     repo1-cipher-type=aes-256-cbc
+              #     delta=y
+              #     compress-type=zst
+              #     compress-level=6
+              #     EOF
+              #   - env $(agenix -i ~/.ssh/id_rowan2 -d pgbackrest-credentials-env.age) \
+              #       pgbackrest \
+              #         --config=$PWD/pgbackrest.conf \
+              #         --stanza=farmdb \
+              #         --delta \
               #         restore
-              # - env $(agenix -i ~/.ssh/id_to_deploy_to_servers1 -d pgbackrest-credentials-env.age) \
-              #       pgbackrest --stanza=farmdb --delta --pg1-host-config=/etc/pgbackrest/pgbackrest.conf restore
-              #         --pg-database=postgres
-              #         --pg-host=objectionable.farm
-              #         --pg-host-user=rowan
+              #   - rm pgbackrest.conf
               environment.etc."pgbackrest/pgbackrest.conf".text = ''
                 [farmdb]
-                pg1-path=/var/lib/postgresql/14
+                pg1-path=${config.postgresql.datadir}
                 pg1-user=postgres
                 repo1-retention-full=2
                 repo1-type=s3
@@ -198,7 +202,14 @@
               '';
               systemd.services.postgres-backup-full = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
-                script = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=full backup";
+                script = ''
+                  if readlink ${config.postgresql.datadir}; then
+                    echo Copying postgresql.conf out of nix store so that it can have writable mode, required for restore
+                    cp "$(readlink ${config.postgresql.datadir})" ${config.postgresql.datadir}
+                    chmod +w ${config.postgresql.datadir}
+                  fi
+                  env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=full backup
+                '';
                 serviceConfig.User = "postgres";
               };
               systemd.timers.postgres-backup-full = {
@@ -208,7 +219,14 @@
               };
               systemd.services.postgres-backup-incr = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
-                script = "env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=incr backup";
+                script = ''
+                  if readlink ${config.postgresql.datadir}; then
+                    echo Copying postgresql.conf out of nix store so that it can have writable mode, required for restore
+                    cp "$(readlink ${config.postgresql.datadir})" ${config.postgresql.datadir}
+                    chmod +w ${config.postgresql.datadir}
+                  fi
+                  env $(cat ${config.age.secrets.pgbackrest-credentials-env.path}) pgbackrest --stanza=farmdb --type=incr backup
+                '';
                 serviceConfig.User = "postgres";
               };
               systemd.timers.postgres-backup-incr = {
