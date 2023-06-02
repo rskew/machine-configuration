@@ -23,10 +23,10 @@ elif [ -n "$(echo $DISPLAY_CONNECTED | grep HDMI-2)" ]; then
   DISPLAY=:0 xrandr --output eDP-1 --rotate normal --output HDMI-2 --primary --mode 1920x1080 --rotate normal --"$POSITION_EXT_TO_LAPPY" eDP-1 --ouptut eDP-1 --mode "$LAPPY_RES"
 
 elif [ -n "$(echo $DISPLAY_CONNECTED | grep DP-2-3)" ]; then
-  #DISPLAY=:0 xrandr \
-  #    --output eDP-1 --mode "$LAPPY_RES" --pos 0x2100 \
-  #    --output "$DISPLAY_CONNECTED" --scale 2 --pos 0x0 --primary --auto --"$POSITION_EXT_TO_LAPPY" eDP-1
   DISPLAY=:0 xrandr --output eDP-1 --mode 3840x2160 --pos 3360x0 --output DP-2-3 --scale 2 --primary --mode 1680x1050 --pos 0x0
+
+elif [ -n "$(echo $DISPLAY_CONNECTED | grep DP-3-3)" ]; then
+  DISPLAY=:0 xrandr --output eDP-1 --mode 3840x2160 --pos 3360x0 --output DP-3-3 --scale 2 --primary --mode 1680x1050 --pos 0x0
 
 elif [ -n "$DISPLAY_CONNECTED" ]; then
   DISPLAY=:0 xrandr --output "$DISPLAY_CONNECTED" --"$POSITION_EXT_TO_LAPPY" eDP-1 --primary --output eDP-1 --mode "$LAPPY_RES"

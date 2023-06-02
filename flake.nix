@@ -1,8 +1,8 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-22.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-22.11";
+    home-manager.url = "github:nix-community/home-manager/release-23.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     kmonad.url = "github:rskew/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
@@ -662,6 +662,12 @@
               systemd.services.kmonad-mac-kbd-config.wantedBy = lib.mkForce [];
             })
 
+            # usb oscilloscope
+            ({ pkgs, ...}: {
+              services.udev.packages = [ pkgs.openhantek6022 ];
+              environment.systemPackages = [ pkgs.openhantek6022 ];
+            })
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
@@ -678,7 +684,6 @@
               boot.loader.efi.canTouchEfiVariables = true;
               boot.loader.grub = {
                 enable = true;
-                version = 2;
                 efiSupport = true;
                 enableCryptodisk = true;
                 device = "nodev";
@@ -733,7 +738,7 @@
                 gnupg
                 awscli
                 hunspell
-                chromium
+                (chromium.overrideAttrs (old: { postInstall = "${pkgs.makeWrapper}/bin/wrapProgram $out/bin/chromium --add-flags --force-device-scale-factor=1.5"; }))
                 bashmount
                 filelight
                 docker
@@ -753,6 +758,7 @@
                 libnotify
                 imagemagick # for screenshots via the 'import' command
                 rofi # launcher
+                qgis
                 ## work talk
                 unstable.slack
                 unstable.teams
@@ -765,7 +771,6 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
-                nix-tree
               ];
 
               security.rtkit.enable = true;
@@ -781,11 +786,11 @@
               services.blueman.enable = true;
 
               # Comment these lines to disable gpu
-              #services.xserver.videoDrivers = [ "nvidia" ];
-              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              #hardware.nvidia.prime.offload.enable = true;
-              #hardware.opengl.enable = true;
+              services.xserver.videoDrivers = [ "nvidia" ];
+              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              hardware.nvidia.prime.offload.enable = true;
+              hardware.opengl.enable = true;
 
               services.logind.lidSwitchDocked = "suspend";
 
@@ -845,6 +850,10 @@
                   ##
                   ${xautolock}/bin/xautolock -time 15 -locker /home/rowan/machine-configuration/scripts/lock.sh -corners 00-0 &
                 '';
+              };
+
+              environment.sessionVariables = {
+                QT_SCALE_FACTOR = "2";
               };
 
               users.users.rowan = {
@@ -921,6 +930,7 @@
 
               nix.package = pkgs.nixFlakes;
               nix.extraOptions = "experimental-features = nix-command flakes";
+              nix.settings.trusted-users = [ "root" "rowan" ];
               system.stateVersion = "21.11"; # Did you read the comment?
             })
           ];

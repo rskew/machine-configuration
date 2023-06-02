@@ -1,6 +1,7 @@
 {config, pkgs, unstable, isGraphical, agenix, ...}:
 let
-  pythonEnv = pkgs.python39.withPackages(ps: with ps; [
+  pythonEnv = pkgs.python3.withPackages (ps: with ps; [
+    ipython
     pandas
     matplotlib
     seaborn
@@ -94,6 +95,7 @@ in {
     unstable.zellij
     pgbackrest
     agenix.packages.${system}.agenix
+    nix-tree
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration
