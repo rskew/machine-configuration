@@ -527,9 +527,11 @@
 
               services.openssh = {
                 enable = true;
-                passwordAuthentication = false;
-                permitRootLogin = "no";
-                forwardX11 = false;
+                settings = {
+                  PasswordAuthentication = false;
+                  PermitRootLogin = "no";
+                  X11Forwarding = false;
+                };
               };
 
               users.users.rowan = {
@@ -542,6 +544,7 @@
                 openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
                 shell = pkgs.fish;
               };
+              programs.fish.enable = true;
 
               nix.package = pkgs.nixFlakes;
               nix.extraOptions = "experimental-features = nix-command flakes";
