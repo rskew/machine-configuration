@@ -265,22 +265,24 @@
                 }
               ];
 
-              # Drop inactive sessions after 1.5 minutes.
-              # This prevents stale sessions from stopping clients
-              # reconnecting with port forwarding.
-              services.openssh.extraConfig = ''
-                ClientAliveInterval 30
-                ClientAliveCountMax 3
-              '';
-              # Don't allow inbound ssh connections to forward ports on 0.0.0.0
-              services.openssh.gatewayPorts = "no";
               users.users.root.openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
 
               services.openssh = {
                 enable = true;
-                passwordAuthentication = false;
-                permitRootLogin = "no";
-                forwardX11 = false;
+                settings = {
+                  PasswordAuthentication = false;
+                  PermitRootLogin = "no";
+                  X11Forwarding = false;
+                  # Don't allow inbound ssh connections to forward ports on 0.0.0.0
+                  GatewayPorts = "no";
+                };
+                # Drop inactive sessions after 1.5 minutes.
+                # This prevents stale sessions from stopping clients
+                # reconnecting with port forwarding.
+                extraConfig = ''
+                  ClientAliveInterval 30
+                  ClientAliveCountMax 3
+                '';
               };
 
               services.journald.extraConfig = "SystemMaxUse=1G";
@@ -295,6 +297,7 @@
                 ];
               };
               security.sudo.wheelNeedsPassword = false;
+              programs.fish.enable = true;
 
               nix.package = pkgs.nixFlakes;
               nix.extraOptions = "experimental-features = nix-command flakes";
