@@ -447,7 +447,13 @@
       devShells.x86_64-linux.shedPowerMonitor = pkgs.mkShell {
         buildInputs = [ pkgs.nodejs pkgs.nodePackages.node2nix ];
         NODE_PATH = shedPowerMonitor.NODE_PATH;
-        shellHook = "cd applications/shed-power-monitor";
+        shellHook = ''
+          cd applications/shed-power-monitor;
+          cat <<EOF
+          Run:
+              cat index.js | sed 's/DEVICE_PLACEHOLDER/\/dev\/vedirect-usb/' | node
+          EOF
+        '';
       };
 
       nixosConfigurations.farm-server =
@@ -464,6 +470,7 @@
                 frontendServerBasicAuthCredentialsFile = config.age.secrets."autofarm-frontend-server-basic-auth-credentials".path;
                 deviceMonitorInfluxdbPort = 8086;
               };
+              environment.systemPackages = [ pkgs.influxdb ];
             })
             # FTDI USB thingo as GPIO for flicking relays that control irrigation solenoids
             ({...}: {
