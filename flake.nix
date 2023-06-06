@@ -1,6 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-22.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager/release-23.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
@@ -16,6 +17,7 @@
   outputs =
     { self,
       nixpkgs,
+      nixpkgs-old,
       nixpkgs-unstable,
       home-manager,
       kmonad,
@@ -27,6 +29,10 @@
     }:
     let
       pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+      };
+      pkgs-old = import nixpkgs-old {
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
@@ -788,6 +794,8 @@
 
               security.rtkit.enable = true;
               services.pipewire = {
+                wireplumber.package = pkgs-old.wireplumber;
+                package = pkgs-old.pipewire;
                 enable = true;
                 alsa.enable = true;
                 alsa.support32Bit = true;

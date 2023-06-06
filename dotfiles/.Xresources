@@ -11,7 +11,7 @@ URxvt*saveLines:10000
 ! Scroll with output when at bottom,
 ! but stop scrolling with output if scrolled up
 URxvt*scrollTtyOutput:      false
-URxvt*scrollWithBuffer:     false
+URxvt*scrollWithBuffer:     true
 URxvt*scrollTtyKeypress:    true
 
 URxvt.keysym.C-b: searchable-scrollback:start
