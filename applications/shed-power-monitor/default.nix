@@ -28,6 +28,7 @@
       script = "shed-power-monitor";
       serviceConfig = {
         Restart = "always";
+        RestartSec = "1s";
       };
     };
   });
