@@ -7,7 +7,7 @@ const consumer = new VEDirect({
 })
 
 consumer.on('delta', function(delta) {
-  console.log('[onDelta]', delta.updates[0].values)
+  //console.log('[onDelta]', delta.updates[0].values)
   delta.updates[0].values.forEach(function(reading) {
     let name = signal_names[reading.path]
     if (name != undefined) {
@@ -59,7 +59,7 @@ function postReadingToInfluxDB(series, value, metadata) {
       valueStr = 'value=' + value;
       metadataStr = metadata ? ',' + JSON.stringify(metadata).replace(/{/g, '').replace(/}/g, '').replace(/"/g, '').replace(/:/g, '=') : '';
   data = series + metadataStr + ' ' + valueStr + ' ' + nowNanos;
-  console.log(data);
+  //console.log(data);
   var optionspost = {
       host : 'localhost',
       port : 8086,
@@ -67,11 +67,11 @@ function postReadingToInfluxDB(series, value, metadata) {
       method : 'POST',
   };
   var reqPost = https.request(optionspost, function(res) {
-      console.log("statusCode: ", res.statusCode);
+      //console.log("statusCode: ", res.statusCode);
       res.on('data', function(d) {
-          console.info('POST result:\n');
+          //console.log('POST result:\n');
           process.stdout.write(d);
-          console.info('\n\nPOST completed');
+          //console.log('\n\nPOST completed');
       });
   });
 

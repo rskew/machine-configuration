@@ -509,8 +509,28 @@
                 remoteForwards = [
                   { localPort = 22; remotePort = 7722; } # SSH
                   { localPort = 3000; remotePort = 3001; } # Grafana
+                  { localPort = 8123; remotePort = 8123; } # Home Assistant
                 ];
               };
+            })
+
+            ({config, pkgs, unstable, ...}: {
+              services.home-assistant = {
+                enable = true;
+                extraComponents = [
+                  # Components required to complete the onboarding
+                  "esphome"
+                  "met"
+                  "radio_browser"
+                  "zha" # for zigbee
+                ];
+                config = {
+                  # Includes dependencies for a basic setup
+                  # https://www.home-assistant.io/integrations/default_config/
+                  default_config = {};
+                };
+              };
+              networking.firewall.allowedTCPPorts = [ 8123 ];
             })
 
             ({config, pkgs, unstable, ...}: {
