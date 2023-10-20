@@ -49,6 +49,21 @@
     in
     rec {
 
+      homeConfigurations.rowan = home-manager.lib.homeManagerConfiguration {
+        modules = [ (import ./home.nix) (
+          { config, pkgs, ... }: {
+            home.username = "rowan";
+            home.homeDirectory = "/home/users/rowan";
+          }
+        ) ];
+        inherit pkgs;
+        extraSpecialArgs = {
+          isGraphical = false;
+          unstable = unstable;
+          agenix = agenix;
+        };
+      };
+
       nixosConfigurations.vps1 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
@@ -311,11 +326,18 @@
             })
 
             home-manager.nixosModules.home-manager
-            ({pkgs, unstable, ...}: {
+            ({ pkgs, unstable, ... }: {
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
-                {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = false;};
+                { config, pkgs, ... }:
+                import ./home.nix {
+                  inherit config pkgs;
+                  specialArgs = {
+                    isGraphical = false;
+                    unstable = unstable;
+                    agenix = agenix;
+                  };
+                };
             })
           ];
         };
@@ -440,11 +462,18 @@
             })
 
             home-manager.nixosModules.home-manager
-            ({pkgs, unstable, lib, ...}: {
+            ({ pkgs, unstable, ... }: {
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
-                {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = false;};
+                { config, pkgs, ... }:
+                import ./home.nix {
+                  inherit config pkgs;
+                  specialArgs = {
+                    isGraphical = false;
+                    unstable = unstable;
+                    agenix = agenix;
+                  };
+                };
             })
           ];
         };
@@ -578,11 +607,18 @@
             })
 
             home-manager.nixosModules.home-manager
-            ({pkgs, unstable, lib, ...}: {
+            ({ pkgs, unstable, ... }: {
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
-                {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = false;};
+                { config, pkgs, ... }:
+                import ./home.nix {
+                  inherit config pkgs;
+                  specialArgs = {
+                    isGraphical = false;
+                    unstable = unstable;
+                    agenix = agenix;
+                  };
+                };
             })
           ];
         };
@@ -650,11 +686,18 @@
             })
 
             home-manager.nixosModules.home-manager
-            ({pkgs, unstable, lib, ...}: {
+            ({ pkgs, unstable, ... }: {
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
-                {config, pkgs, ...}:
-                import ./home.nix {inherit config pkgs unstable agenix; isGraphical = true;};
+                { config, pkgs, ... }:
+                import ./home.nix {
+                  inherit config pkgs;
+                  specialArgs = {
+                    isGraphical = true;
+                    unstable = unstable;
+                    agenix = agenix;
+                  };
+                };
             })
 
             kmonad.nixosModule

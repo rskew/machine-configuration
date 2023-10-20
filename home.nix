@@ -1,5 +1,9 @@
-{config, pkgs, unstable, isGraphical, agenix, ...}:
+{ config, pkgs, unstable, specialArgs, ... }:
 let
+  isGraphical = specialArgs.isGraphical;
+  agenix = specialArgs.agenix;
+  unstable = specialArgs.unstable;
+
   pythonEnv = pkgs.python3.withPackages (ps: with ps; [
     ipython
     pandas
@@ -28,18 +32,18 @@ let
   set-theme-dark = pkgs.writeShellScriptBin "dark" ''
     printf '\033]10;white\007' # urxvt set foreground
     printf '\033]11;black\007' # urxvt set background
-    sed -i --follow-symlinks 's/^\(URxvt.background\).*$/URxvt.background: black/' ~/.Xresources
-    sed -i --follow-symlinks 's/^\(URxvt.foreground\).*$/URxvt.foreground: white/' ~/.Xresources
-    sed -i --follow-symlinks 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #ffffff/' ~/.Xresources
+    sed -i 's/^\(URxvt.background\).*$/URxvt.background: black/' $(realpath ~/.Xresources)
+    sed -i 's/^\(URxvt.foreground\).*$/URxvt.foreground: white/' $(realpath ~/.Xresources)
+    sed -i 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #ffffff/' ~/.Xresources
     xrdb -load ~/.Xresources
     echo dark > ~/.current-theme
   '';
   set-theme-light = pkgs.writeShellScriptBin "light" ''
     printf '\033]10;#383a42\007' # urxvt set foreground
     printf '\033]11;#f9f9f9\007' # urxvt set background
-    sed -i --follow-symlinks 's/^\(URxvt.background\).*$/URxvt.background: #f9f9f9/' ~/.Xresources
-    sed -i --follow-symlinks 's/^\(URxvt.foreground\).*$/URxvt.foreground: #383a42/' ~/.Xresources
-    sed -i --follow-symlinks 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #000000/' ~/.Xresources
+    sed -i 's/^\(URxvt.background\).*$/URxvt.background: #f9f9f9/' $(realpath ~/.Xresources)
+    sed -i 's/^\(URxvt.foreground\).*$/URxvt.foreground: #383a42/' $(realpath ~/.Xresources)
+    sed -i 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #000000/' ~/.Xresources
     xrdb -load ~/.Xresources
     echo light > ~/.current-theme
   '';
