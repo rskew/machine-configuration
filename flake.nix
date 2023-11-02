@@ -543,7 +543,7 @@
               };
             })
 
-            ({config, pkgs, unstable, ...}: {
+            ({config, pkgs, ...}: {
               services.home-assistant = {
                 enable = true;
                 extraComponents = [
@@ -552,17 +552,24 @@
                   "met"
                   "radio_browser"
                   "zha" # for zigbee
+                  "http"
                 ];
                 config = {
                   # Includes dependencies for a basic setup
                   # https://www.home-assistant.io/integrations/default_config/
                   default_config = {};
+                  automation = "!include automations.yaml";
+                  http = {
+                    use_x_forwarded_for = true;
+                    trusted_proxies = [ "::1" ];
+                  };
+                  influxdb = {}; # The database "home_assistant" needs to be created manually
                 };
               };
               networking.firewall.allowedTCPPorts = [ 8123 ];
             })
 
-            ({config, pkgs, unstable, ...}: {
+            ({config, pkgs, ...}: {
               imports =
                 [./machines/farm-server-digital-hardware-configuration.nix
                 ];

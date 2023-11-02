@@ -1,4 +1,4 @@
-{ config, pkgs, unstable, specialArgs, ... }:
+{ config, pkgs, specialArgs, ... }:
 let
   isGraphical = specialArgs.isGraphical;
   agenix = specialArgs.agenix;

@@ -80,5 +80,6 @@ function postReadingToInfluxDB(series, value, metadata) {
   reqPost.end();
   reqPost.on('error', function(e) {
       console.error(e);
+      process.exit(1);
   });
 };
