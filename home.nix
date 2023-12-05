@@ -105,6 +105,10 @@ in {
     dconf # Required for gtk3 configuration
   ] else []);
 
+  home.sessionVariables = {
+    GDK_SCALE = 2;
+  };
+
   # dotfiles
   home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
   home.file.".doom.d/init.el".source     = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/init.el";

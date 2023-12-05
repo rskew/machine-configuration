@@ -41,7 +41,8 @@ main = do
       , borderWidth        = 6
       , terminal           = "urxvt -cd \"$PWD\"" -- NOTE this doesn't work
       , normalBorderColor  = "#000"
-      , focusedBorderColor = "#0af"
+      --, focusedBorderColor = "#0af"
+      , focusedBorderColor = "#000"
       , workspaces = map snd myWorkspaces
       , manageHook = mWManager
       , layoutHook = mkToggle (single NBFULL) $ avoidStruts
@@ -84,11 +85,11 @@ myKeys =
       , ((mod1Mask .|. shiftMask, xK_space), windows W.swapMaster)
       , ((mod1Mask, xK_r), (spawn "rofi -dpi 1 -show run -show-icons -opacity \"40\""))
       , ((mod1Mask, xK_s), (spawn "rofi -dpi 1 -show ssh -show-icons -opacity \"40\""))
-      , ((0, xF86XK_AudioLowerVolume   ), spawn "amixer set Master playback 1%-")
-      , ((0, xF86XK_AudioRaiseVolume   ), spawn "amixer set Master playback 1%+")
-      , ((0, xF86XK_AudioMute          ), spawn "amixer set Master toggle")
-      , ((0, xF86XK_AudioMicMute       ), spawn "amixer set Capture toggle")
-      , ((controlMask, xK_m            ), spawn "amixer set Capture toggle")
+      , ((0, xF86XK_AudioLowerVolume   ), spawn "pamixer -d 1")
+      , ((0, xF86XK_AudioRaiseVolume   ), spawn "pamixer -i 1")
+      , ((0, xF86XK_AudioMute          ), spawn "pamixer -t")
+      , ((0, xF86XK_AudioMicMute       ), spawn "/home/rowan/machine-configuration/scripts/toggle_mic_mute.sh")
+      , ((controlMask, xK_m            ), spawn "/home/rowan/machine-configuration/scripts/toggle_mic_mute.sh")
       , ((0, xF86XK_MonBrightnessUp    ), spawn "brightnessctl s 1000+")
       , ((0, xF86XK_MonBrightnessDown  ), spawn "brightnessctl s 1000-")
       , ((0, xK_Print                  ), spawn "/home/rowan/machine-configuration/scripts/screenshot.sh")

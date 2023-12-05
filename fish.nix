@@ -63,6 +63,8 @@
         end
     end
 
+    alias nix-stray-roots='nix-store --gc --print-roots | egrep -v "^(/nix/var|/proc/.*|/run/\w+-system|\{memory)"'
+
     ####
     #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af
     ####

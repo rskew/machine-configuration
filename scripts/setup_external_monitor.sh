@@ -32,7 +32,7 @@ elif [ -n "$DISPLAY_CONNECTED" ]; then
   DISPLAY=:0 xrandr --output "$DISPLAY_CONNECTED" --"$POSITION_EXT_TO_LAPPY" eDP-1 --primary --output eDP-1 --mode "$LAPPY_RES"
 
 else
-  for DISPLAY in DP-1 DP-1-1 DP-2-2 DP-2-3 DVI-I-1-1 DVI-I-2-2 VGA-1 HDMI-1 HDMI-2
+  for DISPLAY in DP-1 DP-1-1 DP-2-2 DP-2-3 DP-3-3 DVI-I-1-1 DVI-I-2-2 VGA-1 HDMI-1 HDMI-2
   do
     DISPLAY=:0 xrandr --output $DISPLAY --off
   done

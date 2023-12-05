@@ -14,7 +14,7 @@ URxvt*scrollTtyOutput:      false
 URxvt*scrollWithBuffer:     true
 URxvt*scrollTtyKeypress:    true
 
-URxvt.keysym.C-b: searchable-scrollback:start
+#URxvt.keysym.C-b: searchable-scrollback:start
 
 *color0:  #2E3436
 *color1:  #a40000

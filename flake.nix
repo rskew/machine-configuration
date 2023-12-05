@@ -1,9 +1,9 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     nixpkgs-old.url = "github:nixos/nixpkgs/nixos-22.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-23.05";
+    home-manager.url = "github:nix-community/home-manager/release-23.11";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     kmonad.url = "github:rskew/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
@@ -56,7 +56,6 @@
             home.homeDirectory = "/home/users/rowan";
           }
         ) ];
-        inherit pkgs;
         extraSpecialArgs = {
           isGraphical = false;
           unstable = unstable;
@@ -176,9 +175,14 @@
               # Take first backup:
               # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=info --type=full backup
               # Restoring backups:
-              # - stop the database
-              # - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --stanza=farmdb --log-level-console=detail --delta restore
-              # - start the database
+              # - restore from last backup:
+              #   - stop the database
+              #   - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --cmd="env $(cat /run/agenix/pgbackrest-credentials-env | tr '\n' ' ') $(readlink $(which pgbackrest))" --stanza=farmdb --log-level-console=detail --delta restore
+              #   - start the database
+              # - restore from point-in-time:
+              #   - sudo -u postgres env $(cat /run/agenix/pgbackrest-credentials-env) $(readlink $(which pgbackrest)) --cmd="env $(cat /run/agenix/pgbackrest-credentials-env | tr '\n' ' ') $(readlink $(which pgbackrest))" --stanza=farmdb --log-level-console=detail --delta --type=time '--target=xxxx-xx-xx xx:xx:xx' restore
+              #   - start the database
+              #   - run 'SELECT pg_wal_replay_resume();'
               # Restore dev db from backup:
               #   - cd /home/rowan/machine-configuration/secrets
               #   - cat <<EOF > pgbackrest.conf
@@ -373,6 +377,7 @@
                 idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
                 knownHostsLine = jumpBoxKnownHostsLine;
                 remoteForwards = [
+                  # Forward register db
                   { localIp = "192.168.0.121"; localPort = 8001; remotePort = 5001; }
                 ];
               };
@@ -784,6 +789,8 @@
                 2001 # notification server
                 9222 # autofarm device_monitor dev
                 8181 # shop admin app dev
+                3000 # hl web
+                8076 # test ws mcu
               ];
 
               services.tailscale.enable = true;
@@ -821,7 +828,7 @@
                 trayer
                 networkmanagerapplet
                 vlc
-                unstable.haskellPackages.xmobar
+                haskellPackages.xmobar
                 pavucontrol
                 pinta
                 gnupg
@@ -839,6 +846,7 @@
                 pulsemixer
                 pulseaudio
                 alsa-utils
+                pamixer
                 brightnessctl
                 direnv
                 unstable.xournalpp
@@ -848,9 +856,9 @@
                 imagemagick # for screenshots via the 'import' command
                 rofi # launcher
                 qgis
+                qpwgraph
                 ## work talk
                 unstable.slack
-                unstable.teams
                 unstable.zoom-us
                 ##
                 (pkgs.writeShellScriptBin "nvidia-offload" ''
@@ -877,11 +885,16 @@
               services.blueman.enable = true;
 
               # Comment these lines to disable gpu
-              services.xserver.videoDrivers = [ "nvidia" ];
-              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              hardware.nvidia.prime.offload.enable = true;
-              hardware.opengl.enable = true;
+              #services.xserver.videoDrivers = [ "nvidia" ];
+              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              #hardware.nvidia.prime.offload.enable = true;
+              #hardware.opengl = {
+              #  enable = true;
+              #  driSupport = true;
+              #  driSupport32Bit = true;
+              #};
+              #virtualisation.docker.enableNvidia = true;
 
               services.logind.lidSwitchDocked = "suspend";
 

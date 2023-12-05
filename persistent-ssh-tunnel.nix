@@ -60,6 +60,7 @@ in {
          '';
          Restart = "always";
          RestartSec = 3;
+         StartLimitIntervalSec = 0;
        };
      };
    };

@@ -4,6 +4,8 @@
 # - switch off port blocking via web control panel
 # - add entry to ssh config
 # - scp ~/.ssh/id_to_deploy_to_servers1* newhost:/home/rowan/.ssh/
+#
+# TODO try https://github.com/numtide/nixos-anywhere/tree/main
 
 set -euxo pipefail
 
