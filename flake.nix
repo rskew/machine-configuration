@@ -508,16 +508,16 @@
           specialArgs = {inherit pkgs unstable;};
           modules = [
 
-            autofarm.nixosModule
-            ({config, ...}: {
-              services.autofarm = {
-                deviceMonitorDeviceListenerPort = 9222;
-                ecronServerEcrontab = "/home/rowan/.autofarm/ecrontab";
-                frontendServerBasicAuthCredentialsFile = config.age.secrets."autofarm-frontend-server-basic-auth-credentials".path;
-                deviceMonitorInfluxdbPort = 8086;
-              };
-              environment.systemPackages = [ pkgs.influxdb ];
-            })
+            #autofarm.nixosModule
+            #({config, ...}: {
+            #  services.autofarm = {
+            #    deviceMonitorDeviceListenerPort = 9222;
+            #    ecronServerEcrontab = "/home/rowan/.autofarm/ecrontab";
+            #    frontendServerBasicAuthCredentialsFile = config.age.secrets."autofarm-frontend-server-basic-auth-credentials".path;
+            #    deviceMonitorInfluxdbPort = 8086;
+            #  };
+            #  environment.systemPackages = [ pkgs.influxdb ];
+            #})
             # FTDI USB thingo as GPIO for flicking relays that control irrigation solenoids
             ({...}: {
               services.udev.extraRules = ''
@@ -536,6 +536,26 @@
               services.udev.extraRules = ''
                 SUBSYSTEM=="tty", ATTRS{idProduct}=="6015", ATTRS{idVendor}=="0403", ATTRS{serial}=="VE6INUFY", GROUP="dialout", MODE="0664", SYMLINK+="${shedPowerMonitorDeviceSymlink}"
               '';
+              environment.systemPackages = [ pkgs.influxdb ];
+              # On first start of influxdb:
+              #   $ influx
+              #   > CREATE USER <user> WITH PASSWORD '<password>' WITH ALL PRIVILEGES
+              # Query users:
+              #   > SHOW USERS
+              # Database management:
+              #   > CREATE DATABASE shed_power
+              # Query data:
+              #   > USE shed_power
+              #   > SELECT * FROM battery_voltage
+              services.influxdb.enable = true;
+              # On first start of grafana:
+              # - log in with admin/admin, set admin password, create other users
+              # - create data-source pointing at influxdb http://localhost:8086
+              # - create dashboard with shed-power signals
+              services.grafana = {
+                enable = true;
+                settings = {};
+              };
             })
 
             (import ./persistent-ssh-tunnel.nix)
@@ -582,16 +602,25 @@
 
             ({config, pkgs, ...}: {
               imports =
-                [./machines/farm-server-digital-hardware-configuration.nix
+                [./machines/farm-server-hardware-configuration.nix
                 ];
-              networking.hostName = "farm-server-digital";
+              networking.hostName = "farm-server";
               networking.networkmanager.enable = true;
               networking.useDHCP = false;
               networking.interfaces.enp3s0.useDHCP = true;
 
               # Use the systemd-boot EFI boot loader.
-              boot.loader.systemd-boot.enable = true;
-              boot.loader.efi.canTouchEfiVariables = true;
+              boot.loader.grub.enable = true;
+              boot.loader.grub.device = "/dev/sda";
+
+              # Default hardware-configuration has no swap device,
+              # causing nixos-rebuilt to crash
+              swapDevices = pkgs.lib.mkOverride 5 [
+                {
+                  device = "/swapfile";
+                  size = 3000; # MB
+                }
+              ];
 
               # Select internationalisation properties.
               i18n.defaultLocale = "en_AU.UTF-8";
