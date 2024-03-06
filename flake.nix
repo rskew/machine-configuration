@@ -98,11 +98,17 @@
                   forceSSL = true;
                   serverAliases = ["top-tank.objectionable.farm"];
                 };
+                "shed.objectionable.farm" = {
+                  locations."/".proxyPass = "http://127.0.0.1:8123/";
+                  locations."/".proxyWebsockets = true;
+                  enableACME = true;
+                  forceSSL = true;
+                };
               };
               services.nginx.recommendedProxySettings = true;
               security.acme.defaults.email = "rowan.skewes@gmail.com";
               security.acme.acceptTerms = true;
-              networking.firewall.allowedTCPPorts = [ 443 ];
+              networking.firewall.allowedTCPPorts = [ 80 443 ];
             })
 
             # WARNING: This configuration is insecure for fresh deployments.
