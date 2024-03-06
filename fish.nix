@@ -53,7 +53,7 @@
       nix develop $argv --command fish
     end
 
-    any-nix-shell fish --info-right | source
+    #any-nix-shell fish --info-right | source
 
     function notify-me
         curl localhost:2001/$status/$argv[1]/$argv[2]
@@ -64,6 +64,8 @@
     end
 
     alias nix-stray-roots='nix-store --gc --print-roots | egrep -v "^(/nix/var|/proc/.*|/run/\w+-system|\{memory)"'
+
+    abbr csvpager 'column -s, -t | less'
 
     ####
     #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af

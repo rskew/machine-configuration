@@ -90,7 +90,7 @@ Config { font = "gallant12x22 27"
         --                     ]
         , Run StdinReader
         , Run Com "bash" ["-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv | tail -n1 | tr -d '[:space:]'"] "gpu" 10
-        , Run Com "bash" ["-c", "if [ -n \"$(pactl list source-outputs)\" ]; then if [ -z \"$(amixer sget Capture | grep off )\" ]; then echo '<fc=#000,#0f0> <icon=material_mic.xbm/> </fc>'; else echo ' <icon=material_mic_off.xbm/> '; fi; fi"] "mic_status" 1
+        , Run Com "bash" ["-c", "if [ -n \"$(pactl list source-outputs)\" ]; then if [ -z \"$(pactl get-source-mute $(pactl get-default-source) | grep yes )\" ]; then echo '<fc=#000,#0f0> <icon=material_mic.xbm/> </fc>'; else echo ' <icon=material_mic_off.xbm/> '; fi; fi"] "mic_status" 1
         , Run DiskIO [("/", "<read>↑<write>↓")] [ "-w", "4" ] 10
         ]
        , sepChar = "%"

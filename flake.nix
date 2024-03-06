@@ -822,10 +822,6 @@
               networking.networkmanager.enable = true;
               networking.firewall.allowedTCPPorts = [
                 2001 # notification server
-                9222 # autofarm device_monitor dev
-                8181 # shop admin app dev
-                3000 # hl web
-                8076 # test ws mcu
               ];
 
               services.tailscale.enable = true;
@@ -920,16 +916,16 @@
               services.blueman.enable = true;
 
               # Comment these lines to disable gpu
-              #services.xserver.videoDrivers = [ "nvidia" ];
-              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              #hardware.nvidia.prime.offload.enable = true;
-              #hardware.opengl = {
-              #  enable = true;
-              #  driSupport = true;
-              #  driSupport32Bit = true;
-              #};
-              #virtualisation.docker.enableNvidia = true;
+              services.xserver.videoDrivers = [ "nvidia" ];
+              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              hardware.nvidia.prime.offload.enable = true;
+              hardware.opengl = {
+                enable = true;
+                driSupport = true;
+                driSupport32Bit = true;
+              };
+              virtualisation.docker.enableNvidia = true;
 
               services.logind.lidSwitchDocked = "suspend";
 
@@ -1071,6 +1067,9 @@
               nix.extraOptions = "experimental-features = nix-command flakes";
               nix.settings.trusted-users = [ "root" "rowan" ];
               system.stateVersion = "21.11"; # Did you read the comment?
+
+              nixpkgs.config.allowUnfree = true;
+              nixpkgs.config.segger-jlink.acceptLicense = true;
             })
           ];
       };
