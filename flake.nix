@@ -144,8 +144,8 @@
               };
               services.postgresql = {
                 enable = true;
-                package = pkgs.postgresql;
-                extraPlugins = [ pkgs.postgresqlPackages.postgis ];
+                package = pkgs.postgresql_14;
+                extraPlugins = [ pkgs.postgresql14Packages.postgis ];
                 port = 5432;
                 initdbArgs = ["--pwfile=${config.age.secrets.farmdb-pgpassword.path}"];
                 initialScript = pkgs.writeText "initialScript" ''
@@ -247,7 +247,7 @@
               systemd.timers.postgres-backup-full = {
                 partOf      = [ "postgres-backup-full.service" ];
                 wantedBy    = [ "timers.target" ];
-                timerConfig.OnCalendar = "Wed 2:33 Australia/Melbourne";
+                timerConfig.OnCalendar = "*-1,7-1 3:33 Australia/Melbourne";
               };
               systemd.services.postgres-backup-incr = {
                 path = [ pkgs.pgbackrest agenix.packages.x86_64-linux.agenix ];
@@ -265,7 +265,7 @@
               systemd.timers.postgres-backup-incr = {
                 partOf      = [ "postgres-backup-incr.service" ];
                 wantedBy    = [ "timers.target" ];
-                timerConfig.OnCalendar = "Mon,Tue,Thu,Fri,Sat,Sun 2:33 Australia/Melbourne";
+                timerConfig.OnCalendar = "Wed 2:33 Australia/Melbourne";
               };
             })
 
