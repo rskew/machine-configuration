@@ -1,10 +1,9 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
-    nixpkgs-old.url = "github:nixos/nixpkgs/nixos-22.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-23.11";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     kmonad.url = "github:rskew/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
@@ -17,7 +16,6 @@
   outputs =
     { self,
       nixpkgs,
-      nixpkgs-old,
       nixpkgs-unstable,
       home-manager,
       kmonad,
@@ -29,10 +27,6 @@
     }:
     let
       pkgs = import nixpkgs {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-      };
-      pkgs-old = import nixpkgs-old {
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
@@ -720,7 +714,9 @@
       #   - restic-password for this machine's restic backup repository
       #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
       nixosConfigurations.rowan-p14 =
-        nixpkgs.lib.nixosSystem {
+        let pkgs = unstable;
+        in
+        nixpkgs-unstable.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {inherit pkgs unstable;};
           modules = [
@@ -820,9 +816,6 @@
 
               networking.hostName = "rowan-p14";
               networking.networkmanager.enable = true;
-              networking.firewall.allowedTCPPorts = [
-                2001 # notification server
-              ];
 
               services.tailscale.enable = true;
 
@@ -837,7 +830,7 @@
 
               # Select internationalisation properties.
               i18n.defaultLocale = "en_AU.UTF-8";
-              fonts.fonts = with pkgs; [ source-code-pro ];
+              fonts.packages = with pkgs; [ source-code-pro ];
 
               programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
@@ -899,12 +892,13 @@
                    export __VK_LAYER_NV_optimus=NVIDIA_only
                    exec -a "$0" "$@"
                  '')
+                nvtopPackages.nvidia
               ];
 
               security.rtkit.enable = true;
               services.pipewire = {
-                wireplumber.package = pkgs-old.wireplumber;
-                package = pkgs-old.pipewire;
+                wireplumber.package = pkgs.wireplumber;
+                package = pkgs.pipewire;
                 enable = true;
                 alsa.enable = true;
                 alsa.support32Bit = true;
@@ -931,7 +925,7 @@
 
               services.xserver = {
                 enable = true;
-                layout = "us";
+                xkb.layout = "us";
                 # Enable touchpad support.
                 libinput = {
                   enable = true;
@@ -945,7 +939,7 @@
                 autoRepeatDelay = 200; # milliseconds
                 autoRepeatInterval = 28; # milliseconds
                 desktopManager.xterm.enable = false;
-                xkbOptions = "ctrl:nocaps";
+                xkb.options = "ctrl:nocaps";
                 windowManager.xmonad = {
                   enable = true;
                   enableContribAndExtras = true;

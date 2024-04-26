@@ -100,6 +100,7 @@ in {
     pgbackrest
     agenix.packages.${system}.agenix
     nix-tree
+    qrencode
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration
