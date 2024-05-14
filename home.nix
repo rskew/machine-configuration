@@ -91,6 +91,8 @@ in {
     byobu
     tmux
     rxvt_unicode
+    kitty
+    xclip
     set-theme-dark
     set-theme-light
     vim
@@ -119,6 +121,12 @@ in {
   home.file.".xmonad/xmonad.hs".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmonad/xmonad.hs";
   home.file.".xmobarrc".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmobarrc";
   home.file.".Xresources".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xresources";
+  home.file.".config/urxvt/ext/resize-font".source = "${pkgs.fetchFromGitHub {
+    owner = "simmel";
+    repo = "urxvt-resize-font";
+    rev = "b5935806f159594f516da9b4c88bf1f3e5225cfd";
+    sha256 = "sha256-Q/nSa3NMKoBubS0Xpoh+Am84ikUsgNrcUM2WoobepM4=";
+  }}/resize-font";
 
   #gtk = {
   #  enable = true;

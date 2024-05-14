@@ -830,7 +830,7 @@
 
               # Select internationalisation properties.
               i18n.defaultLocale = "en_AU.UTF-8";
-              fonts.packages = with pkgs; [ source-code-pro ];
+              fonts.packages = with pkgs; [ nerdfonts source-code-pro ];
 
               programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
 
