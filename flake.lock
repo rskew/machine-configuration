@@ -50,11 +50,11 @@
         "spago2nix": "spago2nix_2"
       },
       "locked": {
-        "lastModified": 1673175025,
-        "narHash": "sha256-iP4okTDonrQV/SmhLsD/vXw01aD9m3WcO9QuqQ2XQjM=",
+        "lastModified": 1717056472,
+        "narHash": "sha256-LFq6AnJmJ/kbPkzMD7MlOwXpdMq9s/EsvbfIqPViVHM=",
         "ref": "refs/heads/master",
-        "rev": "60aa4a21831f318e76bdfa43da6f51cf1e46a95a",
-        "revCount": 8,
+        "rev": "1a1212b57bc969b1b8785a0e1dcff33b04813c30",
+        "revCount": 9,
         "type": "git",
         "url": "ssh://git@github.com/rskew/coolroom-monitor.git"
       },
@@ -330,15 +330,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1673167847,
-        "narHash": "sha256-LjCFq4Zq4Qww/yY9TUDQJ457ukkaplIKxSamVXSdzrk=",
-        "owner": "rskew",
+        "lastModified": 1673169539,
+        "narHash": "sha256-u83KCFZ92JG0MioUCw7By5E6yQRipR/C8JsoMfuA1h0=",
+        "owner": "axelf4",
         "repo": "nix-rebar3",
-        "rev": "5eed2d4f97c1f9d9a801e6408dae1e6ebd1f168e",
+        "rev": "53342af69f1d20b767b9bcbc10a535bd7a64d13a",
         "type": "github"
       },
       "original": {
-        "owner": "rskew",
+        "owner": "axelf4",
         "repo": "nix-rebar3",
         "type": "github"
       }

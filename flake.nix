@@ -448,7 +448,7 @@
                 enable = true;
                 passwordAuthentication = false;
                 permitRootLogin = "no";
-                forwardX11 = false;
+                forwardX11 = true; # To use the graphical Tyro terminal adapter Configuration.exe
               };
 
               users.users.rowan = {
