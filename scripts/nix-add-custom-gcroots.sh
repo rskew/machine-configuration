@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set eux
-cd ~/projects/notify_send_server && nix build
+cd ~/projects/notify_send_server && nix build .#server
 cd ~/harvest/admin-app \
     && nix build .#devShells.x86_64-linux.db -o result-db \
     && nix build .#devShells.x86_64-linux.erlang-backend -o result-erlang-backend \

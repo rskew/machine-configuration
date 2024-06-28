@@ -818,6 +818,23 @@
               networking.networkmanager.enable = true;
 
               services.tailscale.enable = true;
+              # SSH to machines on a second tailnet by ProxyJumping via a container
+              networking.nat.enable = true;
+              networking.nat.internalInterfaces = ["ve-+"];
+              networking.nat.externalInterface = "wlp0s20f3";
+              networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
+              containers.tailscaled = {
+                autoStart = true;
+                enableTun = true;
+                privateNetwork = true;
+                hostAddress = "192.168.100.10";
+                localAddress = "192.168.100.11";
+                config = { ... }: {
+                  services.tailscale.enable = true;
+                  services.openssh.enable = true;
+                  users.users.root.openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
+                };
+              };
 
               time.timeZone = "Australia/Melbourne";
 
@@ -856,7 +873,7 @@
                 pavucontrol
                 pinta
                 gnupg
-                awscli
+                awscli2
                 hunspell
                 (chromium.overrideAttrs (old: { postInstall = "${pkgs.makeWrapper}/bin/wrapProgram $out/bin/chromium --add-flags --force-device-scale-factor=1.5"; }))
                 bashmount
@@ -922,6 +939,14 @@
               virtualisation.docker.enableNvidia = true;
 
               services.logind.lidSwitchDocked = "suspend";
+
+              services.tlp.enable = true;
+              services.tlp.extraConfig = ''
+                CPU_SCALING_GOVERNOR_ON_AC=performance
+                CPU_SCALING_GOVERNOR_ON_BAT=powersave
+                CPU_MAX_PERF_ON_AC=100
+                CPU_MAX_PERF_ON_BAT=30
+              '';
 
               services.xserver = {
                 enable = true;
