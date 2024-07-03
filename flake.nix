@@ -416,22 +416,23 @@
               nixpkgs.config.allowUnfree = true;
               hardware.enableAllFirmware = true;
 
-              # Set the eno1 interface to use the 192.168.0.* subnet so it can talk to the registers
-              # and add static routes to the registers
-              networking.interfaces.eno1.ipv4 = {
-                addresses = [ {
-                  address = "192.168.0.60";
-                  prefixLength = 24;
-                } ];
-                routes = [
-                  { address = "192.168.0.121"; prefixLength = 32; }
-                  { address = "192.168.0.122"; prefixLength = 32; }
-                ];
-              };
-              # But remove all other routes via ethernet so it doesn't mess up using the wifi for internet
-              networking.localCommands = ''
-                ip route del 192.168.0.0/24 dev eno1 proto kernel scope link src 192.168.0.60
-              '';
+              # Removed since connected to router via ethernet, register switch connected via wifi extender
+              ## Set the eno1 interface to use the 192.168.0.* subnet so it can talk to the registers
+              ## and add static routes to the registers
+              #networking.interfaces.eno1.ipv4 = {
+              #  addresses = [ {
+              #    address = "192.168.0.60";
+              #    prefixLength = 24;
+              #  } ];
+              #  routes = [
+              #    { address = "192.168.0.121"; prefixLength = 32; }
+              #    { address = "192.168.0.122"; prefixLength = 32; }
+              #  ];
+              #};
+              ## But remove all other routes via ethernet so it doesn't mess up using the wifi for internet
+              #networking.localCommands = ''
+              #  ip route del 192.168.0.0/24 dev eno1 proto kernel scope link src 192.168.0.60
+              #'';
 
               # The global useDHCP flag is deprecated, therefore explicitly set to false here.
               # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -448,9 +449,11 @@
 
               services.openssh = {
                 enable = true;
-                passwordAuthentication = false;
-                permitRootLogin = "no";
-                forwardX11 = true; # To use the graphical Tyro terminal adapter Configuration.exe
+                settings = {
+                  X11Forwarding = true; # To use the graphical Tyro terminal adapter Configuration.exe
+                  PasswordAuthentication = false;
+                  PermitRootLogin = "no";
+                };
               };
 
               users.users.rowan = {
@@ -462,6 +465,7 @@
                 openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
                 shell = pkgs.fish;
               };
+              programs.fish.enable = true;
 
               nix.package = pkgs.nixFlakes;
               nix.extraOptions = "experimental-features = nix-command flakes";
