@@ -858,7 +858,11 @@
               i18n.defaultLocale = "en_AU.UTF-8";
               fonts.packages = with pkgs; [ nerdfonts source-code-pro ];
 
-              programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
+              programs.gnupg.agent = {
+                enable = true;
+                enableSSHSupport = true;
+                pinentryPackage = pkgs.pinentry-qt;
+              };
 
               services.printing.enable = true;
               services.printing.drivers = [ pkgs.hplip ];
