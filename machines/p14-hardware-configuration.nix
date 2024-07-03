@@ -11,7 +11,7 @@
   boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" ];
-  boot.kernelParams = [ "intel_pstate=active" ];
+  boot.kernelParams = [ "intel_pstate=disable" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =

@@ -12,6 +12,7 @@
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
     #autofarm.url = "/home/rowan/autofarm";
+    notification-listener.url = "git+ssh://git@github.com/rskew/notification-listener";
   };
   outputs =
     { self,
@@ -24,6 +25,7 @@
       coolroom-monitor,
       agenix,
       autofarm,
+      notification-listener,
     }:
     let
       pkgs = import nixpkgs {
@@ -833,6 +835,9 @@
                   services.tailscale.enable = true;
                   services.openssh.enable = true;
                   users.users.root.openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
+                  environment.systemPackages = with pkgs; [
+                    mtr
+                  ];
                 };
               };
 
@@ -1041,6 +1046,22 @@
                   /home/rowan/machine-configuration/scripts/lock.sh
                 '';
                 serviceConfig.Type = "forking";
+              };
+
+              systemd.user.services.notifier = {
+                wantedBy = [ "default.target" ];
+                serviceConfig.ExecStart = pkgs.lib.getExe notification-listener.packages.x86_64-linux.server;
+              };
+              systemd.user.services.notify-zoomout = {
+                serviceConfig.Type = "oneshot";
+                serviceConfig.ExecStart = "${pkgs.lib.getExe notification-listener.packages.x86_64-linux.notify} localhost zoomout/refocus";
+              };
+              systemd.user.timers.notify-zoomout = {
+                wantedBy = [ "timers.target" ];
+                timerConfig = {
+                  OnCalendar = "*:0/30";
+                  RandomizedDelaySec = 300;
+                };
               };
 
               # Backups
