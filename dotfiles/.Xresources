@@ -1,4 +1,4 @@
-URxvt.font: xft:ComicShannsMono Nerd Font:size=25
+URxvt.font: xft:ComicShannsMono Nerd Font:size=29
 !xterm*font:     *-fixed-*-*-*-28-*
 !URxvt.font: xft:gallant12x22:size=25
 URxvt.perl-ext-common: selection-to-clipboard,searchable-scrollback,resize-font

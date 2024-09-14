@@ -34,6 +34,10 @@
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
+      pkgs-old = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+      };
       unstable = import nixpkgs-unstable {
           system = "x86_64-linux";
           config.allowUnfree = true;
@@ -735,6 +739,12 @@
           specialArgs = {inherit pkgs unstable;};
           modules = [
 
+            ({...}: {
+              networking.extraHosts = ''
+                127.0.0.1 energy-queensland.localtest.me
+              '';
+            })
+
             agenix.nixosModules.age
             ({...}: {
               age.secrets."b2-credentials".file = ./secrets/b2-credentials.age;
@@ -773,18 +783,18 @@
               environment.etc."kmonad/config.kbd".source = pkgs.substitute {
                 name = "config.kbd";
                 src = ./dotfiles/.config/kmonad/base.kbd;
-                replacements = [ "--replace" "keyboard-device" "/dev/input/by-path/platform-i8042-serio-0-event-kbd" ]; # Built-in keyboard
+                substitutions = [ "--replace" "keyboard-device" "/dev/input/by-path/platform-i8042-serio-0-event-kbd" ]; # Built-in keyboard
               };
               environment.etc."kmonad/tex-config.kbd".source = pkgs.substitute {
                 name = "tex-config.kbd";
                 src = ./dotfiles/.config/kmonad/base.kbd;
                 # /dev/tex-kbd is created by the SYMLINK command in the udev rule below
-                replacements = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
+                substitutions = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
               };
               environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
                 name = "mac-kbd-config.kbd";
                 src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-                replacements = [ "--replace" "keyboard-device" "/dev/mac-kbd" ]; # Usb mac keyboard
+                substitutions = [ "--replace" "keyboard-device" "/dev/mac-kbd" ]; # Usb mac keyboard
               };
               services.udev.extraRules = ''
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
@@ -846,12 +856,10 @@
                 config = { ... }: {
                   services.tailscale.enable = true;
                   services.openssh.enable = true;
-                  users.users.root.openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
-                  environment.systemPackages = with pkgs; [
-                    mtr
-                  ];
+                  services.openssh.settings.PermitRootLogin = "yes";
                 };
               };
+              #networking.firewall.allowedTCPPorts = [ 8000 ];
 
               time.timeZone = "Australia/Melbourne";
 
@@ -869,8 +877,8 @@
               programs.gnupg.agent = {
                 enable = true;
                 enableSSHSupport = true;
-                pinentryPackage = pkgs.pinentry-qt;
               };
+              services.xserver.updateDbusEnvironment = true;
 
               services.printing.enable = true;
               services.printing.drivers = [ pkgs.hplip ];
@@ -935,9 +943,11 @@
 
               security.rtkit.enable = true;
               services.pipewire = {
-                wireplumber.package = pkgs.wireplumber;
-                package = pkgs.pipewire;
+                #package = pkgs-old.pipewire;
+                #wireplumber.package = pkgs-old.pipewire;
                 enable = true;
+                audio.enable = true;
+                wireplumber.enable = true;
                 alsa.enable = true;
                 alsa.support32Bit = true;
                 pulse.enable = true;
@@ -952,35 +962,51 @@
               hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
               hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
               hardware.nvidia.prime.offload.enable = true;
-              hardware.opengl = {
+              hardware.nvidia.modesetting.enable = true;
+              hardware.graphics = {
                 enable = true;
-                driSupport32Bit = true;
+                enable32Bit = true;
               };
-              virtualisation.docker.enableNvidia = true;
+              hardware.nvidia-container-toolkit.enable = true;
 
               services.logind.lidSwitchDocked = "suspend";
 
-              services.tlp.enable = true;
-              services.tlp.extraConfig = ''
-                CPU_SCALING_GOVERNOR_ON_AC=performance
-                CPU_SCALING_GOVERNOR_ON_BAT=powersave
-                CPU_MAX_PERF_ON_AC=100
-                CPU_MAX_PERF_ON_BAT=30
-              '';
+              #services.tlp.enable = true;
+              #services.tlp.extraConfig = ''
+              #  CPU_SCALING_GOVERNOR_ON_AC=performance
+              #  CPU_SCALING_GOVERNOR_ON_BAT=powersave
+              #  CPU_MAX_PERF_ON_AC=100
+              #  CPU_MAX_PERF_ON_BAT=30
+              #'';
+
+              services.auto-cpufreq.enable = true;
+              services.auto-cpufreq.settings = {
+                battery = {
+                   governor = "powersave";
+                   turbo = "never";
+                };
+                charger = {
+                   governor = "performance";
+                   turbo = "never";
+                };
+              };
+
+              # Enable touchpad support.
+              services.libinput = {
+                enable = true;
+                touchpad = {
+                  accelSpeed = "1";
+                  naturalScrolling = false;
+                };
+                mouse.scrollMethod = "button";
+                mouse.scrollButton = 2;
+              };
+
+              services.displayManager.defaultSession = "none+xmonad";
 
               services.xserver = {
                 enable = true;
                 xkb.layout = "us";
-                # Enable touchpad support.
-                libinput = {
-                  enable = true;
-                  touchpad = {
-                    accelSpeed = "1";
-                    naturalScrolling = false;
-                  };
-                  mouse.scrollMethod = "button";
-                  mouse.scrollButton = 2;
-                };
                 autoRepeatDelay = 200; # milliseconds
                 autoRepeatInterval = 28; # milliseconds
                 desktopManager.xterm.enable = false;
@@ -994,7 +1020,6 @@
                     xmonad
                   ];
                 };
-                displayManager.defaultSession = "none+xmonad";
                 # this used to be .xinitrc
                 displayManager.sessionCommands = with pkgs; lib.mkAfter ''
                   /home/rowan/machine-configuration/scripts/setup_external_monitor.sh
@@ -1067,6 +1092,7 @@
               systemd.user.services.notifier = {
                 wantedBy = [ "default.target" ];
                 serviceConfig.ExecStart = pkgs.lib.getExe notification-listener.packages.x86_64-linux.server;
+                serviceConfig.Restart = "always";
               };
               systemd.user.services.notify-zoomout = {
                 serviceConfig.Type = "oneshot";
@@ -1121,7 +1147,7 @@
               nix.package = pkgs.nixFlakes;
               nix.extraOptions = "experimental-features = nix-command flakes";
               nix.settings.trusted-users = [ "root" "rowan" ];
-              system.stateVersion = "21.11"; # Did you read the comment?
+              system.stateVersion = "21.11";
 
               nixpkgs.config.allowUnfree = true;
               nixpkgs.config.segger-jlink.acceptLicense = true;

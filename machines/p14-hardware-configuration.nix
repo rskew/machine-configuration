@@ -11,7 +11,6 @@
   boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" ];
-  boot.kernelParams = [ "intel_pstate=disable" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
@@ -28,7 +27,5 @@
     [ { device = "/dev/disk/by-uuid/c9e54ec2-10e1-4833-b496-05a9015f458c"; }
     ];
 
-  powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
-  #powerManagement.cpuFreqGovernor = null;
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

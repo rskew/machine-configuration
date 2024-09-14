@@ -92,7 +92,7 @@ Config { font = "gallant12x22 27"
         , Run Com "bash" ["-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv | tail -n1 | tr -d '[:space:]'"] "gpu" 10
         , Run Com "bash" ["-c", "if [ -n \"$(pactl list source-outputs)\" ]; then if [ -z \"$(pactl get-source-mute $(pactl get-default-source) | grep yes )\" ]; then echo '<fc=#000,#0f0> <icon=material_mic.xbm/> </fc>'; else echo ' <icon=material_mic_off.xbm/> '; fi; fi"] "mic_status" 1
         , Run DiskIO [("/", "<read>↑<write>↓")] [ "-w", "4" ] 10
-        , Run Com "bash" ["-c", "cpupower frequency-info | grep kernel | cut -d' ' -f6,7 | tr -d '[:space:]'"] "cpufreq" 10
+        , Run Com "bash" ["-c", "sleep 0.05; grep MHz /proc/cpuinfo | awk '{ sum += $4/1000 } END { printf (\"%.1fGHz\", sum/NR) }'"] "cpufreq" 10
         ]
        , sepChar = "%"
        , alignSep = "}{"

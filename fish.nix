@@ -53,19 +53,11 @@
       nix develop $argv --command fish
     end
 
-    #any-nix-shell fish --info-right | source
-
-    function notify-me
-        curl localhost:2001/$status/$argv[1]/$argv[2]
-        if test ! $status -eq 0
-            echo "notification server not running, run with:"
-            echo "    nix run /home/rowan/projects/notify_send_server"
-        end
-    end
-
     alias nix-stray-roots='nix-store --gc --print-roots | egrep -v "^(/nix/var|/proc/.*|/run/\w+-system|\{memory)"'
 
     abbr csvpager 'column -s, -t | less'
+
+    abbr lvim 'nix --offline run nixpkgs#lunarvim'
 
     ####
     #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af
