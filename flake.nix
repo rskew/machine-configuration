@@ -13,6 +13,7 @@
     autofarm.url = "github:rskew/autofarm";
     #autofarm.url = "/home/rowan/autofarm";
     notification-listener.url = "git+ssh://git@github.com/rskew/notification-listener";
+    meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
   };
   outputs =
     { self,
@@ -26,6 +27,7 @@
       agenix,
       autofarm,
       notification-listener,
+      meetthecandidatesmtalexander,
     }:
     let
       pkgs = import nixpkgs {
@@ -99,6 +101,12 @@
                   locations."/".proxyWebsockets = true;
                   enableACME = true;
                   forceSSL = true;
+                };
+                "meetthecandidatesmtalexander.com.au" = {
+                  root = meetthecandidatesmtalexander;
+                  enableACME = true;
+                  forceSSL = true;
+                  serverAliases = ["www.meetthecandidatesmtalexander.com.au"];
                 };
               };
               services.nginx.recommendedProxySettings = true;

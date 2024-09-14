@@ -299,6 +299,22 @@
         "type": "github"
       }
     },
+    "meetthecandidatesmtalexander": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1726322294,
+        "narHash": "sha256-f2POv9Bkp+KzNNUDEwuecampjrYf0HQ0rQtnTkc0LAE=",
+        "owner": "rskew",
+        "repo": "meetthecandidatesmtalexander.com.au",
+        "rev": "d8050964dab8adf481919b04145e86da87d7fd46",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rskew",
+        "repo": "meetthecandidatesmtalexander.com.au",
+        "type": "github"
+      }
+    },
     "nix-rebar3": {
       "inputs": {
         "flake-utils": "flake-utils",
@@ -537,6 +553,7 @@
         "harvest-front-page": "harvest-front-page",
         "home-manager": "home-manager",
         "kmonad": "kmonad",
+        "meetthecandidatesmtalexander": "meetthecandidatesmtalexander",
         "nixpkgs": "nixpkgs_5",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "notification-listener": "notification-listener"
