@@ -1,4 +1,4 @@
-{ config, pkgs, specialArgs, ... }:
+{ config, pkgs, lib, specialArgs, ... }:
 let
   isGraphical = specialArgs.isGraphical;
   agenix = specialArgs.agenix;
@@ -10,6 +10,7 @@ let
     matplotlib
     seaborn
     pyyaml
+    boto3
   ]);
   vim-with-custom-rc = pkgs.vim_configurable.customize {
     vimrcConfig = {
@@ -29,40 +30,6 @@ let
       '';
     };
   };
-  set-theme-dark = pkgs.writeShellScriptBin "dark" ''
-    printf '\033]10;white\007' # urxvt set foreground
-    printf '\033]11;black\007' # urxvt set background
-    sed -i 's/^\(URxvt.background\).*$/URxvt.background: black/' $(realpath ~/.Xresources)
-    sed -i 's/^\(URxvt.foreground\).*$/URxvt.foreground: white/' $(realpath ~/.Xresources)
-    sed -i 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #ffffff/' ~/.Xresources
-    xrdb -load ~/.Xresources
-    echo dark > ~/.current-theme
-  '';
-  set-theme-light = pkgs.writeShellScriptBin "light" ''
-    printf '\033]10;#383a42\007' # urxvt set foreground
-    printf '\033]11;#f9f9f9\007' # urxvt set background
-    sed -i 's/^\(URxvt.background\).*$/URxvt.background: #f9f9f9/' $(realpath ~/.Xresources)
-    sed -i 's/^\(URxvt.foreground\).*$/URxvt.foreground: #383a42/' $(realpath ~/.Xresources)
-    sed -i 's/^\(URxvt.pointerColor2\).*$/URxvt.pointerColor2: #000000/' ~/.Xresources
-    xrdb -load ~/.Xresources
-    echo light > ~/.current-theme
-  '';
-  vim = pkgs.writeShellScriptBin "vim" ''
-    if `grep light ~/.current-theme`
-    then
-      ${vim-with-custom-rc}/bin/vim -c 'colorscheme zellner' $@
-    else
-      ${vim-with-custom-rc}/bin/vim $@
-    fi
-  '';
-  bat-themed = pkgs.writeShellScriptBin "bat" ''
-    if `grep light ~/.current-theme`
-    then
-      ${pkgs.bat}/bin/bat --theme 'Monokai Extended Light' $@
-    else
-      ${pkgs.bat}/bin/bat $@
-    fi
-  '';
 in {
   programs.home-manager.enable = true;
 
@@ -74,7 +41,7 @@ in {
     ripgrep # for project-wide search in emacs
     fzf # for reverse history search in fish shell
     wget
-    bat-themed
+    bat
     git
     tree
     zip
@@ -87,30 +54,40 @@ in {
     iotop
     jq
     pythonEnv
-    any-nix-shell
-    byobu
-    tmux
     rxvt_unicode
     kitty
     xclip
-    set-theme-dark
-    set-theme-light
-    vim
+    vim-with-custom-rc
     broot
-    unstable.pandoc
     unstable.zellij
     pgbackrest
     agenix.packages.${system}.agenix
     nix-tree
     qrencode
+    rclone
+    restic
+    awscli2
+    bashmount
+    docker
+    taskwarrior
+    pgcli
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration
+    wmctrl
+    chromium
+    unstable.firefox
+    vlc
+    pulsemixer
+    libreoffice
+    simplescreenrecorder
+    qgis
+    unstable.slack
+    unstable.zoom-us
+    pkgs.gnomeExtensions.appindicator
+    pkgs.gnomeExtensions.paperwm
+    pkgs.gnomeExtensions.switcher
   ] else []);
-
-  home.sessionVariables = {
-    GDK_SCALE = 2;
-  };
 
   # dotfiles
   home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
@@ -127,15 +104,6 @@ in {
     rev = "b5935806f159594f516da9b4c88bf1f3e5225cfd";
     sha256 = "sha256-Q/nSa3NMKoBubS0Xpoh+Am84ikUsgNrcUM2WoobepM4=";
   }}/resize-font";
-
-  #gtk = {
-  #  enable = true;
-  #  font.name = "Sans 16"; # make firefox font big for hi-res monitor
-  #  cursorTheme = {
-  #    name = "Adwaita";
-  #    size = 40; # make cursor big for hi-res monitor
-  #  };
-  #};
 
   services.dunst = {
     enable = isGraphical;
@@ -155,6 +123,29 @@ in {
         foreground = "#eceff1";
         timeout = 3;
       };
+    };
+  };
+
+  dconf.enable = true;
+  dconf.settings = {
+    "org/gnome/desktop/peripherals/keyboard" = {
+      delay = lib.hm.gvariant.mkUint32 200;
+      repeat-interval = lib.hm.gvariant.mkUint32 28;
+      repeat = true;
+    };
+    "org/gnome/shell" = {
+      disable-user-extensions = false;
+      enabled-extensions = with pkgs.gnomeExtensions; [
+        appindicator.extensionUuid
+        paperwm.extensionUuid
+        switcher.extensionUuid
+        system-monitor.extensionUuid
+        workspace-indicator.extensionUuid
+      ];
+    };
+    "org/gnome/desktop/background" = {
+      picture-options = "none";
+      primary-color = "#000000";
     };
   };
 

@@ -1154,5 +1154,143 @@
             })
           ];
       };
+
+      # Steps to reproduce machine state:
+      # - make sure bios is set to uefi boot
+      # - boot from nixos live usb
+      # - nix --extra-experimental-features nix-command --extra-experimental-features flakes run github:kirillrdy/nixos-installer/e887b94a444c7590e3dfb151565a8f1c8b184482 -- -device /dev/nvme0n1 -encrypt
+      # - reboot
+      # - install machine config
+      #   - copy /home/rowan/.ssh from backup
+      #   - git clone git@github.com:rskew/machine-configuration /home/users/rowan/machine-configuration
+      #   - nixos-rebuild --user-remote-sudo switch --flake /home/rowan/machine-configuration#peanut-butter-toast
+      # - reboot
+      #   - log in to root, set user password, log out, log in as user
+      # - "ssh-add -c" priv keys
+      # - set alt as super in gnome
+      #   - gsettings set org.gnome.desktop.input-sources xkb-options "['altwin:swap_alt_win']"
+      # - enable command-not-found on terminal
+      #   - sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos
+      #   - sudo nix-channel --update
+      # - setup firefox
+      #   - log in to firefox to get passwords and extensions
+      #   - in about:config set ui.key.menuAccessKeyFocuses to false to disable showing menu when pressing alt (xmonad mod key)
+      # - to enable backups, add password files to /home/rowan/secrets/
+      #   - restic-password for this machine's restic backup repository
+      #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
+      nixosConfigurations.peanut-butter-toast =
+        let pkgs = unstable;
+        in
+        nixpkgs-unstable.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {inherit pkgs unstable;};
+          modules = [
+
+            home-manager.nixosModules.home-manager
+            ({ pkgs, unstable, ... }: {
+              home-manager.useGlobalPkgs = true;
+              home-manager.users.rowan =
+                { config, pkgs, lib, ... }:
+                import ./home.nix {
+                  inherit config pkgs lib;
+                  specialArgs = {
+                    isGraphical = true;
+                    unstable = unstable;
+                    agenix = agenix;
+                  };
+                };
+            })
+
+            kmonad.nixosModule
+            ({lib, ...}: {
+              services.kmonad = {
+                enable = true;
+                configfiles = [
+                  "/etc/kmonad/tex-usb-config.kbd"
+                ];
+                package = kmonad.packages.x86_64-linux.kmonad;
+                make-group = false;
+              };
+              environment.etc."kmonad/tex-usb-config.kbd".source = pkgs.substitute {
+                name = "config.kbd";
+                src = ./dotfiles/.config/kmonad/base.kbd;
+                substitutions = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usbv2-0:6:1.0-event-kbd" ];
+              };
+            })
+
+            # usb oscilloscope
+            ({ pkgs, ...}: {
+              services.udev.packages = [ pkgs.openhantek6022 ];
+              environment.systemPackages = [ pkgs.openhantek6022 ];
+            })
+
+            ({config, pkgs, unstable, ...}: {
+              imports = [ ./machines/peanut-butter-toast-hardware-configuration.nix ];
+              security.tpm2.enable = false; # prevents "a start job is running for /dev/tpmrm0 ( _ / 1min 30s)"
+
+              boot.loader.systemd-boot.enable = true;
+              boot.loader.efi.canTouchEfiVariables = true;
+
+              networking.hostId = "00000000";
+              networking.hostName = "rowan-peanut-butter-toast";
+
+              services.tailscale.enable = true;
+              # SSH to machines on a second tailnet by ProxyJumping via a container
+              networking.nat.enable = true;
+              networking.nat.internalInterfaces = ["ve-+"];
+              networking.nat.externalInterface = "wlp3s0";
+              networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
+              containers.tailscaled = {
+                autoStart = true;
+                enableTun = true;
+                privateNetwork = true;
+                hostAddress = "192.168.100.10";
+                localAddress = "192.168.100.11";
+                config = { ... }: {
+                  services.tailscale.enable = true;
+                  services.openssh.enable = true;
+                  services.openssh.settings.PermitRootLogin = "yes";
+                };
+              };
+
+              programs.gnupg.agent = {
+                enable = true;
+                enableSSHSupport = true;
+              };
+
+              time.timeZone = "Australia/Melbourne";
+
+              virtualisation.docker.enable = true;
+
+              users.users.rowan = {
+                isNormalUser = true;
+                extraGroups = [ "wheel" "docker" "dialout" ];
+                shell = pkgs.fish;
+              };
+              programs.fish.enable = true;
+              programs.fish.vendor.completions.enable = true;
+
+              services.xserver.enable = true;
+              services.xserver.displayManager.gdm.enable = true;
+              services.xserver.desktopManager.gnome.enable = true;
+              services.xserver.videoDrivers = [ "amdgpu" ];
+              hardware.graphics = {
+                enable = true;
+                enable32Bit = true;
+                extraPackages = [ pkgs.amdvlk ];
+                extraPackages32 = [ pkgs.driversi686Linux.amdvlk ];
+              };
+              systemd.services.lactd.wantedBy = ["multi-user.target"];
+              systemd.packages = [ pkgs.lact ];
+              environment.systemPackages = [
+                pkgs.lact
+              ];
+
+              nix.extraOptions = "experimental-features = nix-command flakes";
+              nix.settings.trusted-users = [ "root" "rowan" ];
+              system.stateVersion = "24.11";
+            })
+          ];
+      };
     };
 }
