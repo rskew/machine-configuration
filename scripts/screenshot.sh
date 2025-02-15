@@ -17,3 +17,4 @@ done
 NEWNUM=$(($MAXNUM+1))
 cd ~/
 import -window root "/home/rowan/screenshots/screenshot$NEWNUM.png"
+notify-send "screenshot taken" "screenshot$NEWNUM.png"

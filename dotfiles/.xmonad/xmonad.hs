@@ -76,7 +76,7 @@ myKeys =
       ] ++ [
         ((mod1Mask .|. shiftMask, xK_i),
          (do
-             spawnOn "2" "nvidia-offload firefox"
+             spawnOn "2" "firefox"
              spawnOn "3" "urxvt -name mainterm --hold"
              spawnOn "5" "urxvt --hold -e 'pulsemixer'"
          ))

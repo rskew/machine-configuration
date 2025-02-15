@@ -12,3 +12,4 @@ for i in screenshot*.png;
 done;
 NEWNUM=$(($MAXNUM+1))
 import "/home/rowan/screenshots/screenshot$NEWNUM.png"
+notify-send "screenshot taken" "screenshot$NEWNUM.png"

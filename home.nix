@@ -11,6 +11,8 @@ let
     seaborn
     pyyaml
     boto3
+    tqdm
+    duckdb
   ]);
   vim-with-custom-rc = pkgs.vim_configurable.customize {
     vimrcConfig = {
