@@ -4,14 +4,13 @@
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
-    kmonad.url = "github:rskew/kmonad?dir=nix";
+    kmonad.url = "github:kmonad/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
     coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
-    #autofarm.url = "/home/rowan/autofarm";
     notification-listener.url = "git+ssh://git@github.com/rskew/notification-listener";
     meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
   };
@@ -90,19 +89,6 @@
                 };
                 "coolroom-sensor.castlemaineharvest.com.au" = {
                   locations."/".proxyPass = "http://127.0.0.1:8086/";
-                  enableACME = true;
-                  forceSSL = true;
-                };
-                "objectionable.farm" = {
-                  locations."/".proxyPass = "http://127.0.0.1:3001/";
-                  enableACME = true;
-                  acmeRoot = null;
-                  forceSSL = true;
-                  serverAliases = ["top-tank.objectionable.farm"];
-                };
-                "shed.objectionable.farm" = {
-                  locations."/".proxyPass = "http://127.0.0.1:8123/";
-                  locations."/".proxyWebsockets = true;
                   enableACME = true;
                   forceSSL = true;
                 };
@@ -338,7 +324,7 @@
               security.sudo.wheelNeedsPassword = false;
               programs.fish.enable = true;
 
-              nix.package = pkgs.nixFlakes;
+              nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "22.05";
             })
@@ -479,7 +465,7 @@
               };
               programs.fish.enable = true;
 
-              nix.package = pkgs.nixFlakes;
+              nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "20.03"; # Did you read the comment?
             })
@@ -660,7 +646,7 @@
               };
               programs.fish.enable = true;
 
-              nix.package = pkgs.nixFlakes;
+              nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "20.03"; # Did you read the comment?
             })
@@ -756,9 +742,9 @@
             ({ pkgs, unstable, ... }: {
               home-manager.useGlobalPkgs = true;
               home-manager.users.rowan =
-                { config, pkgs, ... }:
+                { config, lib, pkgs, ... }:
                 import ./home.nix {
-                  inherit config pkgs;
+                  inherit lib config pkgs;
                   specialArgs = {
                     isGraphical = true;
                     unstable = unstable;
@@ -767,34 +753,40 @@
                 };
             })
 
-            kmonad.nixosModule
-            # Bluetooth keyboard config
+            kmonad.nixosModules.default
             ({lib, ...}: {
               services.kmonad = {
                 enable = true;
-                configfiles = [
-                  "/etc/kmonad/config.kbd"
-                  "/etc/kmonad/tex-config.kbd"
-                  "/etc/kmonad/mac-kbd-config.kbd"
-                ];
-                package = kmonad.packages.x86_64-linux.kmonad;
-                make-group = false;
-              };
-              environment.etc."kmonad/config.kbd".source = pkgs.substitute {
-                name = "config.kbd";
-                src = ./dotfiles/.config/kmonad/base.kbd;
-                substitutions = [ "--replace" "keyboard-device" "/dev/input/by-path/platform-i8042-serio-0-event-kbd" ]; # Built-in keyboard
-              };
-              environment.etc."kmonad/tex-config.kbd".source = pkgs.substitute {
-                name = "tex-config.kbd";
-                src = ./dotfiles/.config/kmonad/base.kbd;
-                # /dev/tex-kbd is created by the SYMLINK command in the udev rule below
-                substitutions = [ "--replace" "keyboard-device" "/dev/tex-kbd" ];
-              };
-              environment.etc."kmonad/mac-kbd-config.kbd".source = pkgs.substitute {
-                name = "mac-kbd-config.kbd";
-                src = ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-                substitutions = [ "--replace" "keyboard-device" "/dev/mac-kbd" ]; # Usb mac keyboard
+                package = kmonad.packages.x86_64-linux.default;
+                keyboards = {
+                  texKeyboard = {
+                    device = "/dev/tex-kbd";
+                    config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
+                    defcfg = {
+                      enable = true;
+                      fallthrough = true;
+                      allowCommands = false;
+                    };
+                  };
+                  builtinKeyboard = {
+                    device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
+                    config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
+                    defcfg = {
+                      enable = true;
+                      fallthrough = true;
+                      allowCommands = false;
+                    };
+                  };
+                  usbMacKeyboard = {
+                    device = "/dev/mac-kbd";
+                    config = builtins.readFile ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
+                    defcfg = {
+                      enable = true;
+                      fallthrough = true;
+                      allowCommands = false;
+                    };
+                  };
+                };
               };
               services.udev.extraRules = ''
                 ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
@@ -872,7 +864,7 @@
 
               # Select internationalisation properties.
               i18n.defaultLocale = "en_AU.UTF-8";
-              fonts.packages = with pkgs; [ nerdfonts source-code-pro ];
+              #fonts.packages = with pkgs; [ nerdfonts source-code-pro ];
 
               programs.gnupg.agent = {
                 enable = true;
@@ -884,78 +876,6 @@
               services.printing.drivers = [ pkgs.hplip ];
 
               virtualisation.docker.enable = true;
-
-              environment.systemPackages = with pkgs; [
-                gping
-                rclone
-                restic
-                unstable.picom-next
-                xorg.xev
-                xorg.xinput
-                xorg.xmessage
-                unstable.firefox
-                i3lock
-                trayer
-                networkmanagerapplet
-                vlc
-                haskellPackages.xmobar
-                pavucontrol
-                pinta
-                gnupg
-                awscli2
-                hunspell
-                (chromium.overrideAttrs (old: { postInstall = "${pkgs.makeWrapper}/bin/wrapProgram $out/bin/chromium --add-flags --force-device-scale-factor=1.5"; }))
-                bashmount
-                filelight
-                docker
-                docker-compose
-                openvpn
-                glxinfo
-                qbittorrent
-                libreoffice
-                pulsemixer
-                pulseaudio
-                alsa-utils
-                pamixer
-                brightnessctl
-                direnv
-                unstable.xournalpp
-                unstable.signal-desktop
-                simplescreenrecorder
-                libnotify
-                imagemagick # for screenshots via the 'import' command
-                rofi # launcher
-                qgis
-                qpwgraph
-                ## work talk
-                unstable.slack
-                unstable.zoom-us
-                ##
-                (pkgs.writeShellScriptBin "nvidia-offload" ''
-                   export __NV_PRIME_RENDER_OFFLOAD=1
-                   export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
-                   export __GLX_VENDOR_LIBRARY_NAME=nvidia
-                   export __VK_LAYER_NV_optimus=NVIDIA_only
-                   exec -a "$0" "$@"
-                 '')
-                nvtopPackages.nvidia
-              ];
-
-              security.rtkit.enable = true;
-              services.pipewire = {
-                #package = pkgs-old.pipewire;
-                #wireplumber.package = pkgs-old.pipewire;
-                enable = true;
-                audio.enable = true;
-                wireplumber.enable = true;
-                alsa.enable = true;
-                alsa.support32Bit = true;
-                pulse.enable = true;
-                jack.enable = true;
-              };
-
-              hardware.bluetooth.enable = true;
-              services.blueman.enable = true;
 
               # Comment these lines to disable gpu
               services.xserver.videoDrivers = [ "nvidia" ];
@@ -971,89 +891,9 @@
 
               services.logind.lidSwitchDocked = "suspend";
 
-              #services.tlp.enable = true;
-              #services.tlp.extraConfig = ''
-              #  CPU_SCALING_GOVERNOR_ON_AC=performance
-              #  CPU_SCALING_GOVERNOR_ON_BAT=powersave
-              #  CPU_MAX_PERF_ON_AC=100
-              #  CPU_MAX_PERF_ON_BAT=30
-              #'';
-
-              services.auto-cpufreq.enable = true;
-              services.auto-cpufreq.settings = {
-                battery = {
-                   governor = "powersave";
-                   turbo = "never";
-                };
-                charger = {
-                   governor = "performance";
-                   turbo = "never";
-                };
-              };
-
-              # Enable touchpad support.
-              services.libinput = {
-                enable = true;
-                touchpad = {
-                  accelSpeed = "1";
-                  naturalScrolling = false;
-                };
-                mouse.scrollMethod = "button";
-                mouse.scrollButton = 2;
-              };
-
-              services.displayManager.defaultSession = "none+xmonad";
-
-              services.xserver = {
-                enable = true;
-                xkb.layout = "us";
-                autoRepeatDelay = 200; # milliseconds
-                autoRepeatInterval = 28; # milliseconds
-                desktopManager.xterm.enable = false;
-                xkb.options = "ctrl:nocaps";
-                windowManager.xmonad = {
-                  enable = true;
-                  enableContribAndExtras = true;
-                  extraPackages = hp: with hp; [
-                    xmonad-contrib
-                    xmonad-extras
-                    xmonad
-                  ];
-                };
-                # this used to be .xinitrc
-                displayManager.sessionCommands = with pkgs; lib.mkAfter ''
-                  /home/rowan/machine-configuration/scripts/setup_external_monitor.sh
-                  ${pkgs.xorg.xrdb}/bin/xrdb -merge /home/rowan/.Xresources
-                  # turn off Display Power Management Service (DPMS)
-                  xset -dpms
-                  setterm -blank 0 -powerdown 0
-                  # turn off black Screensaver
-                  xset s off
-                  trayer --edge bottom \
-                         --align right \
-                         --SetDockType true \
-                         --SetPartialStrut true \
-                         --expand true \
-                         --width 5 \
-                         --transparent true \
-                         --tint 0x000000 \
-                         --height 40 \
-                         --monitor "primary" &
-                  exec nm-applet &
-                  exec blueman-applet &
-                  ${pkgs.feh}/bin/feh --bg-scale ~/Pictures/Jupyter_full_flat.png &
-                  ${unstable.picom-next}/bin/picom --experimental-backends &
-                  ## Synchronise PRIMARY and CLIPBOARD
-                  ${autocutsel}/bin/autocutsel -fork -selection CLIPBOARD
-                  ${autocutsel}/bin/autocutsel -fork -selection PRIMARY
-                  ##
-                  ${xautolock}/bin/xautolock -time 15 -locker /home/rowan/machine-configuration/scripts/lock.sh -corners 00-0 &
-                '';
-              };
-
-              environment.sessionVariables = {
-                QT_SCALE_FACTOR = "2";
-              };
+              services.xserver.enable = true;
+              services.xserver.displayManager.gdm.enable = true;
+              services.xserver.desktopManager.gnome.enable = true;
 
               users.users.rowan = {
                 isNormalUser = true;
@@ -1072,38 +912,6 @@
                 # Melbourne
                 latitude = -37.8136;
                 longitude = 144.9631;
-              };
-
-              systemd.services.lockScreenBeforeSleep = {
-                description = "Lock screen before sleep";
-                wantedBy = [ "sleep.target" ];
-                before = [ "sleep.target" ];
-                path = [ pkgs.bash pkgs.i3lock ];
-                serviceConfig = {
-                  Environment = "DISPLAY=:0";
-                  User = "rowan";
-                };
-                script = ''
-                  /home/rowan/machine-configuration/scripts/lock.sh
-                '';
-                serviceConfig.Type = "forking";
-              };
-
-              systemd.user.services.notifier = {
-                wantedBy = [ "default.target" ];
-                serviceConfig.ExecStart = pkgs.lib.getExe notification-listener.packages.x86_64-linux.server;
-                serviceConfig.Restart = "always";
-              };
-              systemd.user.services.notify-zoomout = {
-                serviceConfig.Type = "oneshot";
-                serviceConfig.ExecStart = "${pkgs.lib.getExe notification-listener.packages.x86_64-linux.notify} localhost zoomout/refocus";
-              };
-              systemd.user.timers.notify-zoomout = {
-                wantedBy = [ "timers.target" ];
-                timerConfig = {
-                  OnCalendar = "*:0/30";
-                  RandomizedDelaySec = 300;
-                };
               };
 
               # Backups
@@ -1144,7 +952,7 @@
                 };
               };
 
-              nix.package = pkgs.nixFlakes;
+              nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               nix.settings.trusted-users = [ "root" "rowan" ];
               system.stateVersion = "21.11";
@@ -1167,8 +975,6 @@
       # - reboot
       #   - log in to root, set user password, log out, log in as user
       # - "ssh-add -c" priv keys
-      # - set alt as super in gnome
-      #   - gsettings set org.gnome.desktop.input-sources xkb-options "['altwin:swap_alt_win']"
       # - enable command-not-found on terminal
       #   - sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos
       #   - sudo nix-channel --update

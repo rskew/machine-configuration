@@ -56,7 +56,6 @@ in {
     iotop
     jq
     pythonEnv
-    rxvt_unicode
     kitty
     xclip
     vim-with-custom-rc
@@ -73,6 +72,8 @@ in {
     docker
     taskwarrior
     pgcli
+    gh
+    lunarvim
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration
@@ -81,6 +82,7 @@ in {
     unstable.firefox
     vlc
     pulsemixer
+    pulseaudio
     libreoffice
     simplescreenrecorder
     qgis
@@ -91,45 +93,13 @@ in {
     pkgs.gnomeExtensions.switcher
   ] else []);
 
-  # dotfiles
-  home.file.".doom.d/config.el".source   = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/config.el";
-  home.file.".doom.d/init.el".source     = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/init.el";
-  home.file.".doom.d/packages.el".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.doom.d/packages.el";
-
-  # For graphical environments
-  home.file.".xmonad/xmonad.hs".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmonad/xmonad.hs";
-  home.file.".xmobarrc".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.xmobarrc";
-  home.file.".Xresources".source = config.lib.file.mkOutOfStoreSymlink "/home/rowan/machine-configuration/dotfiles/.Xresources";
-  home.file.".config/urxvt/ext/resize-font".source = "${pkgs.fetchFromGitHub {
-    owner = "simmel";
-    repo = "urxvt-resize-font";
-    rev = "b5935806f159594f516da9b4c88bf1f3e5225cfd";
-    sha256 = "sha256-Q/nSa3NMKoBubS0Xpoh+Am84ikUsgNrcUM2WoobepM4=";
-  }}/resize-font";
-
-  services.dunst = {
-    enable = isGraphical;
-    settings = {
-      global = {
-        width = 600;
-        height = 600;
-        offset = "30x50";
-        origin = "top-right";
-        transparency = 10;
-        frame_color = "#eceff1";
-        font = "Droid Sans 26";
-      };
-
-      urgency_normal = {
-        background = "#37474f";
-        foreground = "#eceff1";
-        timeout = 3;
-      };
-    };
-  };
-
   dconf.enable = true;
   dconf.settings = {
+    "org/gnome/desktop/input-sources" = {
+      xkb-options = [
+        "altwin:swap_alt_win"
+      ];
+    };
     "org/gnome/desktop/peripherals/keyboard" = {
       delay = lib.hm.gvariant.mkUint32 200;
       repeat-interval = lib.hm.gvariant.mkUint32 28;
@@ -148,7 +118,7 @@ in {
     "org/gnome/desktop/wm/preferences" = {
       num-workspaces = lib.hm.gvariant.mkInt32 6;
       workspace-names = [ "1" "2" "3" "4" "5" "6" ];
-      audible-bell = lib.hm.gvariant.mkBoolean false;
+      audible-bell = false;
     };
     "org/gnome/desktop/wm/keybindings" = {
       switch-to-workspace-1 = [ "<Super>1" ];

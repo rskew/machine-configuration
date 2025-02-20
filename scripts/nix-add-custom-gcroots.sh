@@ -13,4 +13,4 @@ cd ~/farm/autofarm \
     && nix build .#devShells.x86_64-linux.autofarm -o ~/gc-roots/result-autofarm-shell \
     && nix build .#autofarm -o ~/gc-roots/result-autofarm-package
 bash ~/silverpond/build-gc-roots.sh
-nix build ~/scratch-projects/esp32h2#devShells.x86_64-linux.default -o ~/gc-roots/result-esp32h2
+nix build ~/scratch-projects/zigbee-farmnode#devShells.x86_64-linux.default -o ~/gc-roots/result-zigbee-farmnode
