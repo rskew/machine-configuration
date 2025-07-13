@@ -88,6 +88,7 @@ in {
     unstable.slack
     unstable.zoom-us
     pkgs.gnomeExtensions.appindicator
+    pkgs.gnomeExtensions.system-monitor-next
     pkgs.gnomeExtensions.paperwm
     pkgs.gnomeExtensions.switcher
   ] else []);
@@ -112,6 +113,7 @@ in {
         switcher.extensionUuid
         system-monitor.extensionUuid
         workspace-indicator.extensionUuid
+        system-monitor-next.extensionUuid
       ];
     };
     "org/gnome/desktop/wm/preferences" = {

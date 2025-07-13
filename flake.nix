@@ -711,7 +711,7 @@
         in
         nixpkgs-unstable.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs unstable;};
+          specialArgs = {inherit unstable;};
           modules = [
 
             ({...}: {
@@ -748,15 +748,15 @@
                 enable = true;
                 package = kmonad.packages.x86_64-linux.default;
                 keyboards = {
-                  texKeyboard = {
-                    device = "/dev/tex-kbd";
-                    config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
-                    defcfg = {
-                      enable = true;
-                      fallthrough = true;
-                      allowCommands = false;
-                    };
-                  };
+                  #texKeyboard = {
+                  #  device = "/dev/tex-kbd";
+                  #  config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
+                  #  defcfg = {
+                  #    enable = true;
+                  #    fallthrough = true;
+                  #    allowCommands = false;
+                  #  };
+                  #};
                   builtinKeyboard = {
                     device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
                     config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
@@ -766,30 +766,30 @@
                       allowCommands = false;
                     };
                   };
-                  usbMacKeyboard = {
-                    device = "/dev/mac-kbd";
-                    config = builtins.readFile ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-                    defcfg = {
-                      enable = true;
-                      fallthrough = true;
-                      allowCommands = false;
-                    };
-                  };
+                  #usbMacKeyboard = {
+                  #  device = "/dev/mac-kbd";
+                  #  config = builtins.readFile ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
+                  #  defcfg = {
+                  #    enable = true;
+                  #    fallthrough = true;
+                  #    allowCommands = false;
+                  #  };
+                  #};
                 };
               };
-              services.udev.extraRules = ''
-                ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
-                ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
-                ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-tex-config.service"
-                SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", SYMLINK+="mac-kbd"
-                SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-mac-kbd-config.service"
-                SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-mac-kbd-config.service"
-              '';
-              # Disable the unit for external keyboards so they don't start automatically.
-              # The udev rules will start the unit for the bluetooth keyboard when the keyboard connects.
-              # When enabled, sometimes these service use 100% of all CPU cores on boot :/
-              systemd.services.kmonad-tex-config.wantedBy = lib.mkForce [];
-              systemd.services.kmonad-mac-kbd-config.wantedBy = lib.mkForce [];
+              #services.udev.extraRules = ''
+              #  ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
+              #  ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
+              #  ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-tex-config.service"
+              #  SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", SYMLINK+="mac-kbd"
+              #  SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-mac-kbd-config.service"
+              #  SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-mac-kbd-config.service"
+              #'';
+              ## Disable the unit for external keyboards so they don't start automatically.
+              ## The udev rules will start the unit for the bluetooth keyboard when the keyboard connects.
+              ## When enabled, sometimes these service use 100% of all CPU cores on boot :/
+              #systemd.services.kmonad-tex-config.wantedBy = lib.mkForce [];
+              #systemd.services.kmonad-mac-kbd-config.wantedBy = lib.mkForce [];
             })
 
             # usb oscilloscope
@@ -868,6 +868,7 @@
 
               # Comment these lines to disable gpu
               services.xserver.videoDrivers = [ "nvidia" ];
+              hardware.nvidia.open = true;
               hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
               hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
               hardware.nvidia.prime.offload.enable = true;
@@ -880,9 +881,9 @@
 
               services.logind.lidSwitchDocked = "suspend";
 
-              services.xserver.enable = true;
-              services.xserver.displayManager.gdm.enable = true;
-              services.xserver.desktopManager.gnome.enable = true;
+              #services.xserver.enable = true;
+              services.displayManager.gdm.enable = true;
+              services.desktopManager.gnome.enable = true;
 
               users.users.rowan = {
                 isNormalUser = true;
@@ -942,8 +943,11 @@
               };
 
               nix.package = pkgs.nixVersions.stable;
-              nix.extraOptions = "experimental-features = nix-command flakes";
-              nix.settings.trusted-users = [ "root" "rowan" ];
+              nix.extraOptions = ''
+                experimental-features = nix-command flakes
+              '';
+              nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ];
+              nix.settings.trusted-users = [ "rowan" ];
               system.stateVersion = "21.11";
 
               nixpkgs.config.allowUnfree = true;
