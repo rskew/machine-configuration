@@ -39,7 +39,7 @@ in {
 
   home.packages = with pkgs; [
     git
-    unstable.emacs
+    unstable.lunarvim
     ripgrep # for project-wide search in emacs
     fzf # for reverse history search in fish shell
     wget
@@ -73,7 +73,6 @@ in {
     taskwarrior
     pgcli
     gh
-    lunarvim
   ] ++ (if isGraphical then [
     arandr
     dconf # Required for gtk3 configuration

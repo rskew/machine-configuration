@@ -1,9 +1,9 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager/release-25.05";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
@@ -67,7 +67,7 @@
       nixosConfigurations.vps1 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs unstable;};
+          specialArgs = {inherit unstable;};
           modules = [
             (import ./machines/vps1/hardware-configuration.nix)
             (import ./machines/vps1/networking.nix)
@@ -78,22 +78,12 @@
                 "castlemaineharvest.com.au" = {
                   root = harvest-front-page;
                   enableACME = true;
+                  acmeRoot = null;
                   forceSSL = true;
                   serverAliases = ["www.castlemaineharvest.com.au"];
                 };
-                "coolroom.castlemaineharvest.com.au" = {
-                  locations."/".proxyPass = "http://127.0.0.1:3000/";
-                  enableACME = true;
-                  forceSSL = true;
-                  serverAliases = ["www.coolroom.castlemaineharvest.com.au"];
-                };
-                "coolroom-sensor.castlemaineharvest.com.au" = {
-                  locations."/".proxyPass = "http://127.0.0.1:8086/";
-                  enableACME = true;
-                  forceSSL = true;
-                };
                 "meetthecandidatesmtalexander.com.au" = {
-                  root = meetthecandidatesmtalexander;
+                  root = "${meetthecandidatesmtalexander}/site";
                   enableACME = true;
                   forceSSL = true;
                   serverAliases = ["www.meetthecandidatesmtalexander.com.au"];
@@ -118,35 +108,34 @@
             ({pkgs, config, ...}: {
               security.acme = {
                 acceptTerms = true;
-                certs."objectionable.farm" = {
+                certs."castlemaineharvest.com.au" = {
                   email = "certs+rowan.skewes@gmail.com";
                   group = "nginx";
                   postRun = ''
-                    cp ${config.security.acme.certs."objectionable.farm".directory}/fullchain.pem /postgres-fullchain.pem
+                    cp ${config.security.acme.certs."castlemaineharvest.com.au".directory}/fullchain.pem /postgres-fullchain.pem
                     # The cert must be owned by postgres user
                     chown postgres:postgres /postgres-fullchain.pem
                     # Need to set to 600 otherwise get SSL error code 2147483661
                     chmod 600 /postgres-fullchain.pem
-                    cp ${config.security.acme.certs."objectionable.farm".directory}/key.pem /postgres-key.pem
+                    cp ${config.security.acme.certs."castlemaineharvest.com.au".directory}/key.pem /postgres-key.pem
                     chown postgres:postgres /postgres-key.pem
                     chmod 600 /postgres-key.pem
                   '';
                   dnsProvider = "namecheap";
-                  dnsPropagationCheck = false;
                   credentialsFile = config.age.secrets.namecheap-api-credentials.path;
                 };
               };
               services.postgresql = {
                 enable = true;
                 package = pkgs.postgresql_14;
-                extraPlugins = [ pkgs.postgresql14Packages.postgis ];
-                port = 5432;
+                extensions = [ pkgs.postgresql14Packages.postgis ];
                 initdbArgs = ["--pwfile=${config.age.secrets.farmdb-pgpassword.path}"];
                 initialScript = pkgs.writeText "initialScript" ''
                   CREATE EXTENSION postgis;
                   CREATE EXTENSION postgis_raster;
                 '';
                 settings = {
+                  port = 5432;
                   ssl = "on";
                   ssl_cert_file = "/postgres-fullchain.pem";
                   ssl_key_file = "/postgres-key.pem";
@@ -161,7 +150,7 @@
                   hostssl all all ::0/0     md5
                 '';
               };
-              systemd.services.postgresql.requires = [ "acme-finished-objectionable.farm.target" ];
+              systemd.services.postgresql.requires = [ "acme-finished-castlemaineharvest.com.au.target" ];
               networking.firewall.allowedTCPPorts = [ 5432 ];
               # TODO make pgbackrest service module
               # TODO put postgres + pgbackrest configuration in autofarm with a few parameters
@@ -697,7 +686,7 @@
       #   - swapon -s
       # - install laptop config
       #   - copy /mnt/home/rowan/.ssh from backup
-      #   - nix-shell -p git nixFlakes
+      #   - nix-shell -p git nixVersions.stable;
       #   - git clone git@github.com:rskew/machine-configuration /mnt/home/users/rowan/machine-configuration
       #   - nixos-install --root /mnt --flake /mnt/home/rowan/machine-configuration#rowan-p14
       # - reboot.
