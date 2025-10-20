@@ -1144,16 +1144,18 @@
             ({lib, ...}: {
               services.kmonad = {
                 enable = true;
-                configfiles = [
-                  "/etc/kmonad/tex-usb-config.kbd"
-                ];
-                package = kmonad.packages.x86_64-linux.kmonad;
-                make-group = false;
-              };
-              environment.etc."kmonad/tex-usb-config.kbd".source = pkgs.substitute {
-                name = "config.kbd";
-                src = ./dotfiles/.config/kmonad/base.kbd;
-                substitutions = [ "--replace" "keyboard-device" "/dev/input/by-path/pci-0000:00:14.0-usbv2-0:6:1.0-event-kbd" ];
+                package = kmonad.packages.x86_64-linux.default;
+                keyboards = {
+                  texKeyboardUsb = {
+                    device = "/dev/input/by-path/pci-0000:00:14.0-usbv2-0:5:1.0-event-kbd";
+                    config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
+                    defcfg = {
+                      enable = true;
+                      fallthrough = true;
+                      allowCommands = false;
+                    };
+                  };
+                };
               };
             })
 
@@ -1177,7 +1179,7 @@
               # SSH to machines on a second tailnet by ProxyJumping via a container
               networking.nat.enable = true;
               networking.nat.internalInterfaces = ["ve-+"];
-              networking.nat.externalInterface = "wlp3s0";
+              networking.nat.externalInterface = "wls4";
               networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
               containers.tailscaled = {
                 autoStart = true;
