@@ -798,6 +798,32 @@
               environment.systemPackages = [ pkgs.openhantek6022 ];
             })
 
+            # k3s with kata containers for secure-ish vibe coding
+            ({ pkgs, ...}: {
+              services.k3s.enable = true;
+              systemd.services.k3s.serviceConfig.DeviceAllow = [
+                "/dev/kvm rwm"
+                "/dev/mshv rwm"
+                "/dev/kmsg rwm"
+                "/dev/vhost-vsock rwm"
+                "/dev/vhost-net rwm"
+                "/dev/net/tun rwm"
+              ];
+              systemd.services.k3s.serviceConfig.Delegate = "yes";
+              systemd.services.k3s.path = [ pkgs.kata-runtime ];
+              systemd.tmpfiles.settings."09-k3s"."/var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.tmpl"."L+".argument = let
+                template = ''
+                  {{ template "base" . }}
+
+                  [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.'kata']
+                      runtime_type = "io.containerd.kata.v2"
+                      privileged_without_host_devices = true
+                      pod_annotations = ["io.katacontainers.*"]
+                      container_annotations = ["io.katacontainers.*"]
+                  '';
+                in "${pkgs.writeText "config-v3.toml.tmpl" template}";
+            })
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
@@ -853,7 +879,6 @@
 
               # Select internationalisation properties.
               i18n.defaultLocale = "en_AU.UTF-8";
-              #fonts.packages = with pkgs; [ nerdfonts source-code-pro ];
 
               programs.gnupg.agent = {
                 enable = true;
@@ -861,23 +886,21 @@
               };
               services.xserver.updateDbusEnvironment = true;
 
-              services.printing.enable = true;
-              services.printing.drivers = [ pkgs.hplip ];
-
               virtualisation.docker.enable = true;
+              virtualisation.libvirtd.enable = true;
 
               # Comment these lines to disable gpu
-              services.xserver.videoDrivers = [ "nvidia" ];
-              hardware.nvidia.open = true;
-              hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              hardware.nvidia.prime.offload.enable = true;
-              hardware.nvidia.modesetting.enable = true;
-              hardware.graphics = {
-                enable = true;
-                enable32Bit = true;
-              };
-              hardware.nvidia-container-toolkit.enable = true;
+              #services.xserver.videoDrivers = [ "nvidia" ];
+              #hardware.nvidia.open = true;
+              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
+              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
+              #hardware.nvidia.prime.offload.enable = true;
+              #hardware.nvidia.modesetting.enable = true;
+              #hardware.graphics = {
+              #  enable = true;
+              #  enable32Bit = true;
+              #};
+              #hardware.nvidia-container-toolkit.enable = true;
 
               services.logind.lidSwitchDocked = "suspend";
 
