@@ -1,6 +1,7 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -17,6 +18,7 @@
   outputs =
     { self,
       nixpkgs,
+      nixpkgs-stable,
       nixpkgs-unstable,
       home-manager,
       kmonad,
@@ -30,6 +32,10 @@
     }:
     let
       pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+      };
+      pkgs-stable = import nixpkgs-stable {
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
@@ -1052,7 +1058,7 @@
               environment.systemPackages = [ pkgs.openhantek6022 ];
             })
 
-            ({config, pkgs, unstable, ...}: {
+            ({config, pkgs, ...}: {
               imports = [ ./machines/peanut-butter-toast-hardware-configuration.nix ];
               security.tpm2.enable = false; # prevents "a start job is running for /dev/tpmrm0 ( _ / 1min 30s)"
 
@@ -1120,5 +1126,83 @@
             })
           ];
       };
+
+      nixosConfigurations.farm-server-wyse =
+        nixpkgs-stable.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+
+            (import ./persistent-ssh-tunnel.nix)
+            ({...}: {
+              services.persistentSSHTunnel = {
+                enable = true;
+                remoteIp = jumpBoxIp;
+                remoteUser = "rowan";
+                idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
+                knownHostsLine = jumpBoxKnownHostsLine;
+                remoteForwards = [
+                  { localPort = 22; remotePort = 8822; } # SSH
+                  { localPort = 8006; remotePort = 8006; } # Irrigation controller backend
+                ];
+              };
+            })
+
+            ({config, pkgs, ...}: {
+              imports =
+                [./machines/farm-server-wyse-hardware-configuration.nix
+                ];
+              networking.hostName = "farm-server-wyse";
+              networking.useDHCP = false;
+              networking.networkmanager.enable = true;
+
+              networking.firewall.allowedTCPPorts = [
+                8006 # irrigation control backend
+              ];
+
+              # Select internationalisation properties.
+              i18n.defaultLocale = "en_AU.UTF-8";
+              # Set your time zone.
+              time.timeZone = "Australia/Melbourne";
+
+              services.openssh = {
+                enable = true;
+                settings = {
+                  PasswordAuthentication = false;
+                  PermitRootLogin = "no";
+                  X11Forwarding = false;
+                };
+              };
+
+              environment.systemPackages = with pkgs; [
+                git vim-full fzf
+                unixtools.netstat
+              ];
+
+              users.users.rowan = {
+                isNormalUser = true;
+                extraGroups = [
+                  "wheel"  # Enable ‘sudo’ for the user.
+                  "docker"
+                  "usb" "dialout" "uucp"
+                ];
+                openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
+                shell = pkgs-stable.fish;
+              };
+              programs.fish.enable = true;
+
+              services.journald.extraConfig = "SystemMaxUse=200M";
+
+              # Slim it down
+              services.speechd.enable = false;
+              hardware.graphics.enable = false;
+              services.pipewire.enable = false;
+              services.libinput.enable = false;
+
+              nix.package = pkgs-stable.nixVersions.stable;
+              nix.extraOptions = "experimental-features = nix-command flakes";
+              system.stateVersion = "25.05"; # Did you read the comment?
+            })
+          ];
+        };
     };
 }

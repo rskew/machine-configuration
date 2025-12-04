@@ -1,9 +1,5 @@
-{ config, pkgs, lib, specialArgs, ... }:
+{ config, pkgs, lib, isGraphical, agenix, ... }:
 let
-  isGraphical = specialArgs.isGraphical;
-  agenix = specialArgs.agenix;
-  unstable = specialArgs.unstable;
-
   pythonEnv = pkgs.python3.withPackages (ps: with ps; [
     ipython
     pandas
@@ -14,7 +10,7 @@ let
     tqdm
     duckdb
   ]);
-  vim-with-custom-rc = pkgs.vim_configurable.customize {
+  vim-with-custom-rc = pkgs.vim-full.customize {
     vimrcConfig = {
       customRC = ''
         filetype plugin indent on
@@ -39,8 +35,7 @@ in {
 
   home.packages = with pkgs; [
     git
-    unstable.lunarvim
-    unstable.emacs
+    lunarvim
     ripgrep # for project-wide search in emacs
     fzf # for reverse history search in fish shell
     wget
@@ -62,7 +57,7 @@ in {
     xclip
     vim-with-custom-rc
     broot
-    unstable.zellij
+    zellij
     pgbackrest
     agenix.packages.${system}.agenix
     nix-tree
@@ -72,7 +67,6 @@ in {
     awscli2
     bashmount
     docker
-    taskwarrior
     pgcli
     gh
     nettools
@@ -81,7 +75,7 @@ in {
     dconf # Required for gtk3 configuration
     wmctrl
     chromium
-    unstable.firefox
+    firefox
     vlc
     pulsemixer
     pulseaudio
@@ -89,15 +83,15 @@ in {
     libreoffice
     simplescreenrecorder
     qgis
-    unstable.slack
-    unstable.zoom-us
+    slack
+    zoom-us
     pkgs.gnomeExtensions.appindicator
     pkgs.gnomeExtensions.system-monitor-next
     pkgs.gnomeExtensions.paperwm
     pkgs.gnomeExtensions.switcher
   ] else []);
 
-  dconf.enable = true;
+  dconf.enable = isGraphical;
   dconf.settings = {
     "org/gnome/desktop/input-sources" = {
       xkb-options = [
