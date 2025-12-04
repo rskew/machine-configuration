@@ -57,6 +57,7 @@ in {
     iotop
     jq
     pythonEnv
+    duckdb
     kitty
     xclip
     vim-with-custom-rc
@@ -84,6 +85,7 @@ in {
     vlc
     pulsemixer
     pulseaudio
+    pavucontrol
     libreoffice
     simplescreenrecorder
     qgis

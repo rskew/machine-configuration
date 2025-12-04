@@ -3,7 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager/release-25.05";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
@@ -714,12 +714,6 @@
           specialArgs = {inherit unstable;};
           modules = [
 
-            ({...}: {
-              networking.extraHosts = ''
-                127.0.0.1 energy-queensland.localtest.me
-              '';
-            })
-
             agenix.nixosModules.age
             ({...}: {
               age.secrets."b2-credentials".file = ./secrets/b2-credentials.age;
@@ -727,20 +721,27 @@
               age.identityPaths = [ "/home/rowan/.ssh/id_rowan2" ];
             })
 
-            home-manager.nixosModules.home-manager
-            ({ pkgs, unstable, ... }: {
-              home-manager.useGlobalPkgs = true;
-              home-manager.users.rowan =
-                { config, lib, pkgs, ... }:
-                import ./home.nix {
-                  inherit lib config pkgs;
-                  specialArgs = {
-                    isGraphical = true;
-                    unstable = unstable;
-                    agenix = agenix;
-                  };
-                };
-            })
+            ({ pkgs, unstable, ... }:
+              import ./gnome-and-terminal.nix {
+                inherit pkgs unstable agenix;
+                isGraphical = true;
+              }
+            )
+
+            #home-manager.nixosModules.home-manager
+            #({ pkgs, unstable, ... }: {
+            #  home-manager.useGlobalPkgs = true;
+            #  home-manager.users.rowan =
+            #    { config, lib, pkgs, ... }:
+            #    import ./home.nix {
+            #      inherit lib config pkgs;
+            #      specialArgs = {
+            #        isGraphical = true;
+            #        unstable = unstable;
+            #        agenix = agenix;
+            #      };
+            #    };
+            #})
 
             kmonad.nixosModules.default
             ({lib, ...}: {
@@ -927,6 +928,9 @@
                 longitude = 144.9631;
               };
 
+              # Audio
+              services.pipewire.jack.enable = true;
+
               # Backups
               # Creating backup repository
               # - cd ~/machine-configuration/secrets
@@ -971,6 +975,8 @@
               '';
               nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ];
               nix.settings.trusted-users = [ "rowan" ];
+              nix.settings.trusted-substituters = [ "ssh-ng://rowan@tsuruhashi" "tsuruhashi" ];
+              nix.settings.require-sigs = false;
               system.stateVersion = "21.11";
 
               nixpkgs.config.allowUnfree = true;
