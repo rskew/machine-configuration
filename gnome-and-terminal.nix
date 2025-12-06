@@ -10,7 +10,7 @@ let
     tqdm
     duckdb
   ]);
-  vim-with-custom-rc = pkgs.vim_configurable.customize {
+  vim-with-custom-rc = pkgs.vim-full.customize {
     vimrcConfig = {
       customRC = ''
         filetype plugin indent on
@@ -32,7 +32,6 @@ in {
   environment.systemPackages = with pkgs; [
     git
     unstable.lunarvim
-    unstable.emacs
     ripgrep # for project-wide search in emacs
     fzf # for reverse history search in fish shell
     wget
@@ -44,7 +43,7 @@ in {
     nmap
     gnupg
     sl
-    htop
+    btop
     file
     iotop
     jq
@@ -56,21 +55,18 @@ in {
     unstable.zellij
     pgbackrest
     agenix.packages.${system}.agenix
-    nix-tree
-    qrencode
     rclone
     restic
     awscli2
     bashmount
     docker
-    taskwarrior
     pgcli
     gh
     nettools
     pkgs.fishPlugins.fzf
   ] ++ (if isGraphical then [
     arandr
-    dconf # Required for gtk3 configuration
+    #dconf # Required for gtk3 configuration
     wmctrl
     chromium
     unstable.firefox
@@ -79,13 +75,22 @@ in {
     pulseaudio
     libreoffice
     simplescreenrecorder
-    qgis
     unstable.slack
     unstable.zoom-us
-    pkgs.gnomeExtensions.appindicator
-    pkgs.gnomeExtensions.system-monitor-next
-    pkgs.gnomeExtensions.paperwm
-    pkgs.gnomeExtensions.switcher
+    #pkgs.gnomeExtensions.appindicator
+    #pkgs.gnomeExtensions.system-monitor-next
+    ##pkgs.gnomeExtensions.paperwm
+    #(pkgs.gnomeExtensions.buildShellExtension {
+    #  uuid = "paperwm@paperwm.github.com";
+    #  name = "PaperWM";
+    #  pname = "paperwm";
+    #  description = "Tiling window manager with a twist";
+    #  link = "https =//extensions.gnome.org/extension/6099/paperwm/";
+    #  version = "143";
+    #  sha256 = "1a1mnakclblbvg0xp2p7p563s4qz70szd2h65rvry1pysw0rra3z";
+    #  metadata = "ewogICJfZ2VuZXJhdGVkIjogIkdlbmVyYXRlZCBieSBTd2VldFRvb3RoLCBkbyBub3QgZWRpdCIsCiAgImRlc2NyaXB0aW9uIjogIlRpbGluZyB3aW5kb3cgbWFuYWdlciB3aXRoIGEgdHdpc3QiLAogICJuYW1lIjogIlBhcGVyV00iLAogICJzZXR0aW5ncy1zY2hlbWEiOiAib3JnLmdub21lLnNoZWxsLmV4dGVuc2lvbnMucGFwZXJ3bSIsCiAgInNoZWxsLXZlcnNpb24iOiBbCiAgICAiNDUiLAogICAgIjQ2IiwKICAgICI0NyIsCiAgICAiNDgiLAogICAgIjQ5IgogIF0sCiAgInVybCI6ICJodHRwczovL2dpdGh1Yi5jb20vcGFwZXJ3bS9QYXBlcldNIiwKICAidXVpZCI6ICJwYXBlcndtQHBhcGVyd20uZ2l0aHViLmNvbSIsCiAgInZlcnNpb24iOiAxNDMsCiAgInZlcnNpb24tbmFtZSI6ICI0OS4wLjAiCn0=";
+    #})
+    #pkgs.gnomeExtensions.switcher
     (pkgs.fishPlugins.buildFishPlugin {
       pname = "batman";
       version = "hello";
@@ -99,76 +104,76 @@ in {
     libnotify
   ] else []);
 
-  programs.dconf.profiles.user.databases = [
-    {
-      lockAll = true;
-      settings = {
-        "org/gnome/desktop/input-sources" = {
-          xkb-options = [
-            "altwin:swap_alt_win"
-          ];
-        };
-        "org/gnome/desktop/peripherals/keyboard" = {
-          delay = pkgs.lib.gvariant.mkUint32 200;
-          repeat-interval = pkgs.lib.gvariant.mkUint32 28;
-          repeat = true;
-        };
-        "org/gnome/shell" = {
-          disable-user-extensions = false;
-          enabled-extensions = with pkgs.gnomeExtensions; [
-            appindicator.extensionUuid
-            paperwm.extensionUuid
-            switcher.extensionUuid
-            system-monitor.extensionUuid
-            workspace-indicator.extensionUuid
-            system-monitor-next.extensionUuid
-          ];
-        };
-        "org/gnome/desktop/wm/preferences" = {
-          num-workspaces = pkgs.lib.gvariant.mkInt32 6;
-          workspace-names = [ "1" "2" "3" "4" "5" "6" ];
-          audible-bell = false;
-        };
-        "org/gnome/desktop/wm/keybindings" = {
-          switch-to-workspace-1 = [ "<Super>1" ];
-          switch-to-workspace-2 = [ "<Super>2" ];
-          switch-to-workspace-3 = [ "<Super>3" ];
-          switch-to-workspace-4 = [ "<Super>4" ];
-          switch-to-workspace-5 = [ "<Super>5" ];
-          switch-to-workspace-6 = [ "<Super>6" ];
-          move-to-workspace-1 = [ "<Shift><Super>1" ];
-          move-to-workspace-2 = [ "<Shift><Super>2" ];
-          move-to-workspace-3 = [ "<Shift><Super>3" ];
-          move-to-workspace-4 = [ "<Shift><Super>4" ];
-          move-to-workspace-5 = [ "<Shift><Super>5" ];
-          move-to-workspace-6 = [ "<Shift><Super>6" ];
-          minimize = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-        };
-        "org/gnome/shell/keybindings" = {
-          switch-to-application-1 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-          switch-to-application-2 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-          switch-to-application-3 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-          switch-to-application-4 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-          switch-to-application-5 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-          switch-to-application-6 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
-        };
-        "org/gnome/settings-daemon/plugins/media-keys" = {
-          custom-keybindings = [
-            "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-            "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
-          ];
-        };
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-          binding = "<Control><Super>Return";
-          command = "kitty";
-          name = "new-terminal";
-        };
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
-          binding = "<Control>m";
-          command = "/home/rowan/machine-configuration/scripts/toggle_mic_mute.sh";
-          name = "toggle-mic-mute";
-        };
-      };
-    }
-  ];
+  #programs.dconf.profiles.user.databases = [
+  #  {
+  #    lockAll = true;
+  #    settings = {
+  #      "org/gnome/desktop/input-sources" = {
+  #        xkb-options = [
+  #          "altwin:swap_alt_win"
+  #        ];
+  #      };
+  #      "org/gnome/desktop/peripherals/keyboard" = {
+  #        delay = pkgs.lib.gvariant.mkUint32 200;
+  #        repeat-interval = pkgs.lib.gvariant.mkUint32 28;
+  #        repeat = true;
+  #      };
+  #      "org/gnome/shell" = {
+  #        disable-user-extensions = false;
+  #        enabled-extensions = with pkgs.gnomeExtensions; [
+  #          appindicator.extensionUuid
+  #          paperwm.extensionUuid
+  #          switcher.extensionUuid
+  #          system-monitor.extensionUuid
+  #          workspace-indicator.extensionUuid
+  #          system-monitor-next.extensionUuid
+  #        ];
+  #      };
+  #      "org/gnome/desktop/wm/preferences" = {
+  #        num-workspaces = pkgs.lib.gvariant.mkInt32 6;
+  #        workspace-names = [ "1" "2" "3" "4" "5" "6" ];
+  #        audible-bell = false;
+  #      };
+  #      "org/gnome/desktop/wm/keybindings" = {
+  #        switch-to-workspace-1 = [ "<Super>1" ];
+  #        switch-to-workspace-2 = [ "<Super>2" ];
+  #        switch-to-workspace-3 = [ "<Super>3" ];
+  #        switch-to-workspace-4 = [ "<Super>4" ];
+  #        switch-to-workspace-5 = [ "<Super>5" ];
+  #        switch-to-workspace-6 = [ "<Super>6" ];
+  #        move-to-workspace-1 = [ "<Shift><Super>1" ];
+  #        move-to-workspace-2 = [ "<Shift><Super>2" ];
+  #        move-to-workspace-3 = [ "<Shift><Super>3" ];
+  #        move-to-workspace-4 = [ "<Shift><Super>4" ];
+  #        move-to-workspace-5 = [ "<Shift><Super>5" ];
+  #        move-to-workspace-6 = [ "<Shift><Super>6" ];
+  #        minimize = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #      };
+  #      "org/gnome/shell/keybindings" = {
+  #        switch-to-application-1 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #        switch-to-application-2 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #        switch-to-application-3 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #        switch-to-application-4 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #        switch-to-application-5 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #        switch-to-application-6 = pkgs.lib.gvariant.mkEmptyArray (pkgs.lib.gvariant.type.string);
+  #      };
+  #      "org/gnome/settings-daemon/plugins/media-keys" = {
+  #        custom-keybindings = [
+  #          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+  #          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+  #        ];
+  #      };
+  #      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+  #        binding = "<Control><Super>Return";
+  #        command = "kitty";
+  #        name = "new-terminal";
+  #      };
+  #      "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
+  #        binding = "<Control>m";
+  #        command = "/home/rowan/machine-configuration/scripts/toggle_mic_mute.sh";
+  #        name = "toggle-mic-mute";
+  #      };
+  #    };
+  #  }
+  #];
 }

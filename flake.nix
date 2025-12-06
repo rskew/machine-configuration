@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs";
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
@@ -14,6 +14,8 @@
     autofarm.url = "github:rskew/autofarm";
     notification-listener.url = "git+ssh://git@github.com/rskew/notification-listener";
     meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
+    stylix.url = "github:nix-community/stylix";
+    stylix.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
   outputs =
     { self,
@@ -29,6 +31,7 @@
       autofarm,
       notification-listener,
       meetthecandidatesmtalexander,
+      stylix,
     }:
     let
       pkgs = import nixpkgs {
@@ -729,7 +732,8 @@
 
             ({ pkgs, unstable, ... }:
               import ./gnome-and-terminal.nix {
-                inherit pkgs unstable agenix;
+                pkgs = unstable;
+                inherit unstable agenix;
                 isGraphical = true;
               }
             )
@@ -831,6 +835,8 @@
                 in "${pkgs.writeText "config-v3.toml.tmpl" template}";
             })
 
+            #stylix.nixosModules.stylix
+
             ({config, pkgs, unstable, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
@@ -909,11 +915,24 @@
               #};
               #hardware.nvidia-container-toolkit.enable = true;
 
-              services.logind.lidSwitchDocked = "suspend";
+              services.logind.settings.Login.HandleLidSwitchDocked = "suspend";
 
               #services.xserver.enable = true;
               services.displayManager.gdm.enable = true;
               services.desktopManager.gnome.enable = true;
+              programs.niri.enable = true;
+              environment.systemPackages = with pkgs; [
+                fuzzel alacritty mako
+                waybar
+                wl-clipboard
+                wlr-randr
+                swaylock swayidle swaybg
+              ];
+              #stylix = {
+              #  enable = true;
+              #  icons.enable = true;
+              #  base16Scheme = "${pkgs.base16-schemes}/share/themes/ocean.yaml";
+              #};
 
               users.users.rowan = {
                 isNormalUser = true;
@@ -935,7 +954,47 @@
               };
 
               # Audio
-              services.pipewire.jack.enable = true;
+              # Load the sequencer and midi kernel modules.
+              boot.kernelModules = ["snd-seq" "snd-rawmidi"];
+              users.extraUsers.rowan.extraGroups = [ "audio" "realtime" ];
+
+              services.pipewire = {
+                enable = true;
+                alsa = {
+                  enable = true;
+                  support32Bit = true;
+                };
+                jack.enable = true;
+                pulse.enable = true;
+              };
+
+              # Must disable pulseaudio to allow for the pipewire pulseaudio emulation.
+              services.pulseaudio.enable = false;
+
+              # Things to try
+              #security.rtkit.enable = true;
+              #services.pipewire.jack.enable = true;
+              #services.pipewire.pulse.enable = true;
+              #services.pipewire.extraConfig.pipewire-pulse."92-low-latency" = {
+              #  "context.properties" = [
+              #    {
+              #      name = "libpipewire-module-protocol-pulse";
+              #      args = { };
+              #    }
+              #  ];
+              #  "pulse.properties" = {
+              #    "pulse.min.req" = "32/48000";
+              #    "pulse.default.req" = "32/48000";
+              #    "pulse.max.req" = "32/48000";
+              #    "pulse.min.quantum" = "32/48000";
+              #    "pulse.max.quantum" = "32/48000";
+              #  };
+              #  "stream.properties" = {
+              #    "node.latency" = "32/48000";
+              #    "resample.quality" = 1;
+              #  };
+              #};
+
 
               # Backups
               # Creating backup repository
