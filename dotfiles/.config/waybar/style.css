@@ -4,9 +4,18 @@
 }
 
 window#waybar {
-	background: #292b2e;
-	color: #fdf6e3;
+    border-top: solid 1px #ddd;
+	background: #000000;
+	color: #ddd;
     padding: 0 10px;
+}
+
+#pulseaudio {
+    background: #a0f;
+    border-top: solid 1px #ddd;
+}
+#pulseaudio.source-muted {
+    background: #000;
 }
 
 #custom-right-arrow-dark,
@@ -17,18 +26,6 @@ window#waybar {
 #custom-left-arrow-light {
 	color: #292b2e;
 	background: #1a1a1a;
-}
-
-#workspaces,
-#clock.1,
-#clock.2,
-#clock.3,
-#pulseaudio,
-#memory,
-#cpu,
-#battery,
-#disk,
-#tray {
 }
 
 #workspaces button {

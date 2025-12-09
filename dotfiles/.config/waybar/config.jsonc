@@ -2,24 +2,26 @@
 {
     "layer": "top",
     "mode": "dock",
-    "position": "top", // (top|bottom|left|right)
+    "position": "bottom", // (top|bottom|left|right)
     "spacing": 3, // Gaps between modules
     "margin": 0,
     "modules-left": [
-        "niri/workspaces",
+        "custom/fuzzel"
     ],
     "modules-center": [
-        "clock"
     ],
     "modules-right": [
+        "custom/niri-overview",
+        "niri/workspaces",
+        "tray",
         "pulseaudio",
         "battery",
-        "tray"
+        "clock"
     ],
     "tray": {
-        "icon-size": 24,
+        "icon-size": 16,
         "show-passive-items": true,
-        "spacing": 10
+        "spacing": 2
     },
     "clock": {
         "interval": 1,
@@ -37,49 +39,14 @@
             "warning": 30,
             "critical": 15
         },
-        "format": "{icon}",
-        "format-full": "{icon}",
-        "format-charging": "{icon} ",
-        "format-plugged": "{icon} ",
-        "format-alt": "{icon}",
-        "format-icons": [
-            "",
-            "",
-            "",
-            "",
-            ""
-        ]
-    },
-    "power-profiles-daemon": {
-        "format": "{icon}",
-        "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
-        "tooltip": true,
-        "format-icons": {
-            "default": "",
-            "performance": "",
-            "balanced": "",
-            "power-saver": ""
-        }
-    },
-    "network": {
-        "interval": 1000,
-        "format-wifi": "{icon}",
-        "format-ethernet": "{ipaddr}/{cidr} ",
-        "tooltip-format": "{essid}\n{ifname} via {gwaddr}\n{ipaddr}/{cidr}",
-        "format-linked": "{ifname} (No IP) ",
-        "format-disconnected": "󰤭",
-        "format-alt": "{essid}",
-        "format-icons": [
-            "󰤯",
-            "󰤟",
-            "󰤢",
-            "󰤥",
-            "󰤨"
-        ]
+        "format": "{capacity}%",
+        "format-full": "",
+        "format-charging": "{capacity}% ",
+        "format-plugged": " "
     },
     "pulseaudio": {
-        "format": "{icon} {format_source}",
-        "format-muted": " {format_source}",
+        "format": " {volume}% {format_source}",
+        "format-muted": " {volume}% {format_source}",
         "format-source": "",
         "format-source-muted": " ",
         "format-bluetooth": "{icon} {format_source}",
@@ -102,4 +69,12 @@
             "Easy Effects Sink"
         ]
     },
+    "custom/fuzzel": {
+        "format": "apps",
+        "on-click": "/run/current-system/sw/bin/fuzzel"
+    },
+    "custom/niri-overview": {
+        "format": "all",
+        "on-click": "/run/current-system/sw/bin/niri msg action toggle-overview"
+    }
 }

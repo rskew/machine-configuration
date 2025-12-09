@@ -3,7 +3,6 @@
 {
   imports =
     [ ../hardware-configuration.nix
-      ../terminal-environment.nix
       # This machine is now the farm server
       /home/rowan/projects/autofarm/cns/irrigation-control-configuration.nix
     ];
@@ -45,7 +44,31 @@
     brightnessctl
     emacs
     sl
+
+    #utilities
+    htop
+    git
+    wget
+    sl
+
+    # For nicer terminal experience over ssh
+    rxvt_unicode
+    vim
+    byobu # use the byobu-tmux command
+    tmux
+
+    # For querying BIOS settings from inside linux
+    dmidecode
   ];
+
+  # Use fish shell
+  programs.fish.enable = true;
+
+  # vi mode in terminal
+  programs.bash.interactiveShellInit = ''
+    set -o vi
+    alias byobu=byobu-screen
+  '';
 
   # Enable the OpenSSH daemon.
   services.openssh = {
@@ -84,4 +107,3 @@
   hardware.bluetooth.enable = false;
   services.logind.lidSwitch = "ignore";
 }
-

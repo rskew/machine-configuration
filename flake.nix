@@ -14,8 +14,7 @@
     autofarm.url = "github:rskew/autofarm";
     notification-listener.url = "git+ssh://git@github.com/rskew/notification-listener";
     meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
-    stylix.url = "github:nix-community/stylix";
-    stylix.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    musnix  = { url = "github:musnix/musnix"; };
   };
   outputs =
     { self,
@@ -31,7 +30,7 @@
       autofarm,
       notification-listener,
       meetthecandidatesmtalexander,
-      stylix,
+      musnix,
     }:
     let
       pkgs = import nixpkgs {
@@ -705,9 +704,6 @@
       # - enable command-not-found on terminal
       #   - sudo nix-channel --add https://nixos.org/channels/nixos-unstable nixos
       #   - sudo nix-channel --update
-      # - install doom emacs
-      #   - git clone https://github.com/hlissner/doom-emacs ~/.emacs.d
-      #   - .emacs.d/bin/doom install
       # - setup firefox
       #   - log in to firefox to get passwords and extensions, and load tabs from simple tab group backups
       #   - in about:config set ui.key.menuAccessKeyFocuses to false to disable showing menu when pressing alt (xmonad mod key)
@@ -715,6 +711,7 @@
       # - to enable backups, add password files to /home/rowan/secrets/
       #   - restic-password for this machine's restic backup repository
       #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
+      # - create symlinks to dotfiles
       nixosConfigurations.rowan-p14 =
         let pkgs = unstable;
         in
@@ -731,27 +728,12 @@
             })
 
             ({ pkgs, unstable, ... }:
-              import ./gnome-and-terminal.nix {
+              import ./terminal-env.nix {
                 pkgs = unstable;
                 inherit unstable agenix;
                 isGraphical = true;
               }
             )
-
-            #home-manager.nixosModules.home-manager
-            #({ pkgs, unstable, ... }: {
-            #  home-manager.useGlobalPkgs = true;
-            #  home-manager.users.rowan =
-            #    { config, lib, pkgs, ... }:
-            #    import ./home.nix {
-            #      inherit lib config pkgs;
-            #      specialArgs = {
-            #        isGraphical = true;
-            #        unstable = unstable;
-            #        agenix = agenix;
-            #      };
-            #    };
-            #})
 
             kmonad.nixosModules.default
             ({lib, ...}: {
@@ -759,15 +741,6 @@
                 enable = true;
                 package = kmonad.packages.x86_64-linux.default;
                 keyboards = {
-                  #texKeyboard = {
-                  #  device = "/dev/tex-kbd";
-                  #  config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
-                  #  defcfg = {
-                  #    enable = true;
-                  #    fallthrough = true;
-                  #    allowCommands = false;
-                  #  };
-                  #};
                   builtinKeyboard = {
                     device = "/dev/input/by-path/platform-i8042-serio-0-event-kbd";
                     config = builtins.readFile ./dotfiles/.config/kmonad/base.kbd;
@@ -777,30 +750,8 @@
                       allowCommands = false;
                     };
                   };
-                  #usbMacKeyboard = {
-                  #  device = "/dev/mac-kbd";
-                  #  config = builtins.readFile ./dotfiles/.config/kmonad/mac-kbd-base.kbd;
-                  #  defcfg = {
-                  #    enable = true;
-                  #    fallthrough = true;
-                  #    allowCommands = false;
-                  #  };
-                  #};
                 };
               };
-              #services.udev.extraRules = ''
-              #  ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SYMLINK+="tex-kbd"
-              #  ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-tex-config.service"
-              #  ATTRS{name}=="TEX-BLE-KB-1 Keyboard", SUBSYSTEM=="input", ACTION=="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-tex-config.service"
-              #  SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", SYMLINK+="mac-kbd"
-              #  SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="add", RUN+="${pkgs.systemd}/bin/systemctl start kmonad-mac-kbd-config.service"
-              #  SUBSYSTEM=="input", ATTRS{idProduct}=="024f", ATTRS{idVendor}=="05ac", ACTION="remove", RUN+="${pkgs.systemd}/bin/systemctl stop kmonad-mac-kbd-config.service"
-              #'';
-              ## Disable the unit for external keyboards so they don't start automatically.
-              ## The udev rules will start the unit for the bluetooth keyboard when the keyboard connects.
-              ## When enabled, sometimes these service use 100% of all CPU cores on boot :/
-              #systemd.services.kmonad-tex-config.wantedBy = lib.mkForce [];
-              #systemd.services.kmonad-mac-kbd-config.wantedBy = lib.mkForce [];
             })
 
             # usb oscilloscope
@@ -809,33 +760,29 @@
               environment.systemPackages = [ pkgs.openhantek6022 ];
             })
 
-            # k3s with kata containers for secure-ish vibe coding
+            # Audio
+            musnix.nixosModules.musnix
             ({ pkgs, ...}: {
-              services.k3s.enable = true;
-              systemd.services.k3s.serviceConfig.DeviceAllow = [
-                "/dev/kvm rwm"
-                "/dev/mshv rwm"
-                "/dev/kmsg rwm"
-                "/dev/vhost-vsock rwm"
-                "/dev/vhost-net rwm"
-                "/dev/net/tun rwm"
-              ];
-              systemd.services.k3s.serviceConfig.Delegate = "yes";
-              systemd.services.k3s.path = [ pkgs.kata-runtime ];
-              systemd.tmpfiles.settings."09-k3s"."/var/lib/rancher/k3s/agent/etc/containerd/config-v3.toml.tmpl"."L+".argument = let
-                template = ''
-                  {{ template "base" . }}
-
-                  [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.'kata']
-                      runtime_type = "io.containerd.kata.v2"
-                      privileged_without_host_devices = true
-                      pod_annotations = ["io.katacontainers.*"]
-                      container_annotations = ["io.katacontainers.*"]
-                  '';
-                in "${pkgs.writeText "config-v3.toml.tmpl" template}";
+              musnix.enable = true;
+              musnix.soundcardPciId = "00:1f.3";
+              boot.kernelPackages = pkgs.linuxPackages-rt_latest;
+              security.rtkit.enable = true;
+              services.pipewire = {
+                enable = true;
+                pulse.enable = true;
+                jack.enable = true;
+                alsa.enable = true;
+                alsa.support32Bit = true;
+              };
+              services.pipewire.extraConfig.pipewire = {
+                "10-things" = {
+                  "context.properties" = {
+                    "default.clock.quantum" = 128;
+                    "module.x11.bell" = false;
+                  };
+                };
+              };
             })
-
-            #stylix.nixosModules.stylix
 
             ({config, pkgs, unstable, ...}: {
               imports =
@@ -879,7 +826,6 @@
                   services.openssh.settings.PermitRootLogin = "yes";
                 };
               };
-              #networking.firewall.allowedTCPPorts = [ 8000 ];
 
               time.timeZone = "Australia/Melbourne";
 
@@ -917,26 +863,38 @@
 
               services.logind.settings.Login.HandleLidSwitchDocked = "suspend";
 
-              #services.xserver.enable = true;
+              # Window manager
               services.displayManager.gdm.enable = true;
-              services.desktopManager.gnome.enable = true;
               programs.niri.enable = true;
               environment.systemPackages = with pkgs; [
-                fuzzel alacritty mako
+                fuzzel mako
                 waybar
                 wl-clipboard
                 wlr-randr
                 swaylock swayidle swaybg
+                brightnessctl
+                networkmanagerapplet
+                xwayland-satellite
+                nautilus
               ];
-              #stylix = {
-              #  enable = true;
-              #  icons.enable = true;
-              #  base16Scheme = "${pkgs.base16-schemes}/share/themes/ocean.yaml";
-              #};
+              xdg.portal = {
+                enable = true;
+                config = {
+                  common = {
+                    default = "wlr";
+                  };
+                };
+                wlr.enable = true;
+                wlr.settings.screencast = {
+                  output_name = "eDP-1";
+                  chooser_type = "simple";
+                  chooser_cmd = "${pkgs.slurp}/bin/slurp -f %o -or";
+                };
+              };
 
               users.users.rowan = {
                 isNormalUser = true;
-                extraGroups = [ "wheel" "docker" "dialout" ];
+                extraGroups = [ "wheel" "docker" "dialout" "audio" "realtime" ];
                 shell = pkgs.fish;
               };
               # This is required for lightdm to prefill username on login
@@ -952,49 +910,6 @@
                 latitude = -37.8136;
                 longitude = 144.9631;
               };
-
-              # Audio
-              # Load the sequencer and midi kernel modules.
-              boot.kernelModules = ["snd-seq" "snd-rawmidi"];
-              users.extraUsers.rowan.extraGroups = [ "audio" "realtime" ];
-
-              services.pipewire = {
-                enable = true;
-                alsa = {
-                  enable = true;
-                  support32Bit = true;
-                };
-                jack.enable = true;
-                pulse.enable = true;
-              };
-
-              # Must disable pulseaudio to allow for the pipewire pulseaudio emulation.
-              services.pulseaudio.enable = false;
-
-              # Things to try
-              #security.rtkit.enable = true;
-              #services.pipewire.jack.enable = true;
-              #services.pipewire.pulse.enable = true;
-              #services.pipewire.extraConfig.pipewire-pulse."92-low-latency" = {
-              #  "context.properties" = [
-              #    {
-              #      name = "libpipewire-module-protocol-pulse";
-              #      args = { };
-              #    }
-              #  ];
-              #  "pulse.properties" = {
-              #    "pulse.min.req" = "32/48000";
-              #    "pulse.default.req" = "32/48000";
-              #    "pulse.max.req" = "32/48000";
-              #    "pulse.min.quantum" = "32/48000";
-              #    "pulse.max.quantum" = "32/48000";
-              #  };
-              #  "stream.properties" = {
-              #    "node.latency" = "32/48000";
-              #    "resample.quality" = 1;
-              #  };
-              #};
-
 
               # Backups
               # Creating backup repository
