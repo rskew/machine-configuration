@@ -7,7 +7,6 @@ window#waybar {
     border-top: solid 1px #ddd;
 	background: #000000;
 	color: #ddd;
-    padding: 0 10px;
 }
 
 #pulseaudio {

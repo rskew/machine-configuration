@@ -3,21 +3,39 @@
     "layer": "top",
     "mode": "dock",
     "position": "bottom", // (top|bottom|left|right)
-    "spacing": 3, // Gaps between modules
+    "spacing": 5, // Gaps between modules
     "margin": 0,
     "modules-left": [
         "custom/fuzzel"
     ],
     "modules-center": [
+        "cpu",
+        "memory",
+        "jack"
     ],
     "modules-right": [
         "custom/niri-overview",
         "niri/workspaces",
         "tray",
         "pulseaudio",
+        "backlight",
         "battery",
         "clock"
     ],
+    "cpu": {
+        "interval": 1,
+        "format": "{icon0}{icon1}{icon2}{icon3}{icon4}{icon5}{icon6}{icon7}",
+        "format-icons": ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+    },
+    "memory": {
+        "format": "mem {percentage}%"
+    },
+   "jack": {
+        "format": "DSP {}% xruns {xruns}",
+        "format-xrun": "{xruns} xruns",
+        "format-disconnected": "DSP off",
+        "realtime": true
+    },
     "tray": {
         "icon-size": 16,
         "show-passive-items": true,
@@ -39,10 +57,9 @@
             "warning": 30,
             "critical": 15
         },
-        "format": "{capacity}%",
-        "format-full": "",
-        "format-charging": "{capacity}% ",
-        "format-plugged": " "
+        "format": "⚡{capacity}%",
+        "format-full": "{capacity}%",
+        "format-charging": "{capacity}%"
     },
     "pulseaudio": {
         "format": " {volume}% {format_source}",
@@ -69,12 +86,15 @@
             "Easy Effects Sink"
         ]
     },
+    "backlight": {
+        "format": "💡{percent}%"
+    },
     "custom/fuzzel": {
         "format": "apps",
-        "on-click": "/run/current-system/sw/bin/fuzzel"
+        "on-click": "fuzzel || pkill fuzzel"
     },
     "custom/niri-overview": {
         "format": "all",
-        "on-click": "/run/current-system/sw/bin/niri msg action toggle-overview"
+        "on-click": "niri msg action toggle-overview"
     }
 }

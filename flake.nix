@@ -1,51 +1,28 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs";
-    home-manager.url = "github:nix-community/home-manager/release-25.05";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
-    coolroom-monitor.url = "git+ssh://git@github.com/rskew/coolroom-monitor.git";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     autofarm.url = "github:rskew/autofarm";
-    notification-listener.url = "git+ssh://git@github.com/rskew/notification-listener";
     meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
     musnix  = { url = "github:musnix/musnix"; };
   };
   outputs =
     { self,
       nixpkgs,
-      nixpkgs-stable,
-      nixpkgs-unstable,
-      home-manager,
       kmonad,
       harvest-front-page,
       harvest-admin-app,
-      coolroom-monitor,
       agenix,
       autofarm,
-      notification-listener,
       meetthecandidatesmtalexander,
       musnix,
     }:
     let
       pkgs = import nixpkgs {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-      };
-      pkgs-stable = import nixpkgs-stable {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-      };
-      pkgs-old = import nixpkgs {
-          system = "x86_64-linux";
-          config.allowUnfree = true;
-      };
-      unstable = import nixpkgs-unstable {
           system = "x86_64-linux";
           config.allowUnfree = true;
       };
@@ -55,27 +32,183 @@
       pubkeyToDeployToVps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
       shedPowerMonitorDeviceSymlink = "vedirect-usb";
       shedPowerMonitor = import ./applications/shed-power-monitor { inherit pkgs; device_path = "/dev/${shedPowerMonitorDeviceSymlink}"; };
-    in
-    rec {
 
-      homeConfigurations.rowan = home-manager.lib.homeManagerConfiguration {
-        modules = [ (import ./home.nix) (
-          { config, pkgs, ... }: {
-            home.username = "rowan";
-            home.homeDirectory = "/home/users/rowan";
-          }
-        ) ];
-        extraSpecialArgs = {
-          isGraphical = false;
-          unstable = unstable;
-          agenix = agenix;
+      terminalEnv = { pkgs, ...}:
+        let
+          pythonEnv = pkgs.python3.withPackages (ps: with ps; [
+            ipython pandas matplotlib seaborn pyyaml
+            boto3 tqdm duckdb
+          ]);
+          vim-with-custom-rc = pkgs.vim-full.customize {
+            vimrcConfig = {
+              customRC = ''
+                filetype plugin indent on
+                syntax on
+                set number relativenumber
+                set tabstop=4
+                set softtabstop=4
+                set expandtab
+                set shiftwidth=4
+                set smarttab
+                set clipboard=unnamed
+                set noerrorbells
+                set vb t_vb=
+                colorscheme torte
+              '';
+            };
+          };
+        in {
+          environment.systemPackages = with pkgs; [
+            git
+            lunarvim
+            ripgrep # for project-wide search in emacs
+            fzf # for reverse history search in fish shell
+            wget
+            bat
+            tree
+            zip
+            unzip
+            nmap
+            gnupg
+            sl
+            btop
+            file
+            iotop
+            jq
+            pythonEnv
+            kitty
+            xclip
+            vim-with-custom-rc
+            broot
+            zellij
+            pgbackrest
+            agenix.packages.${system}.agenix
+            rclone
+            restic
+            awscli2
+            bashmount
+            docker
+            pgcli
+            gh
+            nettools
+            pkgs.fishPlugins.fzf
+            (pkgs.fishPlugins.buildFishPlugin {
+              pname = "batman";
+              version = "hello";
+              src = pkgs.fetchFromGitHub {
+                owner = "oh-my-fish";
+                repo = "theme-batman";
+                rev = "2a76bd81f4805debd7f137cb98828bff34570562";
+                sha256 = "Ko4w9tMnIi17db174FzW44LgUdui/bUzPFEHEHv//t4=";
+              };
+            })
+            nushell
+            timg
+            csvlens
+            duckdb
+          ];
+        };
+      graphicalPkgs = { pkgs, ...}: {
+        environment.systemPackages = with pkgs; [
+          firefox
+          chromium
+          vlc
+          pulsemixer
+          libreoffice
+          simplescreenrecorder
+          libnotify
+        ];
+      };
+
+      audioSystemConfig = { pkgs, ...}: {
+        imports = [ musnix.nixosModules.musnix ];
+        musnix.enable = true;
+        musnix.soundcardPciId = "00:1f.3";
+        musnix.rtcqs.enable = true;
+        boot.kernelPackages = pkgs.linuxPackages-rt_latest;
+        security.rtkit.enable = true;
+        services.pipewire = {
+          enable = true;
+          pulse.enable = true;
+          jack.enable = true;
+          alsa.enable = true;
+          alsa.support32Bit = true;
+        };
+        services.pipewire.extraConfig.pipewire = {
+          "10-things" = {
+            "context.properties" = {
+              "default.clock.quantum" = 128;
+              "module.x11.bell" = false;
+            };
+          };
+        };
+        environment.systemPackages = with pkgs; [
+          qjackctl a2jmidid
+        ];
+      };
+
+      musicPkgs = { pkgs, ...}: {
+        environment.systemPackages = with pkgs; [
+          giada guitarix
+          lmms seq66
+        ];
+      };
+
+      windowManager = { pkgs, ...}: {
+        programs.niri.enable = true;
+        environment.systemPackages = with pkgs; [
+          fuzzel mako
+          waybar
+          wl-clipboard
+          wlr-randr
+          swaylock swayidle swaybg
+          brightnessctl
+          networkmanagerapplet
+          xwayland-satellite
+          nautilus
+        ];
+        security.pam.services.swaylock = {};
+        xdg.portal = {
+          enable = true;
+          config = {
+            common = {
+              default = "wlr";
+            };
+          };
+          wlr.enable = true;
+          #wlr.settings.screencast = {
+          #  output_name = "eDP-1";
+          #  chooser_type = "simple";
+          #  chooser_cmd = "${pkgs.slurp}/bin/slurp -f %o -or";
+          #};
         };
       };
+
+      secondTailnetViaContainer = { networkInterface }: { pkgs, ... }: {
+        # SSH to machines on a second tailnet by ProxyJumping via a container
+        networking.nat.enable = true;
+        networking.nat.internalInterfaces = ["ve-+"];
+        networking.nat.externalInterface = networkInterface;
+        networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
+        containers.tailscaled = {
+          autoStart = true;
+          enableTun = true;
+          privateNetwork = true;
+          hostAddress = "192.168.100.10";
+          localAddress = "192.168.100.11";
+          config = { ... }: {
+            services.tailscale.enable = true;
+            services.openssh.enable = true;
+            services.openssh.settings.PermitRootLogin = "yes";
+          };
+        };
+      };
+    in
+    rec {
 
       nixosConfigurations.vps1 =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit unstable;};
           modules = [
             (import ./machines/vps1/hardware-configuration.nix)
             (import ./machines/vps1/networking.nix)
@@ -101,16 +234,6 @@
               security.acme.defaults.email = "rowan.skewes@gmail.com";
               security.acme.acceptTerms = true;
               networking.firewall.allowedTCPPorts = [ 80 443 ];
-            })
-
-            # WARNING: This configuration is insecure for fresh deployments.
-            # You must activate influxdb-and-grafana **without exposing publicly** (i.e. comment out the nginx config above)
-            # then set the admin password for influxdb and for grafana
-            coolroom-monitor.nixosModules.influxdb-and-grafana
-            ({...}: {
-              services.influxdb.dataDir = "/home/rowan/.influxdb-data";
-              services.influxdb.user = "rowan";
-              services.grafana.settings = {};
             })
 
             ({pkgs, config, ...}: {
@@ -275,6 +398,8 @@
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
+            terminalEnv
+
             ({pkgs, ...}: {
               networking.hostName = "rowan-vps1";
 
@@ -325,36 +450,16 @@
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "22.05";
             })
-
-            home-manager.nixosModules.home-manager
-            ({ pkgs, unstable, ... }: {
-              home-manager.useGlobalPkgs = true;
-              home-manager.users.rowan =
-                { config, pkgs, ... }:
-                import ./home.nix {
-                  inherit config pkgs;
-                  specialArgs = {
-                    isGraphical = false;
-                    unstable = unstable;
-                    agenix = agenix;
-                  };
-                };
-            })
           ];
         };
 
       nixosConfigurations.shop-server =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs unstable;};
+          specialArgs = {inherit pkgs ;};
           modules = [
 
             harvest-admin-app.nixosModules.admin-app-services
-
-            coolroom-monitor.nixosModules.coolroom-monitor-relay
-            ({config, ...}: {
-              services.coolroom-monitor-relay.influxdb-password-file = config.age.secrets."coolroom-monitor-influxdb-password".path;
-            })
 
             agenix.nixosModules.age
             ({...}: {
@@ -380,7 +485,9 @@
               };
             })
 
-            ({config, pkgs, unstable, ...}: {
+            terminalEnv
+
+            ({config, pkgs, ...}: {
               imports =
                 [./machines/shop-server-z230-hardware-configuration.nix
                 ];
@@ -466,21 +573,6 @@
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "20.03"; # Did you read the comment?
             })
-
-            home-manager.nixosModules.home-manager
-            ({ pkgs, unstable, ... }: {
-              home-manager.useGlobalPkgs = true;
-              home-manager.users.rowan =
-                { config, pkgs, ... }:
-                import ./home.nix {
-                  inherit config pkgs;
-                  specialArgs = {
-                    isGraphical = false;
-                    unstable = unstable;
-                    agenix = agenix;
-                  };
-                };
-            })
           ];
         };
 
@@ -500,25 +592,8 @@
       nixosConfigurations.farm-server =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs unstable;};
+          specialArgs = {inherit pkgs;};
           modules = [
-
-            #autofarm.nixosModule
-            #({config, ...}: {
-            #  services.autofarm = {
-            #    deviceMonitorDeviceListenerPort = 9222;
-            #    ecronServerEcrontab = "/home/rowan/.autofarm/ecrontab";
-            #    frontendServerBasicAuthCredentialsFile = config.age.secrets."autofarm-frontend-server-basic-auth-credentials".path;
-            #    deviceMonitorInfluxdbPort = 8086;
-            #  };
-            #  environment.systemPackages = [ pkgs.influxdb ];
-            #})
-            # FTDI USB thingo as GPIO for flicking relays that control irrigation solenoids
-            ({...}: {
-              services.udev.extraRules = ''
-                SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="dialout", MODE="0664", SYMLINK+="ftdi-thingo"
-              '';
-            })
 
             agenix.nixosModules.age
             ({...}: {
@@ -595,6 +670,8 @@
               networking.firewall.allowedTCPPorts = [ 8123 ];
             })
 
+            terminalEnv
+
             ({config, pkgs, ...}: {
               imports =
                 [./machines/farm-server-hardware-configuration.nix
@@ -647,21 +724,6 @@
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "20.03"; # Did you read the comment?
             })
-
-            home-manager.nixosModules.home-manager
-            ({ pkgs, unstable, ... }: {
-              home-manager.useGlobalPkgs = true;
-              home-manager.users.rowan =
-                { config, pkgs, ... }:
-                import ./home.nix {
-                  inherit config pkgs;
-                  specialArgs = {
-                    isGraphical = false;
-                    unstable = unstable;
-                    agenix = agenix;
-                  };
-                };
-            })
           ];
         };
 
@@ -713,12 +775,16 @@
       #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
       # - create symlinks to dotfiles
       nixosConfigurations.rowan-p14 =
-        let pkgs = unstable;
-        in
-        nixpkgs-unstable.lib.nixosSystem {
+        nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit unstable;};
           modules = [
+
+            terminalEnv
+            windowManager
+            graphicalPkgs
+            audioSystemConfig
+            musicPkgs
+            (secondTailnetViaContainer { networkInterface = "wlp0s20f3"; })
 
             agenix.nixosModules.age
             ({...}: {
@@ -726,14 +792,6 @@
               age.secrets."restic-password".file = ./secrets/restic-password.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_rowan2" ];
             })
-
-            ({ pkgs, unstable, ... }:
-              import ./terminal-env.nix {
-                pkgs = unstable;
-                inherit unstable agenix;
-                isGraphical = true;
-              }
-            )
 
             kmonad.nixosModules.default
             ({lib, ...}: {
@@ -760,35 +818,13 @@
               environment.systemPackages = [ pkgs.openhantek6022 ];
             })
 
-            # Audio
-            musnix.nixosModules.musnix
-            ({ pkgs, ...}: {
-              musnix.enable = true;
-              musnix.soundcardPciId = "00:1f.3";
-              boot.kernelPackages = pkgs.linuxPackages-rt_latest;
-              security.rtkit.enable = true;
-              services.pipewire = {
-                enable = true;
-                pulse.enable = true;
-                jack.enable = true;
-                alsa.enable = true;
-                alsa.support32Bit = true;
-              };
-              services.pipewire.extraConfig.pipewire = {
-                "10-things" = {
-                  "context.properties" = {
-                    "default.clock.quantum" = 128;
-                    "module.x11.bell" = false;
-                  };
-                };
-              };
-            })
-
-            ({config, pkgs, unstable, ...}: {
+            ({config, pkgs, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
                   ./machines/p14-hardware-configuration.nix
                 ];
+
+              services.displayManager.gdm.enable = true;
 
               boot.initrd.luks.devices = {
                 root = {
@@ -809,23 +845,6 @@
               networking.networkmanager.enable = true;
 
               services.tailscale.enable = true;
-              # SSH to machines on a second tailnet by ProxyJumping via a container
-              networking.nat.enable = true;
-              networking.nat.internalInterfaces = ["ve-+"];
-              networking.nat.externalInterface = "wlp0s20f3";
-              networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
-              containers.tailscaled = {
-                autoStart = true;
-                enableTun = true;
-                privateNetwork = true;
-                hostAddress = "192.168.100.10";
-                localAddress = "192.168.100.11";
-                config = { ... }: {
-                  services.tailscale.enable = true;
-                  services.openssh.enable = true;
-                  services.openssh.settings.PermitRootLogin = "yes";
-                };
-              };
 
               time.timeZone = "Australia/Melbourne";
 
@@ -848,7 +867,7 @@
               virtualisation.docker.enable = true;
               virtualisation.libvirtd.enable = true;
 
-              # Comment these lines to disable gpu
+              # These lines enable gpu
               #services.xserver.videoDrivers = [ "nvidia" ];
               #hardware.nvidia.open = true;
               #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
@@ -861,40 +880,9 @@
               #};
               #hardware.nvidia-container-toolkit.enable = true;
 
-              services.logind.settings.Login.HandleLidSwitchDocked = "suspend";
-
-              # Window manager
-              services.displayManager.gdm.enable = true;
-              programs.niri.enable = true;
-              environment.systemPackages = with pkgs; [
-                fuzzel mako
-                waybar
-                wl-clipboard
-                wlr-randr
-                swaylock swayidle swaybg
-                brightnessctl
-                networkmanagerapplet
-                xwayland-satellite
-                nautilus
-              ];
-              xdg.portal = {
-                enable = true;
-                config = {
-                  common = {
-                    default = "wlr";
-                  };
-                };
-                wlr.enable = true;
-                wlr.settings.screencast = {
-                  output_name = "eDP-1";
-                  chooser_type = "simple";
-                  chooser_cmd = "${pkgs.slurp}/bin/slurp -f %o -or";
-                };
-              };
-
               users.users.rowan = {
                 isNormalUser = true;
-                extraGroups = [ "wheel" "docker" "dialout" "audio" "realtime" ];
+                extraGroups = [ "wheel" "docker" "dialout" "audio" "realtime" "netdev" ];
                 shell = pkgs.fish;
               };
               # This is required for lightdm to prefill username on login
@@ -910,6 +898,9 @@
                 latitude = -37.8136;
                 longitude = 144.9631;
               };
+
+              # Disable fingerprint reader
+              systemd.services.fprintd.enable = false;
 
               # Backups
               # Creating backup repository
@@ -949,18 +940,15 @@
                 };
               };
 
-              nix.package = pkgs.nixVersions.stable;
+              #nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = ''
                 experimental-features = nix-command flakes
               '';
               nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ];
               nix.settings.trusted-users = [ "rowan" ];
               nix.settings.trusted-substituters = [ "ssh-ng://rowan@tsuruhashi" "tsuruhashi" ];
-              nix.settings.require-sigs = false;
+              #nix.settings.require-sigs = false;
               system.stateVersion = "21.11";
-
-              nixpkgs.config.allowUnfree = true;
-              nixpkgs.config.segger-jlink.acceptLicense = true;
             })
           ];
       };
@@ -987,27 +975,10 @@
       #   - restic-password for this machine's restic backup repository
       #   - restic-b2-appkey.env with B2_ACCOUNT_ID and B2_ACCOUNT_KEY
       nixosConfigurations.peanut-butter-toast =
-        let pkgs = unstable;
-        in
-        nixpkgs-unstable.lib.nixosSystem {
+        nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs unstable;};
+          specialArgs = {inherit pkgs;};
           modules = [
-
-            home-manager.nixosModules.home-manager
-            ({ pkgs, unstable, ... }: {
-              home-manager.useGlobalPkgs = true;
-              home-manager.users.rowan =
-                { config, pkgs, lib, ... }:
-                import ./home.nix {
-                  inherit config pkgs lib;
-                  specialArgs = {
-                    isGraphical = true;
-                    unstable = unstable;
-                    agenix = agenix;
-                  };
-                };
-            })
 
             kmonad.nixosModule
             ({lib, ...}: {
@@ -1102,7 +1073,7 @@
       };
 
       nixosConfigurations.farm-server-wyse =
-        nixpkgs-stable.lib.nixosSystem {
+        nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
 
@@ -1160,7 +1131,7 @@
                   "usb" "dialout" "uucp"
                 ];
                 openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
-                shell = pkgs-stable.fish;
+                shell = pkgs.fish;
               };
               programs.fish.enable = true;
 
@@ -1172,7 +1143,6 @@
               services.pipewire.enable = false;
               services.libinput.enable = false;
 
-              nix.package = pkgs-stable.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "25.05"; # Did you read the comment?
             })

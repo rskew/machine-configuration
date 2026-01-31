@@ -30,8 +30,6 @@ end
 
 alias nix-stray-roots='nix-store --gc --print-roots | egrep -v "^(/nix/var|/proc/.*|/run/\w+-system|\{memory)"'
 
-abbr csvpager 'column -s, -t | less'
-
 abbr lvim 'nix --offline run nixpkgs#lunarvim'
 
 ####
