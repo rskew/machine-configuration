@@ -6,7 +6,6 @@
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
-    autofarm.url = "github:rskew/autofarm";
     meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
     musnix  = { url = "github:musnix/musnix"; };
   };
@@ -17,7 +16,6 @@
       harvest-front-page,
       harvest-admin-app,
       agenix,
-      autofarm,
       meetthecandidatesmtalexander,
       musnix,
     }:
@@ -106,6 +104,7 @@
             timg
             csvlens
             duckdb
+            nix-tree
           ];
         };
       graphicalPkgs = { pkgs, ...}: {
@@ -213,7 +212,7 @@
             (import ./machines/vps1/hardware-configuration.nix)
             (import ./machines/vps1/networking.nix)
 
-            ({
+            ({config, ...}: {
               services.nginx.enable = true;
               services.nginx.virtualHosts = {
                 "castlemaineharvest.com.au" = {
@@ -228,6 +227,16 @@
                   enableACME = true;
                   forceSSL = true;
                   serverAliases = ["www.meetthecandidatesmtalexander.com.au"];
+                };
+                "farm.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://127.0.0.1:8006";
+                    proxyWebsockets = true;
+                  };
+                  serverAliases = ["www.farm.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farm-basic-auth.path;
                 };
               };
               services.nginx.recommendedProxySettings = true;
@@ -281,7 +290,6 @@
                   hostssl all all ::0/0     md5
                 '';
               };
-              systemd.services.postgresql.requires = [ "acme-finished-castlemaineharvest.com.au.target" ];
               networking.firewall.allowedTCPPorts = [ 5432 ];
               # TODO make pgbackrest service module
               # TODO put postgres + pgbackrest configuration in autofarm with a few parameters
@@ -385,6 +393,10 @@
 
             agenix.nixosModules.age
             ({...}: {
+              age.secrets.farm-basic-auth.file = ./secrets/farm-basic-auth.age;
+              age.secrets.farm-basic-auth.mode = "770";
+              age.secrets.farm-basic-auth.owner = "nginx";
+              age.secrets.farm-basic-auth.group = "nginx";
               age.secrets.farmdb-pgpassword.file = ./secrets/farmdb-pgpassword.age;
               age.secrets.farmdb-pgpassword.mode = "770";
               age.secrets.farmdb-pgpassword.owner = "postgres";
@@ -446,7 +458,7 @@
               security.sudo.wheelNeedsPassword = false;
               programs.fish.enable = true;
 
-              nix.package = pkgs.nixVersions.stable;
+              nix.package = pkgs.nixVersions.latest;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "22.05";
             })
@@ -569,7 +581,6 @@
               };
               programs.fish.enable = true;
 
-              nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "20.03"; # Did you read the comment?
             })
@@ -720,7 +731,6 @@
               };
               programs.fish.enable = true;
 
-              nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = "experimental-features = nix-command flakes";
               system.stateVersion = "20.03"; # Did you read the comment?
             })
@@ -940,7 +950,6 @@
                 };
               };
 
-              #nix.package = pkgs.nixVersions.stable;
               nix.extraOptions = ''
                 experimental-features = nix-command flakes
               '';
