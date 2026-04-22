@@ -1196,6 +1196,8 @@
           system = "x86_64-linux";
           modules = [
 
+            autofarm.nixosModules.gleam-backend
+
             (import ./persistent-ssh-tunnel.nix)
             ({...}: {
               services.persistentSSHTunnel = {
@@ -1218,6 +1220,7 @@
               networking.hostName = "farm-server-wyse";
               networking.useDHCP = false;
               networking.networkmanager.enable = true;
+              networking.networkmanager.settings.connection.autoconnect-retries = 0;
 
               networking.firewall.allowedTCPPorts = [
                 8006 # irrigation control backend

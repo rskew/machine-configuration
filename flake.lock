@@ -29,11 +29,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1771168237,
-        "narHash": "sha256-N+OJkPcYjigsr1qNPvf0eBuuEsSCsRgBRuluqIF73M8=",
+        "lastModified": 1771169210,
+        "narHash": "sha256-BUs34il1W0HeVq7ibJfl8LdYzl1pCabBF5OQwGGVf2I=",
         "owner": "rskew",
         "repo": "autofarm",
-        "rev": "83d3f785be633147f747a5ac82c07d1241c310de",
+        "rev": "4febe818490a1796e88659384347e441ae1e3a63",
         "type": "github"
       },
       "original": {
@@ -290,6 +290,22 @@
         "owner": "nixos",
         "repo": "nixpkgs",
         "rev": "a82ccc39b39b621151d6732718e3e250109076fa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_7": {
+      "locked": {
+        "lastModified": 1717786204,
+        "narHash": "sha256-4q0s6m0GUcN7q+Y2DqD27iLvbcd1G50T2lv08kKxkSI=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "051f920625ab5aabe37c920346e3e69d7d34400e",
         "type": "github"
       },
       "original": {
