@@ -287,6 +287,28 @@
             (import ./machines/vps1/hardware-configuration.nix)
             (import ./machines/vps1/networking.nix)
 
+            (harvest-admin-app.nixosModules.shop-app-services {
+              appPort = 3006;
+              registerPort = 5001;
+              registerDb = "postgres";
+              registerUser = "root";
+            })
+            ({ ... }: {
+              systemd.services.shop-app = {
+                environment = {
+                  PACKING_SSH_HOST_1 = "ssh://root@localhost:2122";
+                  PACKING_SSH_HOST_2 = "ssh://root@localhost:2222";
+                  # %d expands to the unit's private credentials directory at runtime
+                  PACKING_SSH_KEY = "%d/registers_rsa";
+                  PACKING_KNOWN_HOSTS = "/dev/null";
+                };
+                serviceConfig.LoadCredential = [
+                  # root-owned source file on the VPS, e.g. mode 600
+                  "registers_rsa:/home/rowan/.ssh/registers_rsa"
+                ];
+              };
+            })
+
             ({config, ...}: {
               services.nginx.enable = true;
               services.nginx.virtualHosts = {
@@ -296,6 +318,16 @@
                   acmeRoot = null;
                   forceSSL = true;
                   serverAliases = ["www.castlemaineharvest.com.au"];
+                };
+                "admin.castlemaineharvest.com.au" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://127.0.0.1:3006";
+                    extraConfig = "proxy_buffering off;"; # For SSE
+                  };
+                  serverAliases = ["www.admin.castlemaineharvest.com.au"];
+                  basicAuthFile = config.age.secrets.shop-app-basic-auth.path;
                 };
                 "meetthecandidatesmtalexander.com.au" = {
                   root = "${meetthecandidatesmtalexander}/site";
@@ -309,6 +341,9 @@
                   locations."/" = {
                     proxyPass = "http://127.0.0.1:8006";
                     proxyWebsockets = true;
+                    extraConfig = ''
+                      proxy_set_header Sec-WebSocket-Extensions "";
+                    '';
                   };
                   serverAliases = ["www.farm.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farm-basic-auth.path;
@@ -468,6 +503,10 @@
 
             agenix.nixosModules.age
             ({...}: {
+              age.secrets.shop-app-basic-auth.file = ./secrets/shop-app-basic-auth.age;
+              age.secrets.shop-app-basic-auth.mode = "770";
+              age.secrets.shop-app-basic-auth.owner = "nginx";
+              age.secrets.shop-app-basic-auth.group = "nginx";
               age.secrets.farm-basic-auth.file = ./secrets/farm-basic-auth.age;
               age.secrets.farm-basic-auth.mode = "770";
               age.secrets.farm-basic-auth.owner = "nginx";

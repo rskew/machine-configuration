@@ -16,4 +16,5 @@ in
   "vps1-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "shop-server-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "farm-server-wyse-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "shop-app-basic-auth.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
 }
