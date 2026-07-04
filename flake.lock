@@ -81,7 +81,7 @@
     },
     "harvest-admin-app": {
       "inputs": {
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "nixpkgs-new": "nixpkgs-new",
         "nixpkgs-old": "nixpkgs-old",
         "spago2nixSource": "spago2nixSource"
@@ -233,6 +233,21 @@
       "original": {
         "id": "nixpkgs",
         "ref": "nixos-21.11",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1685620773,
+        "narHash": "sha256-iQ+LmporQNdLz8uMJdP62TaAWeLUwl43/MYUBtWqulM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f0ba8235153dd2e25cf06cbf70d43efdd4443592",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-23.05",
         "type": "indirect"
       }
     },

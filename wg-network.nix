@@ -6,6 +6,7 @@
 # listed explicitly.
 {
   vps = let listenPort = 51820; in {
+    hostName = "rowan-vps1";
     endpoint = "rowanskewes.com:${listenPort}";
     publicKey = "pW7Rd/G5f5CR40TR1KOgLh3M+nF2ZV7ZIXjCT/h2KEs=";
     wgIp = "10.100.0.1";

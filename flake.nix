@@ -287,6 +287,13 @@
             (import ./machines/vps1/hardware-configuration.nix)
             (import ./machines/vps1/networking.nix)
 
+            ({ config, lib, ... }: import ./wireguard-to-vps.nix {
+              privateKeyFile = config.age.secrets.wg-key.path;
+              wgNetwork = import ./wg-network.nix;
+              hostName = config.networking.hostName;
+              inherit lib;
+            })
+
             (harvest-admin-app.nixosModules.shop-app-services {
               appPort = 3006;
               registerPort = 5001;
@@ -503,6 +510,7 @@
 
             agenix.nixosModules.age
             ({...}: {
+              age.secrets.wg-key.file = ./secrets/vps1-wg-key.age;
               age.secrets.shop-app-basic-auth.file = ./secrets/shop-app-basic-auth.age;
               age.secrets.shop-app-basic-auth.mode = "770";
               age.secrets.shop-app-basic-auth.owner = "nginx";
@@ -587,9 +595,17 @@
 
             harvest-admin-app.nixosModules.admin-app-services
 
+            ({ config, lib, ... }: import ./wireguard-to-vps.nix {
+              privateKeyFile = config.age.secrets.wg-key.path;
+              wgNetwork = import ./wg-network.nix;
+              hostName = config.networking.hostName;
+              inherit lib;
+            })
+
             agenix.nixosModules.age
             ({...}: {
               age.secrets."coolroom-monitor-influxdb-password".file = ./secrets/coolroom-monitor-influxdb-password.age;
+              age.secrets.wg-key.file = ./secrets/shop-server-wg-key.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
