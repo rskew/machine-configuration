@@ -913,6 +913,14 @@
               environment.systemPackages = [ pkgs.openhantek6022 ];
             })
 
+            # Keep the Realtek SD card reader out of runtime suspend; it misses
+            # card-detect interrupts while suspended so inserted cards are never seen.
+            ({...}: {
+              services.udev.extraRules = ''
+                ACTION=="add", SUBSYSTEM=="pci", DRIVER=="rtsx_pci", ATTR{power/control}="on"
+              '';
+            })
+
             ({config, pkgs, ...}: {
               imports =
                 [ # Include the results of the hardware scan.
@@ -941,6 +949,7 @@
               networking.firewall.allowedTCPPorts = [
                 8006 # irrigation control backend
                 3006 # shop app backend
+                3007 # shop app backend 2
               ];
 
               services.tailscale.enable = true;

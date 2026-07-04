@@ -13,4 +13,7 @@ in
   "pgbackrest-cipher-pass.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "pgbackrest-credentials-env.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "farm-basic-auth.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "vps1-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "shop-server-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "farm-server-wyse-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
 }
