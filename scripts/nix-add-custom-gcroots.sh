@@ -7,10 +7,9 @@ cd ~/harvest/admin-app \
     && nix build .#devShells.x86_64-linux.erlang-backend -o ~/gc-roots/result-shop-app-erlang-backend \
     && nix build .#devShells.x86_64-linux.tabular-frontend -o ~/gc-roots/result-shop-app-tabular-frontend
 cd ~/harvest/munge \
-   && nix build .#devShells.x86_64-linux.munge -o ~/gc-roots/result-shop-app-munge
+   && nix build .#devShells.x86_64-linux.default -o ~/gc-roots/result-shop-app-munge
 cd ~/farm/autofarm \
-    && nix build .#devShells.x86_64-linux.autofarm -o ~/gc-roots/result-autofarm-shell \
-    && nix build .#autofarm -o ~/gc-roots/result-autofarm-package \
+    && nix build .#devShells.x86_64-linux.lora-node -o ~/gc-roots/result-autofarm-shell \
     && nix build .#devShells.x86_64-linux.gleam-backend -o ~/gc-roots/result-autofarm-gleam-backend-shell \
     && nix build .#devShells.x86_64-linux.gleam-frontend -o ~/gc-roots/result-autofarm-gleam-frontend-shell
 bash ~/silverpond/build-gc-roots.sh

@@ -1,0 +1,42 @@
+[package]
+name = "devlog-player"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "devlog_player"
+path = "src/lib.rs"
+
+[[bin]]
+name = "seekbench"
+path = "src/bin/seekbench.rs"
+
+[[bin]]
+name = "devlog-dump"
+path = "src/bin/devlog-dump.rs"
+
+[[bin]]
+name = "devlog-player"
+path = "src/main.rs"
+required-features = ["gui"]
+
+[[bin]]
+name = "harness"
+path = "src/bin/harness.rs"
+required-features = ["harness"]
+
+[features]
+gui = ["dep:eframe"]
+harness = ["gui", "dep:egui_kittest", "dep:image"]
+
+[dependencies]
+avt = "0.18"
+serde_json = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+chrono = "0.4"
+eframe = { version = "0.34", optional = true }
+egui_kittest = { version = "0.34", optional = true, features = ["wgpu", "snapshot", "eframe"] }
+image = { version = "0.25", optional = true }
+
+[profile.release]
+opt-level = 3

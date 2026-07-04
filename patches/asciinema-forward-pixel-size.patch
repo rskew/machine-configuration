@@ -1,0 +1,22 @@
+--- a/asciinema/pty_.py
++++ b/asciinema/pty_.py
+@@ -49,7 +49,18 @@
+ 
+     def set_pty_size(size: Tuple[int, int]) -> None:
+         cols, rows = size
+-        buf = array.array("h", [rows, cols, 0, 0])
++        # Forward the real terminal's pixel dimensions to the recorded PTY so
++        # that programs using the kitty graphics protocol / sixel (e.g. `kitten
++        # icat`) can detect the cell pixel size instead of aborting. Upstream
++        # hardcodes these to 0.
++        x_pixels = y_pixels = 0
++        try:
++            win = array.array("h", [0, 0, 0, 0])
++            fcntl.ioctl(tty_stdout_fd, termios.TIOCGWINSZ, win, True)
++            x_pixels, y_pixels = win[2], win[3]
++        except OSError:
++            pass
++        buf = array.array("h", [rows, cols, x_pixels, y_pixels])
+         fcntl.ioctl(pty_fd, termios.TIOCSWINSZ, buf)
+ 
+     def handle_master_read(data: Any) -> None:

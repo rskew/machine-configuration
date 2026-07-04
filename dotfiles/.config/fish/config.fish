@@ -2,6 +2,18 @@ set -gx PATH $HOME/machine-configuration/scripts $PATH
 set -gx PATH $HOME/bin $PATH
 set -gx EDITOR vim
 
+# Auto-record interactive shells with asciinema for a searchable devlog.
+# Skips nested sessions (asciinema sets ASCIINEMA_REC=1 in the recorded shell)
+# and bails out gracefully if asciinema isn't installed.
+if status is-interactive
+    and not set -q ASCIINEMA_REC
+    and command -q asciinema
+    set -l session_dir $HOME/asciinema-sessions
+    mkdir -p $session_dir
+    set -l ts (date -u +%Y-%m-%dT%H-%M-%SZ)
+    exec asciinema rec --quiet --idle-time-limit=2 $session_dir/$ts.cast
+end
+
 alias rm='rm -i'
 
 alias cat=bat

@@ -23,6 +23,25 @@
         "type": "github"
       }
     },
+    "autofarm": {
+      "inputs": {
+        "gleam-nixpkgs": "gleam-nixpkgs",
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1771168237,
+        "narHash": "sha256-N+OJkPcYjigsr1qNPvf0eBuuEsSCsRgBRuluqIF73M8=",
+        "owner": "rskew",
+        "repo": "autofarm",
+        "rev": "83d3f785be633147f747a5ac82c07d1241c310de",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rskew",
+        "repo": "autofarm",
+        "type": "github"
+      }
+    },
     "darwin": {
       "inputs": {
         "nixpkgs": [
@@ -45,9 +64,24 @@
         "type": "github"
       }
     },
+    "gleam-nixpkgs": {
+      "locked": {
+        "lastModified": 1762424912,
+        "narHash": "sha256-9L4djKH5DIBL2pnUwcQjsQrRjUOeHsKv7plx6nL12Z0=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "550b5f9baa1619097186676736962f9365b71589",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "harvest-admin-app": {
       "inputs": {
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "lastModified": 1676304891,
@@ -102,7 +136,7 @@
     },
     "kmonad": {
       "inputs": {
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_3"
       },
       "locked": {
         "dir": "nix",
@@ -138,7 +172,7 @@
     },
     "musnix": {
       "inputs": {
-        "nixpkgs": "nixpkgs_3"
+        "nixpkgs": "nixpkgs_4"
       },
       "locked": {
         "lastModified": 1767232402,
@@ -156,6 +190,20 @@
     },
     "nixpkgs": {
       "locked": {
+        "lastModified": 1770843696,
+        "narHash": "sha256-LovWTGDwXhkfCOmbgLVA10bvsi/P8eDDpRudgk68HA8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2343bbb58f99267223bc2aac4fc9ea301a155a16",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
         "lastModified": 1662099760,
         "narHash": "sha256-MdZLCTJPeHi/9fg6R9fiunyDwP3XHJqDd51zWWz9px0=",
         "owner": "NixOS",
@@ -169,7 +217,7 @@
         "type": "indirect"
       }
     },
-    "nixpkgs_2": {
+    "nixpkgs_3": {
       "locked": {
         "lastModified": 1768395095,
         "narHash": "sha256-ZhuYJbwbZT32QA95tSkXd9zXHcdZj90EzHpEXBMabaw=",
@@ -185,7 +233,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_3": {
+    "nixpkgs_4": {
       "locked": {
         "lastModified": 1766902085,
         "narHash": "sha256-coBu0ONtFzlwwVBzmjacUQwj3G+lybcZ1oeNSQkgC0M=",
@@ -201,7 +249,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "nixpkgs_5": {
       "locked": {
         "lastModified": 1771008912,
         "narHash": "sha256-gf2AmWVTs8lEq7z/3ZAsgnZDhWIckkb+ZnAo5RzSxJg=",
@@ -220,12 +268,13 @@
     "root": {
       "inputs": {
         "agenix": "agenix",
+        "autofarm": "autofarm",
         "harvest-admin-app": "harvest-admin-app",
         "harvest-front-page": "harvest-front-page",
         "kmonad": "kmonad",
         "meetthecandidatesmtalexander": "meetthecandidatesmtalexander",
         "musnix": "musnix",
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": "nixpkgs_5"
       }
     },
     "systems": {
