@@ -590,7 +590,6 @@
       nixosConfigurations.shop-server =
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = {inherit pkgs ;};
           modules = [
 
             harvest-admin-app.nixosModules.admin-app-services
@@ -609,24 +608,6 @@
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
-            # Forward the port of the register DB to the cloud server
-            # so the shop admin app database can connect directly to the
-            # register database for keeping prices up-to-date
-            (import ./persistent-ssh-tunnel.nix)
-            ({...}: {
-              services.persistentSSHTunnel = {
-                enable = true;
-                remoteIp = jumpBoxIp;
-                remoteUser = "rowan";
-                idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
-                knownHostsLine = jumpBoxKnownHostsLine;
-                remoteForwards = [
-                  # Forward register db
-                  { localIp = "192.168.0.121"; localPort = 8001; remotePort = 5001; }
-                ];
-              };
-            })
-
             terminalEnv
 
             ({config, pkgs, ...}: {
@@ -641,8 +622,6 @@
               # This machine is behind a router NAT
               networking.firewall.allowedTCPPorts = [
                 8080 # Hasura
-                80 443 # test admin app
-                8005
               ];
 
               virtualisation.docker.enable = true;
@@ -659,24 +638,6 @@
               # Enable firmware for rtl wireless chip
               nixpkgs.config.allowUnfree = true;
               hardware.enableAllFirmware = true;
-
-              # Removed since connected to router via ethernet, register switch connected via wifi extender
-              ## Set the eno1 interface to use the 192.168.0.* subnet so it can talk to the registers
-              ## and add static routes to the registers
-              #networking.interfaces.eno1.ipv4 = {
-              #  addresses = [ {
-              #    address = "192.168.0.60";
-              #    prefixLength = 24;
-              #  } ];
-              #  routes = [
-              #    { address = "192.168.0.121"; prefixLength = 32; }
-              #    { address = "192.168.0.122"; prefixLength = 32; }
-              #  ];
-              #};
-              ## But remove all other routes via ethernet so it doesn't mess up using the wifi for internet
-              #networking.localCommands = ''
-              #  ip route del 192.168.0.0/24 dev eno1 proto kernel scope link src 192.168.0.60
-              #'';
 
               # The global useDHCP flag is deprecated, therefore explicitly set to false here.
               # Per-interface useDHCP will be mandatory in the future, so this generated config
