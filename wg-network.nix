@@ -19,8 +19,8 @@
       wgIp = "10.100.0.2";
       lanInterface = "eth0";
       expose = [
-        { host = "192.168.1.121"; ports = [ 6677 5432 ]; }  # register master: fb-reader + register DB
-        { host = "192.168.1.122"; ports = [ 6677 ]; }       # register 2: fb-reader
+        { host = "192.168.0.121"; ports = [ 6677 5432 ]; }  # register master: fb-reader + register DB
+        { host = "192.168.0.122"; ports = [ 6677 ]; }       # register 2: fb-reader
       ];
     };
     farm-server-wyse = {
