@@ -296,24 +296,9 @@
 
             (harvest-admin-app.nixosModules.shop-app-services {
               appPort = 3006;
-              registerPort = 5001;
+              registerPort = 8001;
               registerDb = "postgres";
               registerUser = "root";
-            })
-            ({ ... }: {
-              systemd.services.shop-app = {
-                environment = {
-                  PACKING_SSH_HOST_1 = "ssh://root@localhost:2122";
-                  PACKING_SSH_HOST_2 = "ssh://root@localhost:2222";
-                  # %d expands to the unit's private credentials directory at runtime
-                  PACKING_SSH_KEY = "%d/registers_rsa";
-                  PACKING_KNOWN_HOSTS = "/dev/null";
-                };
-                serviceConfig.LoadCredential = [
-                  # root-owned source file on the VPS, e.g. mode 600
-                  "registers_rsa:/home/rowan/.ssh/registers_rsa"
-                ];
-              };
             })
 
             ({config, ...}: {
