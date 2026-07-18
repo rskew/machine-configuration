@@ -118,6 +118,7 @@
           libreoffice
           simplescreenrecorder
           libnotify
+          wdisplays
         ];
       };
 
@@ -578,6 +579,10 @@
           modules = [
 
             harvest-admin-app.nixosModules.admin-app-services
+            ({config, ...}: {
+              systemd.services.shop-app.serviceConfig.EnvironmentFile =
+                config.age.secrets.shop-app-eftpos.path;
+            })
 
             ({ config, lib, ... }: import ./wireguard-to-vps.nix {
               privateKeyFile = config.age.secrets.wg-key.path;
@@ -588,8 +593,8 @@
 
             agenix.nixosModules.age
             ({...}: {
-              age.secrets."coolroom-monitor-influxdb-password".file = ./secrets/coolroom-monitor-influxdb-password.age;
               age.secrets.wg-key.file = ./secrets/shop-server-wg-key.age;
+              age.secrets.shop-app-eftpos.file = ./secrets/shop-app-eftpos.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
@@ -947,10 +952,10 @@
 
               networking.hostName = "rowan-p14";
               networking.networkmanager.enable = true;
+              services.resolved.enable = true;
               networking.firewall.allowedTCPPorts = [
-                8006 # irrigation control backend
                 3006 # shop app backend
-                3007 # shop app backend 2
+                3007 # shop app backend
               ];
 
               services.tailscale.enable = true;
