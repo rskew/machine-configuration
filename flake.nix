@@ -301,6 +301,10 @@
               registerDb = "postgres";
               registerUser = "root";
             })
+            ({config, ...}: {
+              systemd.services.shop-app.serviceConfig.EnvironmentFile =
+                config.age.secrets.shop-app-eftpos.path;
+            })
 
             ({config, ...}: {
               services.nginx.enable = true;
@@ -496,6 +500,7 @@
 
             agenix.nixosModules.age
             ({...}: {
+              age.secrets.shop-app-eftpos.file = ./secrets/shop-app-eftpos.age;
               age.secrets.wg-key.file = ./secrets/vps1-wg-key.age;
               age.secrets.shop-app-basic-auth.file = ./secrets/shop-app-basic-auth.age;
               age.secrets.shop-app-basic-auth.mode = "770";
@@ -579,10 +584,6 @@
           modules = [
 
             harvest-admin-app.nixosModules.admin-app-services
-            ({config, ...}: {
-              systemd.services.shop-app.serviceConfig.EnvironmentFile =
-                config.age.secrets.shop-app-eftpos.path;
-            })
 
             ({ config, lib, ... }: import ./wireguard-to-vps.nix {
               privateKeyFile = config.age.secrets.wg-key.path;
@@ -594,7 +595,6 @@
             agenix.nixosModules.age
             ({...}: {
               age.secrets.wg-key.file = ./secrets/shop-server-wg-key.age;
-              age.secrets.shop-app-eftpos.file = ./secrets/shop-app-eftpos.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
