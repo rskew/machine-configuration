@@ -87,11 +87,11 @@
         "spago2nixSource": "spago2nixSource"
       },
       "locked": {
-        "lastModified": 1783336012,
-        "narHash": "sha256-dnuxa9INcYucl97IE3TGAAazarZaBaJamV1Xf7V3jnk=",
+        "lastModified": 1784357053,
+        "narHash": "sha256-OPXEkV9fGWf1RyRjeAlXveCZmohuaMqhIPCvkLiAiYY=",
         "ref": "refs/heads/master",
-        "rev": "2cbbb0ac4bf3e0006857a08eb368c9c29e7dedfd",
-        "revCount": 245,
+        "rev": "7f9ddeceb23b2ac2ef7e9515e00a08d978d073c6",
+        "revCount": 328,
         "type": "git",
         "url": "ssh://git@github.com/rskew/greengrocer-admin-app.git"
       },

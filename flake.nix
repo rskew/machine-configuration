@@ -323,6 +323,14 @@
                     proxyPass = "http://127.0.0.1:3006";
                     extraConfig = "proxy_buffering off;"; # For SSE
                   };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://127.0.0.1:3006";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://127.0.0.1:3006";
+                    extraConfig = "auth_basic off;";
+                  };
                   serverAliases = ["www.admin.castlemaineharvest.com.au"];
                   basicAuthFile = config.age.secrets.shop-app-basic-auth.path;
                 };
