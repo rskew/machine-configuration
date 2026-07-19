@@ -26,11 +26,6 @@
     farm-server-wyse = {
       publicKey = "1TKilt4Xjr7brRhrfC70HaXzbAoN9t2jLCkZFZ4GxRo=";
       wgIp = "10.100.0.3";
-      lanInterface = "enp1s0";
-      expose = [
-        { host = "127.0.0.1"; ports = [ 22 ]; }  # SSH
-        { host = "::"; ports = [ 8006 ]; }  # Farm control
-      ];
     };
   };
 }
