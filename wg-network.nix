@@ -28,7 +28,8 @@
       wgIp = "10.100.0.3";
       lanInterface = "enp1s0";
       expose = [
-        { host = "127.0.0.1"; ports = [ 22 8006 ]; }  # SSH, farm control
+        { host = "127.0.0.1"; ports = [ 22 ]; }  # SSH
+        { host = "::"; ports = [ 8006 ]; }  # Farm control
       ];
     };
   };
