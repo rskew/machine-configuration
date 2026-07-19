@@ -1198,19 +1198,17 @@
 
             autofarm.nixosModules.gleam-backend
 
-            (import ./persistent-ssh-tunnel.nix)
+            ({ config, lib, ... }: import ./wireguard-to-vps.nix {
+              privateKeyFile = config.age.secrets.wg-key.path;
+              wgNetwork = import ./wg-network.nix;
+              hostName = config.networking.hostName;
+              inherit lib;
+            })
+
+            agenix.nixosModules.age
             ({...}: {
-              services.persistentSSHTunnel = {
-                enable = true;
-                remoteIp = jumpBoxIp;
-                remoteUser = "rowan";
-                idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
-                knownHostsLine = jumpBoxKnownHostsLine;
-                remoteForwards = [
-                  { localPort = 22; remotePort = 8822; } # SSH
-                  { localPort = 8006; remotePort = 8006; } # Irrigation controller backend
-                ];
-              };
+              age.secrets.wg-key.file = ./secrets/farm-server-wyse-wg-key.age;
+              age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
             ({config, pkgs, ...}: {
