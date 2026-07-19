@@ -344,7 +344,7 @@
                   enableACME = true;
                   forceSSL = true;
                   locations."/" = {
-                    proxyPass = "http://127.0.0.1:8006";
+                    proxyPass = "http://10.100.0.3:8006";
                     proxyWebsockets = true;
                     extraConfig = ''
                       proxy_set_header Sec-WebSocket-Extensions "";
