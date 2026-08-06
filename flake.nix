@@ -37,7 +37,7 @@
         let
           pythonEnv = pkgs.python3.withPackages (ps: with ps; [
             ipython pandas matplotlib seaborn pyyaml
-            boto3 tqdm duckdb
+            boto3 tqdm duckdb requests
           ]);
           vim-with-custom-rc = pkgs.vim-full.customize {
             vimrcConfig = {
