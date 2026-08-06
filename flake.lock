@@ -345,11 +345,11 @@
     "touch-synth": {
       "flake": false,
       "locked": {
-        "lastModified": 1786022892,
-        "narHash": "sha256-0AxkGR/s3mZUwmvisE+iLPTNg8SpxSHQQY9+YnS8/os=",
+        "lastModified": 1786027502,
+        "narHash": "sha256-oHSmtlFvUgpwPpvBRDYcBW8XB1nCavg7BSlbfllBYu8=",
         "owner": "rskew",
         "repo": "touch-synth",
-        "rev": "1d0e5c91c47914cae9ada0f534a089afd2e15a3a",
+        "rev": "ff9a608ce71127872813e2244f2117452e88dead",
         "type": "github"
       },
       "original": {
