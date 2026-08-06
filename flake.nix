@@ -933,6 +933,23 @@
               };
             })
 
+            # Bind texUsb kmonad to the keyboard's udev device unit: replug
+            # starts it (SYSTEMD_WANTS), unplug cleanly stops it (BindsTo).
+            ({ lib, ... }: let
+              dev = "dev-input-by\\x2did-usb\\x2d04d9_USB\\x2dHID_Keyboard_000000000407\\x2devent\\x2dkbd.device";
+            in {
+              services.udev.extraRules = ''
+                ACTION=="add", SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_SERIAL}=="04d9_USB-HID_Keyboard_000000000407", ENV{ID_USB_INTERFACE_NUM}=="00", TAG+="systemd", ENV{SYSTEMD_WANTS}+="kmonad-texUsb.service"
+              '';
+              systemd.paths.kmonad-texUsb.wantedBy = lib.mkForce [ ]; # drop the poller
+              systemd.services.kmonad-texUsb = {
+                bindsTo = [ dev ];
+                after = [ dev ];
+                startLimitIntervalSec = 0; # a plug-time hiccup can't lock it out
+                serviceConfig.Restart = lib.mkForce "on-failure";
+              };
+            })
+
             # usb oscilloscope
             ({ pkgs, ...}: {
               services.udev.packages = [ pkgs.openhantek6022 ];
