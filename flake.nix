@@ -990,6 +990,10 @@
                 enable = true;
                 enableSSHSupport = true;
               };
+              # programs.niri enables gnome-keyring, which enables gcr-ssh-agent,
+              # which grabs SSH_AUTH_SOCK and caches unlocked keys for the whole
+              # session with no way to turn that off. Use gpg-agent for ssh instead.
+              services.gnome.gcr-ssh-agent.enable = false;
               services.xserver.updateDbusEnvironment = true;
 
               virtualisation.docker.enable = true;
@@ -1163,6 +1167,11 @@
                 enable = true;
                 enableSSHSupport = true;
               };
+              # The gnome desktop enables gnome-keyring, which enables
+              # gcr-ssh-agent, which grabs SSH_AUTH_SOCK and caches unlocked keys
+              # for the whole session with no way to turn that off. Use gpg-agent
+              # for ssh instead.
+              services.gnome.gcr-ssh-agent.enable = false;
 
               time.timeZone = "Australia/Melbourne";
 
