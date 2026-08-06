@@ -29,11 +29,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1784458850,
-        "narHash": "sha256-4jzz3mXJOAORFbSSq7pRtk7dK9e6npIgCH2U4yRv9SQ=",
+        "lastModified": 1784464103,
+        "narHash": "sha256-OwlQ+WWaPCmM+3rdd7GW0jwmX3Q6sKlZsVrJABdF2hM=",
         "owner": "rskew",
         "repo": "autofarm",
-        "rev": "5a9c6b4cc116fc7a2d0dbd9fd172d268fab34a48",
+        "rev": "dcedec83ce65109b7d447bd7454b628a0f180fbd",
         "type": "github"
       },
       "original": {
