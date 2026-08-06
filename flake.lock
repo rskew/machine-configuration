@@ -307,7 +307,8 @@
         "kmonad": "kmonad",
         "meetthecandidatesmtalexander": "meetthecandidatesmtalexander",
         "musnix": "musnix",
-        "nixpkgs": "nixpkgs_5"
+        "nixpkgs": "nixpkgs_5",
+        "touch-synth": "touch-synth"
       }
     },
     "spago2nixSource": {
@@ -338,6 +339,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "touch-synth": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786022892,
+        "narHash": "sha256-0AxkGR/s3mZUwmvisE+iLPTNg8SpxSHQQY9+YnS8/os=",
+        "owner": "rskew",
+        "repo": "touch-synth",
+        "rev": "1d0e5c91c47914cae9ada0f534a089afd2e15a3a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rskew",
+        "repo": "touch-synth",
         "type": "github"
       }
     }

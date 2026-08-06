@@ -7,6 +7,7 @@
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     meetthecandidatesmtalexander = { url = "github:rskew/meetthecandidatesmtalexander.com.au"; flake = false; };
+    touch-synth = { url = "github:rskew/touch-synth"; flake = false; };
     musnix  = { url = "github:musnix/musnix"; };
     autofarm.url = "github:rskew/autofarm";
   };
@@ -18,6 +19,7 @@
       harvest-admin-app,
       agenix,
       meetthecandidatesmtalexander,
+      touch-synth,
       musnix,
       autofarm,
     }:
@@ -352,6 +354,16 @@
                   };
                   serverAliases = ["www.farm.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farm-basic-auth.path;
+                };
+                "rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  serverAliases = ["www.rowanskewes.com"];
+                  locations."= /touch-synth".return = "301 /touch-synth/";
+                  locations."/touch-synth/" = {
+                    alias = "${touch-synth}/";
+                    index = "index.html";
+                  };
                 };
               };
               services.nginx.recommendedProxySettings = true;
