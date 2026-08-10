@@ -1140,7 +1140,24 @@
           specialArgs = {inherit pkgs;};
           modules = [
 
-            kmonad.nixosModule
+            terminalEnv
+            windowManager
+            graphicalPkgs
+
+            ({ config, lib, ... }: import ./wireguard-to-vps.nix {
+              privateKeyFile = config.age.secrets.wg-key.path;
+              wgNetwork = import ./wg-network.nix;
+              hostName = config.networking.hostName;
+              inherit lib;
+            })
+
+            agenix.nixosModules.age
+            ({...}: {
+              age.secrets.wg-key.file = ./secrets/peanut-butter-toast-wg-key.age;
+              age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
+            })
+
+            kmonad.nixosModules.default
             ({lib, ...}: {
               services.kmonad = {
                 enable = true;
@@ -1169,30 +1186,40 @@
               imports = [ ./machines/peanut-butter-toast-hardware-configuration.nix ];
               security.tpm2.enable = false; # prevents "a start job is running for /dev/tpmrm0 ( _ / 1min 30s)"
 
+              # Select internationalisation properties.
+              i18n.defaultLocale = "en_AU.UTF-8";
+
+              services.redshift.enable = true;
+              # Used by redshift
+              location = {
+                # Melbourne
+                latitude = -37.8136;
+                longitude = 144.9631;
+              };
+
               boot.loader.systemd-boot.enable = true;
               boot.loader.efi.canTouchEfiVariables = true;
 
               networking.hostId = "00000000";
               networking.hostName = "rowan-peanut-butter-toast";
 
+              networking.networkmanager.enable = true;
+              services.resolved.enable = true;
+
+              # mDNS
+              services.avahi.enable = true;
+              services.avahi.nssmdns4 = true;
+              services.avahi.publish.addresses = true;
+              services.avahi.publish.enable = true;
+
+              # The global useDHCP flag is deprecated, therefore explicitly set to false here.
+              # Per-interface useDHCP will be mandatory in the future, so this generated config
+              # replicates the default behaviour.
+              networking.useDHCP = false;
+              networking.interfaces.eno1.useDHCP = true;
+              networking.interfaces.wls4.useDHCP = true;
+
               services.tailscale.enable = true;
-              # SSH to machines on a second tailnet by ProxyJumping via a container
-              networking.nat.enable = true;
-              networking.nat.internalInterfaces = ["ve-+"];
-              networking.nat.externalInterface = "wls4";
-              networking.networkmanager.unmanaged = [ "interface-name:ve-*" ];
-              containers.tailscaled = {
-                autoStart = true;
-                enableTun = true;
-                privateNetwork = true;
-                hostAddress = "192.168.100.10";
-                localAddress = "192.168.100.11";
-                config = { ... }: {
-                  services.tailscale.enable = true;
-                  services.openssh.enable = true;
-                  services.openssh.settings.PermitRootLogin = "yes";
-                };
-              };
 
               programs.gnupg.agent = {
                 enable = true;
@@ -1204,36 +1231,42 @@
               # for ssh instead.
               services.gnome.gcr-ssh-agent.enable = false;
 
+              services.openssh = {
+                enable = true;
+                settings = {
+                  PasswordAuthentication = false;
+                  PermitRootLogin = "no";
+                  X11Forwarding = false;
+                  # Don't allow inbound ssh connections to forward ports on 0.0.0.0
+                  GatewayPorts = "no";
+                };
+                # Drop inactive sessions after 1.5 minutes.
+                # This prevents stale sessions from stopping clients
+                # reconnecting with port forwarding.
+                extraConfig = ''
+                  ClientAliveInterval 30
+                  ClientAliveCountMax 3
+                '';
+              };
+
               time.timeZone = "Australia/Melbourne";
 
               virtualisation.docker.enable = true;
 
+              services.displayManager.gdm.enable = true;
+
+              programs.fish.enable = true;
+              programs.fish.vendor.completions.enable = true;
               users.users.rowan = {
                 isNormalUser = true;
                 extraGroups = [ "wheel" "docker" "dialout" ];
                 shell = pkgs.fish;
+                openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
               };
-              programs.fish.enable = true;
-              programs.fish.vendor.completions.enable = true;
-
-              services.xserver.enable = true;
-              services.xserver.displayManager.gdm.enable = true;
-              services.xserver.desktopManager.gnome.enable = true;
-              services.xserver.videoDrivers = [ "amdgpu" ];
-              hardware.graphics = {
-                enable = true;
-                enable32Bit = true;
-                extraPackages = [ pkgs.amdvlk ];
-                extraPackages32 = [ pkgs.driversi686Linux.amdvlk ];
-              };
-              systemd.services.lactd.wantedBy = ["multi-user.target"];
-              systemd.packages = [ pkgs.lact ];
-              environment.systemPackages = [
-                pkgs.lact
-              ];
 
               nix.extraOptions = "experimental-features = nix-command flakes";
-              nix.settings.trusted-users = [ "root" "rowan" ];
+              nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ];
+              nix.settings.trusted-users = [ "rowan" ];
               system.stateVersion = "24.11";
             })
           ];

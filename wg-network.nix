@@ -27,5 +27,9 @@
       publicKey = "1TKilt4Xjr7brRhrfC70HaXzbAoN9t2jLCkZFZ4GxRo=";
       wgIp = "10.100.0.3";
     };
+    rowan-peanut-butter-toast = {
+      publicKey = "OtA576836ujtNK5baw9ot7aSF+Tw83FsWNPVrmW9xw8=";
+      wgIp = "10.100.0.4";
+    };
   };
 }
