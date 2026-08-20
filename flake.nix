@@ -323,7 +323,18 @@
                   forceSSL = true;
                   locations."/" = {
                     proxyPass = "http://127.0.0.1:3006";
-                    extraConfig = "proxy_buffering off;"; # For SSE
+                    extraConfig = ''
+                      proxy_buffering off; # For SSE
+                      error_page 502 503 504 @maintenance;
+                    '';
+                  };
+                  locations."@maintenance" = {
+                    extraConfig = ''
+                      root /var/lib/shop-app-deploy;
+                      default_type application/json;
+                      add_header Cache-Control "no-store" always;
+                      try_files /deploying.json =502;
+                    '';
                   };
                   locations."= /manifest.json" = {
                     proxyPass = "http://127.0.0.1:3006";
