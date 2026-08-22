@@ -599,6 +599,7 @@
                   pubkeyToDeployToVps # Allow other servers to SSH to this server
                 ];
               };
+              nix.settings.trusted-users = [ "rowan" ];
               security.sudo.wheelNeedsPassword = false;
               programs.fish.enable = true;
 
