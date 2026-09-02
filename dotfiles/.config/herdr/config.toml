@@ -1,0 +1,75 @@
+onboarding = false
+[ui]
+agent_panel_sort = "spaces"
+
+# Desktop notifications instead of in-app toasts, so mako can match on them and
+# rumble the gamepad. Fires on herdr's own agent-state detection, which is
+# sooner and covers every agent, unlike the agent's own terminal notification.
+[ui.toast]
+delivery = "system"
+
+# Zellij-style keybindings.
+#
+# Zellij is modal; herdr has one prefix plus a flat action namespace. The
+# mapping therefore works in two tiers:
+#
+#   1. Zellij's non-modal Alt quicknav is bound directly (no prefix).
+#   2. The prefix is Ctrl+t, zellij's Tab mode, so tab keys are exact.
+#      Pane actions that have nowhere else to live borrow that prefix using
+#      their zellij Pane-mode letter, shifted where Tab mode already claims it.
+#
+# Alt+f, Alt+b and Ctrl+p are deliberately left unbound: they are readline
+# word-motion / history keys and stay usable inside panes.
+#
+# kmonad: caps is (layer-toggle ctlplusarrows), so every key pressed while caps
+# is held emits C-<key>, and h/j/k/l emit bare arrows. Herdr matches modifiers
+# exactly, so "prefix+n" cannot fire while caps stays down (herdr sees Ctrl+n).
+# Each prefix binding therefore also lists its ctrl variant. The arrows get one
+# too: kmonad's C-t holds ctrl until t is physically released, so rolling
+# caps+t into caps+l emits Ctrl+Right rather than Right.
+[keys]
+prefix = "ctrl+t"                     # zellij: Ctrl+t enters Tab mode
+
+# --- Tab mode (exact zellij Tab-mode keys after the prefix) ---
+new_tab      = ["prefix+n", "prefix+ctrl+n"]
+close_tab    = ["prefix+x", "prefix+ctrl+x"]
+rename_tab   = ["prefix+r", "prefix+ctrl+r"]
+switch_tab   = ["prefix+1..9", "prefix+ctrl+1..9"]
+previous_tab = [
+  "prefix+h", "prefix+k",
+  "prefix+left", "prefix+up",              # caps+h / caps+k
+  "prefix+ctrl+left", "prefix+ctrl+up",    # same, rolled off Ctrl+t
+  "f13",
+]
+next_tab = [
+  "prefix+l", "prefix+j",
+  "prefix+right", "prefix+down",           # caps+l / caps+j
+  "prefix+ctrl+right", "prefix+ctrl+down", # same, rolled off Ctrl+t
+  "f14",
+]
+
+# --- Alt quicknav (zellij normal mode, works without the prefix) ---
+focus_pane_left  = ["alt+h", "alt+left"]
+focus_pane_down  = ["alt+j", "alt+down"]
+focus_pane_up    = ["alt+k", "alt+up"]
+focus_pane_right = ["alt+l", "alt+right"]
+split_vertical   = "alt+n"            # zellij: Alt+n opens a new pane
+
+# --- Direct mode-entry chords reused as their nearest herdr action ---
+resize_mode = "ctrl+n"                                 # zellij: Ctrl+n enters Resize mode
+goto        = ["prefix+g", "prefix+ctrl+g"]  # zellij: Ctrl+o enters Session mode
+detach      = ["ctrl+q", "prefix+q", "prefix+ctrl+q"]  # zellij: Ctrl+q quits; herdr only detaches
+
+# --- Pane actions borrowing the prefix (zellij Pane-mode letters) ---
+split_horizontal = ["prefix+d", "prefix+ctrl+d"]               # zellij Pane: d = new pane down
+zoom             = ["prefix+f", "prefix+ctrl+f"]               # zellij Pane: f = fullscreen
+rename_pane      = ["prefix+c", "prefix+ctrl+c"]               # zellij Pane: c = rename pane
+close_pane       = ["prefix+shift+x", "prefix+ctrl+shift+x"]   # zellij Pane: x (Tab mode owns plain x)
+cycle_pane_next  = ["prefix+p", "prefix+tab", "prefix+ctrl+p"] # zellij Pane: p = switch focus
+edit_scrollback  = ["prefix+e", "prefix+ctrl+e"]               # zellij Scroll: e = edit scrollback
+
+# Herdr-native actions with no zellij equivalent keep their defaults:
+# help (prefix+?), settings (prefix+s), toggle_sidebar (prefix+b),
+# reload_config (prefix+shift+R), workspace_picker (prefix+w),
+# new_workspace (prefix+shift+N), new_worktree (prefix+shift+G),
+# cycle_pane_previous (prefix+shift+Tab).

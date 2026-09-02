@@ -1,0 +1,11 @@
+name = "Push To Talk"
+description = "Hold to record, release to transcribe and type"
+
+# Overload mode is the only one that fires separate actions on press and
+# release; every other superkey mode reacts to tap/hold patterns after the fact,
+# which cannot express "record for exactly as long as I hold this".
+mode = "overload"
+
+[actions]
+overload_down = [ { action = "exec", cmd = "/run/current-system/sw/bin/push-to-talk start" } ]
+overload_up = [ { action = "exec", cmd = "/run/current-system/sw/bin/push-to-talk stop" } ]

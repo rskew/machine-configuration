@@ -1,0 +1,62 @@
+name = "Arrow Buttons"
+input_type = "stick"
+description = "The four arrow buttons emit arrow keys, held while the button is held"
+
+# No rapidfire on purpose. A threshold action presses the key on entering the
+# band and releases it on leaving, so the key stays held for as long as you
+# hold the arrow button and niri's own repeat-delay/repeat-rate does the
+# repeating. That gives the same initial grace period as the keyboard, instead
+# of firing at full speed the instant you touch it.
+
+[mouse_motion]
+enabled = false
+
+[gamepad_output]
+enabled = false
+
+# The arrow buttons only ever report -1, 0 or 1, so the bands are wide.
+# hat0y: -1 = up, +1 = down.
+[[thresholds]]
+axis = "y"
+trigger_min = -1.0
+trigger_max = -0.5
+release_min = -1.0
+release_max = -0.25
+
+[[thresholds.actions]]
+action = "keyboard"
+target = "key_up"
+
+[[thresholds]]
+axis = "y"
+trigger_min = 0.5
+trigger_max = 1.0
+release_min = 0.25
+release_max = 1.0
+
+[[thresholds.actions]]
+action = "keyboard"
+target = "key_down"
+
+# hat0x: -1 = left, +1 = right.
+[[thresholds]]
+axis = "x"
+trigger_min = -1.0
+trigger_max = -0.5
+release_min = -1.0
+release_max = -0.25
+
+[[thresholds.actions]]
+action = "keyboard"
+target = "key_left"
+
+[[thresholds]]
+axis = "x"
+trigger_min = 0.5
+trigger_max = 1.0
+release_min = 0.25
+release_max = 1.0
+
+[[thresholds.actions]]
+action = "keyboard"
+target = "key_right"

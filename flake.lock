@@ -137,9 +137,27 @@
         "type": "github"
       }
     },
-    "kmonad": {
+    "keymasq": {
       "inputs": {
         "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1787584048,
+        "narHash": "sha256-6LPT5kPk9dKas6X1QCYrddFp14osKXHvtyG7DcTu7y0=",
+        "owner": "nyrda",
+        "repo": "keymasq",
+        "rev": "89dac3346020ec286b08dc49c12b405d7acbef89",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nyrda",
+        "repo": "keymasq",
+        "type": "github"
+      }
+    },
+    "kmonad": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
       },
       "locked": {
         "dir": "nix",
@@ -175,7 +193,7 @@
     },
     "musnix": {
       "inputs": {
-        "nixpkgs": "nixpkgs_4"
+        "nixpkgs": "nixpkgs_5"
       },
       "locked": {
         "lastModified": 1767232402,
@@ -252,6 +270,22 @@
     },
     "nixpkgs_3": {
       "locked": {
+        "lastModified": 1782467914,
+        "narHash": "sha256-pGvFkM8N0xEkIIXDe5YYfbEAvHrk4IxBrjB/x8OomhE=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e73de5be04e0eff4190a1432b946d469c794e7b4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_4": {
+      "locked": {
         "lastModified": 1768395095,
         "narHash": "sha256-ZhuYJbwbZT32QA95tSkXd9zXHcdZj90EzHpEXBMabaw=",
         "owner": "NixOS",
@@ -266,7 +300,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
+    "nixpkgs_5": {
       "locked": {
         "lastModified": 1766902085,
         "narHash": "sha256-coBu0ONtFzlwwVBzmjacUQwj3G+lybcZ1oeNSQkgC0M=",
@@ -282,7 +316,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_5": {
+    "nixpkgs_6": {
       "locked": {
         "lastModified": 1771008912,
         "narHash": "sha256-gf2AmWVTs8lEq7z/3ZAsgnZDhWIckkb+ZnAo5RzSxJg=",
@@ -304,10 +338,11 @@
         "autofarm": "autofarm",
         "harvest-admin-app": "harvest-admin-app",
         "harvest-front-page": "harvest-front-page",
+        "keymasq": "keymasq",
         "kmonad": "kmonad",
         "meetthecandidatesmtalexander": "meetthecandidatesmtalexander",
         "musnix": "musnix",
-        "nixpkgs": "nixpkgs_5",
+        "nixpkgs": "nixpkgs_6",
         "touch-synth": "touch-synth"
       }
     },

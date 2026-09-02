@@ -1,0 +1,59 @@
+[profile]
+name = "Default"
+enabled = true
+is_permanent = true
+priority = 0
+notify_on_activation = false
+created_at = "2026-08-30T23:30:43.282299"
+
+# Scoped to herdr by choosing keys nothing else binds. F13-F15 are unclaimed by
+# every other application, so the pad is inert outside herdr without needing
+# anything to watch window focus. Arrow keys and Enter are deliberately global:
+# niri's own pane and workspace bindings are all Mod+arrow, so the pad cannot
+# move you between applications. Switching apps stays a keyboard job.
+
+[devices."054c:09cc"]
+always_grab_all = false
+
+# --- Shoulders: tab switching within the one herdr session ---
+[devices."054c:09cc".mapping.btn_tl]
+action = "keyboard"
+target = "key_f13"
+
+[devices."054c:09cc".mapping.btn_tr]
+action = "keyboard"
+target = "key_f14"
+
+# --- L2 held: push-to-talk. A trigger because it is held for seconds at a
+# time, and an index finger leaves both thumbs free to scroll and answer while
+# talking. The superkey is what gives us a release event; a plain exec action
+# only fires on press.
+[devices."054c:09cc".mapping.btn_tl2]
+action = "superkey"
+superkey_name = "Push To Talk"
+
+# --- Cross: submit. Typing also snaps the pane scrollback to the bottom, so
+# this doubles as the jump-to-bottom gesture.
+[devices."054c:09cc".mapping.btn_south]
+action = "keyboard"
+target = "key_enter"
+
+# --- Circle: clear the text entered into a code agent. A keyboard action can
+# only emit one keycode, so ctrl+c is a four-event macro instead.
+[devices."054c:09cc".mapping.btn_east]
+action = "macro"
+target = "ctrl_c"
+
+# --- Arrow buttons: arrow keys ---
+[devices."054c:09cc".mapping.dpad]
+action = "analog_control"
+analog_control_name = "Arrow Buttons"
+
+# --- Right stick: scroll ---
+[devices."054c:09cc".mapping.right_stick]
+action = "analog_control"
+analog_control_name = "Scroll Wheel"
+
+# Left stick and the stick clicks are deliberately unmapped. They drove the
+# system mouse cursor, which is useless in a TUI and was the one part of this
+# setup that leaked outside herdr. Restore them here if you want them back.

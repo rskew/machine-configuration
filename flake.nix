@@ -2,6 +2,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
+    keymasq.url = "github:nyrda/keymasq";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
     harvest-admin-app.url = "git+ssh://git@github.com/rskew/greengrocer-admin-app.git";
     agenix.url = "github:ryantm/agenix";
@@ -15,6 +16,7 @@
     { self,
       nixpkgs,
       kmonad,
+      keymasq,
       harvest-front-page,
       harvest-admin-app,
       agenix,
@@ -278,6 +280,99 @@
             services.openssh.enable = true;
             services.openssh.settings.PermitRootLogin = "yes";
           };
+        };
+      };
+
+      # Bluetooth gamepad driving herdr. Mapping lives in dotfiles/.config/keymasq,
+      # symlinked in as whole directories: keymasq rewrites config with os.replace(),
+      # which would clobber per-file symlinks. Scoped to herdr by using keycodes
+      # nothing else binds (F13-F15) rather than by gating on focus.
+      gamepadControl = { pkgs, ... }: let
+        deviceSubPath = "input/gamepad";
+        rumble = import ./applications/rumble.nix {
+          inherit pkgs;
+          devicePath = "/dev/${deviceSubPath}";
+        };
+        # base.en rather than a larger model: on this CPU (no dGPU) it is the
+        # largest that still transcribes a short clip in about a second, which is
+        # the difference between dictation feeling instant and feeling like a wait.
+        whisperModel = pkgs.fetchurl {
+          url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
+          sha256 = "00nhqqvgwyl9zgyy7vk9i3n017q2wlncp5p7ymsk0cpkdp47jdx0";
+        };
+        pushToTalk = pkgs.writeShellApplication {
+          name = "push-to-talk";
+          runtimeInputs = [
+            pkgs.whisper-cpp
+            pkgs.pipewire        # pw-record
+            pkgs.coreutils
+            pkgs.gnused
+            rumble
+            keymasq.packages.x86_64-linux.default   # keymasq type
+          ];
+          text = builtins.replaceStrings [ "@model@" ] [ "${whisperModel}" ]
+            (builtins.readFile ./scripts/push-to-talk.sh);
+        };
+      in {
+        imports = [ keymasq.nixosModules.default ];
+
+        hardware.bluetooth.enable = true;
+        hardware.bluetooth.powerOnBoot = true;
+        services.blueman.enable = true;
+        # rumble writes force-feedback to the physical pad, but keymasq's
+        # 99-keymasq-hide-grabbed.rules deliberately resets grabbed pads to
+        # root:root 0600 and runs `setfacl -b`, wiping the uaccess ACL logind
+        # grants. This file sorts after that one, so this RUN re-grants access
+        # last. Hiding still works: keymasq holds the EVIOCGRAB, so reads here
+        # return nothing - this only allows opening the device to write to it.
+        services.udev.extraRules = ''
+          SUBSYSTEM=="input", KERNEL=="event*", \
+            ATTRS{id/vendor}=="054c", \
+            ATTRS{id/product}=="09cc", \
+            ATTRS{name}=="Wireless Controller", \
+            SYMLINK+="${deviceSubPath}", TAG+="uaccess", \
+            RUN+="${pkgs.acl}/bin/setfacl -m u:rowan:rw /dev/input/%k"
+        '';
+        environment.systemPackages = [ rumble pushToTalk ];
+        services.keymasq.enable = true;
+        services.keymasq.installPackage = true;
+
+        # Circle sends ctrl+c, and a keymasq keyboard action emits only one keycode,
+        # so it has to be a macro. Macros live in /var/lib/keymasq as opaque blobs,
+        # so recreate it here to keep the binding reproducible. User service because
+        # the macro store is reached over the per-user socket; retries because a user
+        # unit cannot order itself against the system-level keymasqd.
+        systemd.user.services.keymasq-macros = {
+          description = "Recreate declarative keymasq macros";
+          after = [ "keymasq-session.service" ];
+          wantedBy = [ "default.target" ];
+          path = [ pkgs.coreutils ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+          script = let
+            keymasqBin = "${keymasq.packages.x86_64-linux.default}/bin/keymasq";
+            # ctrl down, c down, c up, ctrl up. device_type must be "keyboard" or
+            # playback routes to the wrong uinput device.
+            ctrlC = builtins.toJSON {
+              events = [
+                { t_us = 0;     type = 1; code = 29; value = 1; device_type = "keyboard"; }
+                { t_us = 8000;  type = 1; code = 46; value = 1; device_type = "keyboard"; }
+                { t_us = 24000; type = 1; code = 46; value = 0; device_type = "keyboard"; }
+                { t_us = 32000; type = 1; code = 29; value = 0; device_type = "keyboard"; }
+              ];
+            };
+          in ''
+            for _ in $(seq 30); do
+              if ${keymasqBin} macros create -f ctrl_c ${pkgs.lib.escapeShellArg ctrlC}; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "keymasqd never became available" >&2
+            exit 1
+          '';
         };
       };
     in
@@ -967,6 +1062,8 @@
               services.udev.packages = [ pkgs.openhantek6022 ];
               environment.systemPackages = [ pkgs.openhantek6022 ];
             })
+
+            gamepadControl
 
             # Keep the Realtek SD card reader out of runtime suspend; it misses
             # card-detect interrupts while suspended so inserted cards are never seen.

@@ -1,0 +1,194 @@
+[hardware]
+name = "Wireless Controller"
+vendor_id = "054c"
+product_id = "09cc"
+
+[[hardware.evdev.devices]]
+path = "keymasq:054c:09cc"
+type = "gamepad"
+id = "gamepad"
+capabilities = [
+    "btn_south",
+    "btn_east",
+    "btn_north",
+    "btn_west",
+    "btn_tl",
+    "btn_tr",
+    "btn_tl2",
+    "btn_tr2",
+    "btn_select",
+    "btn_start",
+    "btn_mode",
+    "btn_thumbl",
+    "btn_thumbr",
+    "abs_x",
+    "abs_y",
+    "abs_z",
+    "abs_rx",
+    "abs_ry",
+    "abs_rz",
+    "abs_hat0x",
+    "abs_hat0y",
+]
+
+[hardware.layout]
+type = "gamepad"
+
+# Labels are what is printed on this pad, verified with evtest rather than
+# taken from the DS4 identity it claims over Bluetooth. Face buttons are
+# PlayStation glyphs in NESW order: triangle, circle, cross, square.
+[[hardware.layout.buttons]]
+id = "btn_south"
+label = "Cross"
+evdev = "btn_south"
+evdev_code = 304
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_east"
+label = "Circle"
+evdev = "btn_east"
+evdev_code = 305
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_north"
+label = "Triangle"
+evdev = "btn_north"
+evdev_code = 307
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_west"
+label = "Square"
+evdev = "btn_west"
+evdev_code = 308
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_tl"
+label = "L1"
+evdev = "btn_tl"
+evdev_code = 310
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_tr"
+label = "R1"
+evdev = "btn_tr"
+evdev_code = 311
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_tl2"
+label = "L2"
+evdev = "btn_tl2"
+evdev_code = 312
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_tr2"
+label = "R2"
+evdev = "btn_tr2"
+evdev_code = 313
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_select"
+label = "Select"
+evdev = "btn_select"
+evdev_code = 314
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_start"
+label = "Start"
+evdev = "btn_start"
+evdev_code = 315
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_mode"
+label = "Home"
+evdev = "btn_mode"
+evdev_code = 316
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_thumbl"
+label = "Left Stick Click"
+evdev = "btn_thumbl"
+evdev_code = 317
+source = "gamepad"
+type = "gamepad"
+
+[[hardware.layout.buttons]]
+id = "btn_thumbr"
+label = "Right Stick Click"
+evdev = "btn_thumbr"
+evdev_code = 318
+source = "gamepad"
+type = "gamepad"
+
+# The arrow buttons (the d-pad) are not four separate buttons: they arrive as
+# two axes reporting -1 / 0 / 1, so they have to be driven through an analog
+# control's thresholds rather than button mappings.
+# Verified: hat0y -1 = up, +1 = down; hat0x -1 = left, +1 = right.
+[[hardware.layout.analogs]]
+id = "dpad"
+label = "Arrow Buttons"
+type = "stick"
+source = "gamepad"
+axes = [
+    { role = "x", evdev = "abs_hat0x", evdev_code = 16 },
+    { role = "y", evdev = "abs_hat0y", evdev_code = 17 },
+]
+
+[[hardware.layout.analogs]]
+id = "left_stick"
+label = "Left Stick"
+type = "stick"
+source = "gamepad"
+axes = [
+    { role = "x", evdev = "abs_x", evdev_code = 0 },
+    { role = "y", evdev = "abs_y", evdev_code = 1 },
+]
+
+[[hardware.layout.analogs]]
+id = "right_stick"
+label = "Right Stick"
+type = "stick"
+source = "gamepad"
+axes = [
+    { role = "x", evdev = "abs_rx", evdev_code = 3 },
+    { role = "y", evdev = "abs_ry", evdev_code = 4 },
+]
+
+[[hardware.layout.analogs]]
+id = "left_trigger"
+label = "Left Trigger"
+type = "axis"
+source = "gamepad"
+axes = [
+    { role = "x", evdev = "abs_z", evdev_code = 2 },
+]
+
+[[hardware.layout.analogs]]
+id = "right_trigger"
+label = "Right Trigger"
+type = "axis"
+source = "gamepad"
+axes = [
+    { role = "x", evdev = "abs_rz", evdev_code = 5 },
+]

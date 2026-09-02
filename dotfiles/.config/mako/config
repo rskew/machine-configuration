@@ -1,1 +1,11 @@
 default-timeout=10000
+
+# Rumble the gamepad on agent state changes, so waiting for one does not mean
+# watching the screen. herdr shells out to notify-send, so app-name is generic
+# and the state lives in the summary as "<agent> <state>".
+# Finished: short and soft. Needs attention: longer and firmer.
+[app-name=notify-send summary~="finished$"]
+on-notify=exec /run/current-system/sw/bin/rumble 120 22000 0 &
+
+[app-name=notify-send summary~="(needs attention|needs input|waiting|blocked)"]
+on-notify=exec /run/current-system/sw/bin/rumble 400 45000 0 &

@@ -1,0 +1,29 @@
+name = "Mouse Move"
+input_type = "stick"
+description = "Move the mouse with the stick"
+
+[mouse_motion]
+enabled = true
+mode = "velocity"
+speed = 1000.0
+speed_x = 700.0
+speed_y = 700.0
+area_radius_x = 400.0
+area_radius_y = 400.0
+area_start_enabled = false
+area_start_x = 0
+area_start_y = 0
+deadzone = 0.049999999999999975
+sensitivity = 1.0
+response_curve = 2.0
+direction = "right"
+invert_x = false
+invert_y = false
+tick_ms = 8
+
+[gamepad_output]
+enabled = false
+deadzone = 0.0
+target = "same"
+sensitivity = 1.0
+response_curve = 1.0
