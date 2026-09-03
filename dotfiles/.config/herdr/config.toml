@@ -2,6 +2,11 @@ onboarding = false
 [ui]
 agent_panel_sort = "spaces"
 
+# A whole line is the finest step herdr can take, so this is the granularity
+# floor every other application is matched to (kitty's wheel_scroll_multiplier,
+# niri's window scroll-factor). Set explicitly because the default is 3.
+mouse_scroll_lines = 1
+
 # Desktop notifications instead of in-app toasts, so mako can match on them and
 # rumble the gamepad. Fires on herdr's own agent-state detection, which is
 # sooner and covers every agent, unlike the agent's own terminal notification.
@@ -31,7 +36,7 @@ delivery = "system"
 prefix = "ctrl+t"                     # zellij: Ctrl+t enters Tab mode
 
 # --- Tab mode (exact zellij Tab-mode keys after the prefix) ---
-new_tab      = ["prefix+n", "prefix+ctrl+n"]
+new_tab      = ["prefix+n", "prefix+ctrl+n", "f15"]
 close_tab    = ["prefix+x", "prefix+ctrl+x"]
 rename_tab   = ["prefix+r", "prefix+ctrl+r"]
 switch_tab   = ["prefix+1..9", "prefix+ctrl+1..9"]

@@ -38,11 +38,26 @@ superkey_name = "Push To Talk"
 action = "keyboard"
 target = "key_enter"
 
-# --- Circle: clear the text entered into a code agent. A keyboard action can
-# only emit one keycode, so ctrl+c is a four-event macro instead.
+# --- Circle: clear the entered text. ctrl+u rather than ctrl+c because it clears
+# without interrupting, and it means the same thing in all three places dictation
+# lands: herdr's own prompts, fish, and a code agent's input box.
 [devices."054c:09cc".mapping.btn_east]
 action = "macro"
-target = "ctrl_c"
+target = "ctrl_u"
+
+# --- Square: new tab. herdr prompts for the name, so the rest of the flow is
+# already on the pad: hold L2 to speak the name, Cross to accept, L2 again to
+# speak a command into the fresh shell, then Up to run fish's history search
+# over it.
+[devices."054c:09cc".mapping.btn_west]
+action = "keyboard"
+target = "key_f15"
+
+# --- Triangle: ctrl+d, to close a tab whose work is done. Only takes effect at
+# an empty prompt, so it cannot interrupt a running agent the way Circle does.
+[devices."054c:09cc".mapping.btn_north]
+action = "macro"
+target = "ctrl_d"
 
 # --- Arrow buttons: arrow keys ---
 [devices."054c:09cc".mapping.dpad]

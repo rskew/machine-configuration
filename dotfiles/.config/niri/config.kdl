@@ -53,6 +53,10 @@ input {
         // accel-profile "flat"
         // scroll-method "two-finger"
         // disabled-on-external-mouse
+
+        // Same cancellation as mouse/scroll-factor; kitty's
+        // touch_scroll_multiplier is divided by 3 to match.
+        scroll-factor 3.0
     }
 
     mouse {
@@ -61,6 +65,10 @@ input {
         // accel-speed 0.2
         // accel-profile "flat"
         // scroll-method "no-scroll"
+
+        // Cancels the 0.34 catch-all window rule below, so wheel devices keep
+        // their usual 3 lines per notch. See that rule for why it exists.
+        scroll-factor 3.0
     }
 
     trackpoint {
@@ -323,6 +331,25 @@ animations {
 // Window rules let you adjust behavior for individual windows.
 // Find more information on the wiki:
 // https://yalter.github.io/niri/Configuration:-Window-Rules
+
+// One scroll notch must move the same distance in every application, so that the
+// gamepad stick (and the mouse) feel identical wherever they point. herdr can only
+// scroll whole lines, so its 1 line/notch is the floor everyone else has to meet:
+// GTK and Firefox hardcode 3 lines/notch, and the only lever over them is this
+// per-window factor. It applies to every device, so mouse/ and touchpad/
+// scroll-factor 3.0 above cancel it back out for real pointers - which leaves the
+// gamepad free to set its own rate in keymasq's scroll_wheel.toml.
+// 0.34 rather than 1/3: niri truncates the scaled value120 to an integer.
+window-rule {
+    scroll-factor 0.34
+}
+
+// kitty is excluded: it is told 1 line/notch directly (wheel_scroll_multiplier),
+// which is also what it forwards to a mouse-grabbing app like herdr.
+window-rule {
+    match app-id=r#"^kitty$"#
+    scroll-factor 1.0
+}
 
 // Work around WezTerm's initial configure bug
 // by setting an empty default-column-width.

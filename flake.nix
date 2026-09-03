@@ -337,15 +337,18 @@
         services.keymasq.enable = true;
         services.keymasq.installPackage = true;
 
-        # Circle sends ctrl+c, and a keymasq keyboard action emits only one keycode,
-        # so it has to be a macro. Macros live in /var/lib/keymasq as opaque blobs,
-        # so recreate it here to keep the binding reproducible. User service because
+        # A keymasq keyboard action emits only one keycode, so every chord on the pad
+        # has to be a macro. Macros live in /var/lib/keymasq as opaque blobs, so
+        # recreate them here to keep the bindings reproducible. User service because
         # the macro store is reached over the per-user socket; retries because a user
         # unit cannot order itself against the system-level keymasqd.
         systemd.user.services.keymasq-macros = {
           description = "Recreate declarative keymasq macros";
           after = [ "keymasq-session.service" ];
-          wantedBy = [ "default.target" ];
+          # nixos-rebuild does not start user units, so also hang this off the
+          # session service: restarting that after a mapping change recreates the
+          # macros too, rather than leaving them a login behind.
+          wantedBy = [ "default.target" "keymasq-session.service" ];
           path = [ pkgs.coreutils ];
           serviceConfig = {
             Type = "oneshot";
@@ -353,19 +356,26 @@
           };
           script = let
             keymasqBin = "${keymasq.packages.x86_64-linux.default}/bin/keymasq";
-            # ctrl down, c down, c up, ctrl up. device_type must be "keyboard" or
-            # playback routes to the wrong uinput device.
-            ctrlC = builtins.toJSON {
+            # ctrl down, key down, key up, ctrl up. device_type must be "keyboard"
+            # or playback routes to the wrong uinput device.
+            withCtrl = code: builtins.toJSON {
               events = [
-                { t_us = 0;     type = 1; code = 29; value = 1; device_type = "keyboard"; }
-                { t_us = 8000;  type = 1; code = 46; value = 1; device_type = "keyboard"; }
-                { t_us = 24000; type = 1; code = 46; value = 0; device_type = "keyboard"; }
-                { t_us = 32000; type = 1; code = 29; value = 0; device_type = "keyboard"; }
+                { t_us = 0;     type = 1; code = 29;   value = 1; device_type = "keyboard"; }
+                { t_us = 8000;  type = 1; code = code; value = 1; device_type = "keyboard"; }
+                { t_us = 24000; type = 1; code = code; value = 0; device_type = "keyboard"; }
+                { t_us = 32000; type = 1; code = 29;   value = 0; device_type = "keyboard"; }
               ];
             };
+            macros = { ctrl_d = withCtrl 32; ctrl_u = withCtrl 22; };
+            # --force overwrites an existing macro but errors with "not found" on
+            # a new one, so neither flag alone is idempotent - fall back to it.
+            create = name: json: let
+              run = flags:
+                "${keymasqBin} macros create ${flags}${name} ${pkgs.lib.escapeShellArg json}";
+            in "( ${run ""} || ${run "-f "} )";
           in ''
             for _ in $(seq 30); do
-              if ${keymasqBin} macros create -f ctrl_c ${pkgs.lib.escapeShellArg ctrlC}; then
+              if ${pkgs.lib.concatStringsSep " && " (pkgs.lib.mapAttrsToList create macros)}; then
                 exit 0
               fi
               sleep 2
@@ -997,6 +1007,17 @@
           system = "x86_64-linux";
           modules = [
 
+            # SSH from corp laptop for reverse tunnel, don't commit this
+            ({...}: {
+              services.openssh = {
+                enable = true;
+                settings = {
+                  PasswordAuthentication = true;
+                  AllowUsers = [ "rowan@192.168.0.55" ];
+                };
+              };
+            })
+
             terminalEnv
             windowManager
             graphicalPkgs
@@ -1004,6 +1025,16 @@
             audioSystemConfig
             musicPkgs
             (secondTailnetViaContainer { networkInterface = "wlp0s20f3"; })
+
+            ({pkgs,...}: {
+              environment.systemPackages = [ pkgs.android-tools pkgs.heimdall ];
+              users.users.rowan.extraGroups = [ "adbusers" ];
+              services.udev.extraRules = ''
+                SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666", GROUP="adbusers"
+                SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", ATTR{idProduct}=="685d", MODE="0666", GROUP="adbusers"
+                SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", ATTR{idProduct}=="6860", MODE="0666", GROUP="adbusers"
+              '';
+            })
 
             agenix.nixosModules.age
             ({...}: {

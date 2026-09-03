@@ -44,6 +44,9 @@ case "${1:-}" in
 
     text=$(whisper-cli -m "$MODEL" -f "$WAV" -nt -np 2>/dev/null || true)
     text=$(printf '%s' "$text" | tr '\n' ' ' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    # Whisper writes prose - leading capital, closing full stop - but this is
+    # dictated into shells, prompts and tab names where neither is wanted.
+    text=$(printf '%s' "$text" | sed 's/[.[:space:]]*$//; s/^\(.\)/\l\1/')
     [ -n "$text" ] || exit 0
 
     # Fed silence, whisper does not return nothing - it invents a stock phrase

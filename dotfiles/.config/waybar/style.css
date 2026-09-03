@@ -10,7 +10,7 @@ window#waybar {
 }
 
 #pulseaudio {
-    background: #a0f;
+    background: #70b;
     border-top: solid 1px #ddd;
 }
 #pulseaudio.source-muted {
