@@ -300,6 +300,14 @@
           url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
           sha256 = "00nhqqvgwyl9zgyy7vk9i3n017q2wlncp5p7ymsk0cpkdp47jdx0";
         };
+        # Silero, 0.8MB. Used twice per utterance: once by us to measure how much
+        # of the clip is actually speech, and again inside whisper to drop the
+        # silence. Both matter - see the sizing comment in push-to-talk.sh.
+        vadModel = pkgs.fetchurl {
+          url = "https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin";
+          hash = "sha256-KZQNmNQrkfvQXOSJ8+z3xy8KQvAn5IdZGaKPtMBOos8=";
+        };
+        whisperPort = 8378;
         pushToTalk = pkgs.writeShellApplication {
           name = "push-to-talk";
           runtimeInputs = [
@@ -307,10 +315,13 @@
             pkgs.pipewire        # pw-record
             pkgs.coreutils
             pkgs.gnused
+            pkgs.curl
             rumble
             keymasq.packages.x86_64-linux.default   # keymasq type
           ];
-          text = builtins.replaceStrings [ "@model@" ] [ "${whisperModel}" ]
+          text = builtins.replaceStrings
+            [ "@vadmodel@" "@port@" ]
+            [ "${vadModel}" (toString whisperPort) ]
             (builtins.readFile ./scripts/push-to-talk.sh);
         };
       in {
@@ -336,6 +347,25 @@
         environment.systemPackages = [ rumble pushToTalk ];
         services.keymasq.enable = true;
         services.keymasq.installPackage = true;
+
+        # Keeps the model resident. Spawning whisper-cli per utterance cost ~200ms
+        # in process startup and model load before any audio was looked at; on a
+        # short clip that was a third of the total. 262MB resident, so on 31GB
+        # there is no reason to load it on demand. Localhost only.
+        systemd.user.services.whisper-server = {
+          description = "Warm whisper.cpp server for push-to-talk dictation";
+          wantedBy = [ "default.target" ];
+          serviceConfig = {
+            ExecStart = pkgs.lib.concatStringsSep " " [
+              "${pkgs.whisper-cpp}/bin/whisper-server"
+              "-m ${whisperModel}"
+              "--vad -vm ${vadModel}"
+              "--host 127.0.0.1 --port ${toString whisperPort}"
+            ];
+            Restart = "always";
+            RestartSec = 2;
+          };
+        };
 
         # A keymasq keyboard action emits only one keycode, so every chord on the pad
         # has to be a macro. Macros live in /var/lib/keymasq as opaque blobs, so
