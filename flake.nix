@@ -1621,6 +1621,7 @@
               services.libinput.enable = false;
 
               nix.extraOptions = "experimental-features = nix-command flakes";
+              nix.settings.trusted-users = [ "rowan" ];
               system.stateVersion = "25.05"; # Did you read the comment?
             })
           ];
