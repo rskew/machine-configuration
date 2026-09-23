@@ -87,11 +87,11 @@
         "spago2nixSource": "spago2nixSource"
       },
       "locked": {
-        "lastModified": 1787109267,
-        "narHash": "sha256-o1mTb00I4HAiMj+JtTmtA0+KCgQGa3eYx2SXSNS7VI4=",
+        "lastModified": 1788750279,
+        "narHash": "sha256-Y9EDL8ftfQq//YK7Wt2VDcBL7t37rBkB1PQr/e4jNfg=",
         "ref": "refs/heads/master",
-        "rev": "d94202f0c984c6e554dc9cbcab8ebf4760139ed5",
-        "revCount": 697,
+        "rev": "18f769e83866412ecab227127c192d88f2c900c6",
+        "revCount": 985,
         "type": "git",
         "url": "ssh://git@github.com/rskew/greengrocer-admin-app.git"
       },
@@ -397,11 +397,11 @@
     "touch-synth": {
       "flake": false,
       "locked": {
-        "lastModified": 1786286418,
-        "narHash": "sha256-iMerHiWF4M2OEa/aZvcFJsgx4gFEF7wW124Y3cMpiJQ=",
+        "lastModified": 1789355243,
+        "narHash": "sha256-SaI6MpbIYCy3xJIX5d6s7YSVRCV5D9m8atQbn836n7c=",
         "owner": "rskew",
         "repo": "touch-synth",
-        "rev": "a45849f908429f23815cbe2ec27948d4d36d3f25",
+        "rev": "d6021d505b434021a3fb8efc3243070ee702729b",
         "type": "github"
       },
       "original": {

@@ -529,7 +529,7 @@
             })
             ({config, ...}: {
               systemd.services.shop-app.serviceConfig.EnvironmentFile =
-                config.age.secrets.shop-app-eftpos.path;
+                config.age.secrets.shop-app-env.path;
             })
 
             ({config, ...}: {
@@ -568,6 +568,16 @@
                     proxyPass = "http://127.0.0.1:3006";
                     extraConfig = "auth_basic off;";
                   };
+                  locations."/api/handset/" = {
+                    proxyPass = "http://127.0.0.1:3006";
+                    extraConfig = ''
+                      auth_basic off;
+                      # MMS parts arrive as a raw body on POST /api/handset/media/<sha>;
+                      # nginx's default 1m would 413 the bigger photos.
+                      client_max_body_size 20m;
+                      proxy_buffering off; # For SSE
+                    '';
+                  };
                   serverAliases = ["www.admin.castlemaineharvest.com.au"];
                   basicAuthFile = config.age.secrets.shop-app-basic-auth.path;
                 };
@@ -588,6 +598,15 @@
                     '';
                   };
                   serverAliases = ["www.farm.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farm-basic-auth.path;
+                };
+                "farmapp.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:9044";
+                  };
+                  serverAliases = ["www.farmapp.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farm-basic-auth.path;
                 };
                 "rowanskewes.com" = {
@@ -755,7 +774,7 @@
 
             agenix.nixosModules.age
             ({...}: {
-              age.secrets.shop-app-eftpos.file = ./secrets/shop-app-eftpos.age;
+              age.secrets.shop-app-env.file = ./secrets/shop-app-env.age;
               age.secrets.wg-key.file = ./secrets/vps1-wg-key.age;
               age.secrets.shop-app-basic-auth.file = ./secrets/shop-app-basic-auth.age;
               age.secrets.shop-app-basic-auth.mode = "770";
