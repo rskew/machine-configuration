@@ -83,7 +83,6 @@
         in {
           environment.systemPackages = with pkgs; [
             git
-            lunarvim
             ripgrep # for project-wide search in emacs
             fzf # for reverse history search in fish shell
             wget
@@ -222,10 +221,9 @@
       audioSystemConfig = { pkgs, ...}: {
         imports = [ musnix.nixosModules.musnix ];
         musnix.enable = true;
-        musnix.soundcardPciId = "00:1f.3";
+        musnix.kernel.realtime = true;
         musnix.rtcqs.enable = true;
-        boot.kernelPackages = pkgs.linuxPackages-rt_latest;
-        security.rtkit.enable = true;
+        musnix.soundcardPciId = "00:1f.3";
         services.pipewire = {
           enable = true;
           pulse.enable = true;
@@ -1382,8 +1380,7 @@
               '';
               nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ];
               nix.settings.trusted-users = [ "rowan" ];
-              nix.settings.trusted-substituters = [ "ssh-ng://rowan@tsuruhashi" "tsuruhashi" ];
-              #nix.settings.require-sigs = false;
+              nix.settings.trusted-substituters = [ "ssh-ng://rowan@tsuruhashi" ];
               system.stateVersion = "21.11";
             })
           ];
