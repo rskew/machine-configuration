@@ -52,6 +52,12 @@
         }
     },
     "battery": {
+        // Pin to the laptop's own battery/adapter. Left unpinned, waybar scans all
+        // of /sys/class/power_supply and races the gamepad's ps-controller-battery-*
+        // node: it vanishes on disconnect between the scan and inotify_add_watch, and
+        // the resulting throw happens off the main thread, so waybar terminates.
+        "bat": "BAT0",
+        "adapter": "AC",
         "states": {
             // "good": 95,
             "warning": 30,

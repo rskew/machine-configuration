@@ -1,6 +1,6 @@
 name = "Scroll Wheel"
 input_type = "stick"
-description = "Scroll up/down with the stick, ramping across four speed bands"
+description = "Scroll up/down with the stick: slow everywhere, fast only at the stop"
 
 # Emits REL_WHEEL_HI_RES rather than REL_WHEEL, so libinput reports a fine-grained
 # wheel rather than one whole notch per event. 120 hi-res units = 1 notch, and one
@@ -8,19 +8,15 @@ description = "Scroll up/down with the stick, ramping across four speed bands"
 # mouse_scroll_lines and niri's window scroll-factor), so these numbers are the
 # only thing setting the stick's speed and they mean the same in every window.
 #
-# Four bands so the ramp uses the whole stick rather than topping out early, with
-# a distinct jump reserved for the last few percent of travel. niri multiplies
-# wheel value120 by 3, and the pulse rate is fixed at ~33/sec, so lines per second
-# is per-pulse x 0.825:
-#     0.15-0.61     9/pulse    ~7 lines/sec   reading
-#     0.63-0.88    22/pulse   ~18 lines/sec   skimming
-#     0.90-0.96    47/pulse   ~39 lines/sec   moving
-#     0.98-1.00   126/pulse  ~104 lines/sec   pinned against the stop
-# Boundaries come from measuring where the stick was actually held, not from
-# dividing the range evenly: this pad pins at raw 255 before its mechanical stop,
-# so the top band has to trigger at the pin or it fires early. Release ranges
-# overlap the trigger ranges so bands hand over without chatter. If the view
-# creeps with the stick at rest, raise the 0.15/0.10 floors.
+# Deliberately not a ramp: the whole usable travel is one slow reading speed, and
+# fast only exists pinned against the stop. niri multiplies wheel value120 by 3,
+# and the pulse rate is fixed at ~33/sec, so lines per second is per-pulse x 0.825:
+#     0.15-0.98    10/pulse    ~8 lines/sec   reading
+#     0.985-1.00  126/pulse  ~104 lines/sec   pinned against the stop
+# This pad pins at raw 255 before its mechanical stop, so the fast band has to
+# trigger at the pin (0.985) or it fires early. Release ranges overlap the trigger
+# ranges so the handover doesn't chatter. If the view creeps with the stick at
+# rest, raise the 0.15/0.10 floors.
 
 [mouse_motion]
 enabled = false
@@ -31,42 +27,14 @@ enabled = false
 # --- Up: negative y, wheel positive ---
 [[thresholds]]
 axis = "y"
-trigger_min = -0.61
+trigger_min = -0.98
 trigger_max = -0.15
-release_min = -0.63
+release_min = -0.985
 release_max = -0.1
 
 [[thresholds.actions]]
 action = "mouse"
-target = "rel_wheel_hi_res:9"
-rapidfire_enabled = true
-rapidfire_hold_ms = 5
-rapidfire_wait_ms = 25
-
-[[thresholds]]
-axis = "y"
-trigger_min = -0.88
-trigger_max = -0.63
-release_min = -0.9
-release_max = -0.61
-
-[[thresholds.actions]]
-action = "mouse"
-target = "rel_wheel_hi_res:22"
-rapidfire_enabled = true
-rapidfire_hold_ms = 5
-rapidfire_wait_ms = 25
-
-[[thresholds]]
-axis = "y"
-trigger_min = -0.965
-trigger_max = -0.9
-release_min = -0.985
-release_max = -0.88
-
-[[thresholds.actions]]
-action = "mouse"
-target = "rel_wheel_hi_res:47"
+target = "rel_wheel_hi_res:10"
 rapidfire_enabled = true
 rapidfire_hold_ms = 5
 rapidfire_wait_ms = 25
@@ -76,7 +44,7 @@ axis = "y"
 trigger_min = -1.0
 trigger_max = -0.985
 release_min = -1.0
-release_max = -0.965
+release_max = -0.975
 
 [[thresholds.actions]]
 action = "mouse"
@@ -89,41 +57,13 @@ rapidfire_wait_ms = 25
 [[thresholds]]
 axis = "y"
 trigger_min = 0.15
-trigger_max = 0.61
+trigger_max = 0.98
 release_min = 0.1
-release_max = 0.63
-
-[[thresholds.actions]]
-action = "mouse"
-target = "rel_wheel_hi_res:-9"
-rapidfire_enabled = true
-rapidfire_hold_ms = 5
-rapidfire_wait_ms = 25
-
-[[thresholds]]
-axis = "y"
-trigger_min = 0.63
-trigger_max = 0.88
-release_min = 0.61
-release_max = 0.9
-
-[[thresholds.actions]]
-action = "mouse"
-target = "rel_wheel_hi_res:-22"
-rapidfire_enabled = true
-rapidfire_hold_ms = 5
-rapidfire_wait_ms = 25
-
-[[thresholds]]
-axis = "y"
-trigger_min = 0.9
-trigger_max = 0.965
-release_min = 0.88
 release_max = 0.985
 
 [[thresholds.actions]]
 action = "mouse"
-target = "rel_wheel_hi_res:-47"
+target = "rel_wheel_hi_res:-10"
 rapidfire_enabled = true
 rapidfire_hold_ms = 5
 rapidfire_wait_ms = 25
@@ -132,7 +72,7 @@ rapidfire_wait_ms = 25
 axis = "y"
 trigger_min = 0.985
 trigger_max = 1.0
-release_min = 0.965
+release_min = 0.975
 release_max = 1.0
 
 [[thresholds.actions]]
@@ -152,7 +92,7 @@ release_max = -0.45
 
 [[thresholds.actions]]
 action = "mouse"
-target = "rel_hwheel_hi_res:-22"
+target = "rel_hwheel_hi_res:-12"
 rapidfire_enabled = true
 rapidfire_hold_ms = 5
 rapidfire_wait_ms = 25
@@ -166,7 +106,7 @@ release_max = 1.0
 
 [[thresholds.actions]]
 action = "mouse"
-target = "rel_hwheel_hi_res:22"
+target = "rel_hwheel_hi_res:12"
 rapidfire_enabled = true
 rapidfire_hold_ms = 5
 rapidfire_wait_ms = 25

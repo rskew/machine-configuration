@@ -1,6 +1,10 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # sherpa-onnx (the parakeet runtime) landed after the nixpkgs pin above, and
+    # its CUDA build needs an onnxruntime from the same set. Pinned rather than
+    # tracking a branch: nothing here should move without being re-measured.
+    nixpkgs-asr.url = "github:nixos/nixpkgs/e73de5be04e0eff4190a1432b946d469c794e7b4";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
     keymasq.url = "github:nyrda/keymasq";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
@@ -15,6 +19,7 @@
   outputs =
     { self,
       nixpkgs,
+      nixpkgs-asr,
       kmonad,
       keymasq,
       harvest-front-page,
@@ -36,6 +41,20 @@
       pubkeyToDeployToVps = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINyNsCdnk/Q9H9OWakN0llCHbgb4RTB0f2na54XEy6FW rowan@rowan-p14"; # id_to_deploy_to_servers1.pub
       shedPowerMonitorDeviceSymlink = "vedirect-usb";
       shedPowerMonitor = import ./applications/shed-power-monitor { inherit pkgs; device_path = "/dev/${shedPowerMonitorDeviceSymlink}"; };
+
+      # The one switch for GPU dictation on the p14. It turns on the nvidia
+      # driver, builds a CUDA sherpa-onnx, runs parakeet warm and points
+      # push-to-talk at it instead of whisper. Off means none of that is fetched,
+      # built or evaluated, and the machine stays free-software-only.
+      #
+      # Parakeet 0.6B is the more accurate engine - it hears "sync prod UAT"
+      # where whisper base.en produces "SyncProGUAT", and it punctuates - but it
+      # decodes at 3x real time on this CPU. Whisper's cost is flat (~1.9s, set
+      # by its fixed 30s window) while parakeet's is proportional to the clip, so
+      # the T500 is the only thing that can make the trade pay. That is also the
+      # only job the card currently has: on whisper base.en it measured parity
+      # with the CPU, which is why the driver was left off in the first place.
+      parakeetOnGpu = false;
 
       terminalEnv = { pkgs, ...}:
         let
@@ -308,6 +327,63 @@
           hash = "sha256-KZQNmNQrkfvQXOSJ8+z3xy8KQvAn5IdZGaKPtMBOos8=";
         };
         whisperPort = 8378;
+
+        # Everything from here to parakeetServer is inert while parakeetOnGpu is
+        # false: nix never forces a let binding nothing refers to.
+        #
+        # The whole parakeet stack comes out of one newer package set rather
+        # than moving the system's pin forward, because sherpa-onnx has to be
+        # built against an onnxruntime carrying the CUDA execution provider and
+        # the two have to agree. allowUnfree is scoped to this set, so the CUDA
+        # redistributables never widen what the host itself will accept.
+        #
+        # Expect a long first build: nixpkgs' cuda-enabled onnxruntime is not on
+        # cache.nixos.org. `nix.settings.substituters` gaining
+        # https://cuda-maintainers.cachix.org is the difference between minutes
+        # and most of a day.
+        asrPkgs = import nixpkgs-asr {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+        };
+        sherpaOnnx = asrPkgs.sherpa-onnx.override {
+          cudaSupport = true;
+          onnxruntime = asrPkgs.onnxruntime.override { cudaSupport = true; };
+        };
+        # The int8 unified 0.6B, in its non-streaming mode: same weights the CPU
+        # measurement used, in the shape push-to-talk actually needs - one whole
+        # clip in on release, one transcript out. sha256 is the release asset
+        # digest github publishes, so pinning it cost no download.
+        parakeetArchive = asrPkgs.fetchurl {
+          url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-non-streaming.tar.bz2";
+          sha256 = "99f63605b3a85a54c250c0869670a687b7d6598a47bf2421515e1f839a76e150";
+        };
+        parakeetModel = asrPkgs.runCommand "parakeet-unified-en-0.6b" { } ''
+          mkdir -p $out
+          tar xjf ${parakeetArchive} --strip-components=1 -C $out
+        '';
+        parakeetPort = 8379;
+        parakeetServer = asrPkgs.writeShellApplication {
+          name = "parakeet-server";
+          runtimeInputs = [ (asrPkgs.python3.withPackages (ps: [ ps.numpy ])) ];
+          # The python bindings are a separate output holding the sherpa_onnx
+          # package. LD_LIBRARY_PATH is belt and braces: the extension module in
+          # that output is not guaranteed to carry an rpath back to the shared
+          # libraries in $out, and this has not been run yet. Drop it if it turns
+          # out to be unnecessary.
+          text = ''
+            export PYTHONPATH="${sherpaOnnx.python}''${PYTHONPATH:+:$PYTHONPATH}"
+            export LD_LIBRARY_PATH="${sherpaOnnx}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            exec python3 ${./scripts/parakeet-server.py} \
+              --model ${parakeetModel} \
+              --port ${toString parakeetPort} \
+              --provider cuda "$@"
+          '';
+        };
+
+        # whisper-server keeps running either way: it is 262MB and it is the
+        # reference every eval run is scored against.
+        asrPort = if parakeetOnGpu then parakeetPort else whisperPort;
+
         pushToTalk = pkgs.writeShellApplication {
           name = "push-to-talk";
           runtimeInputs = [
@@ -320,8 +396,8 @@
             keymasq.packages.x86_64-linux.default   # keymasq type
           ];
           text = builtins.replaceStrings
-            [ "@vadmodel@" "@port@" ]
-            [ "${vadModel}" (toString whisperPort) ]
+            [ "@port@" ]
+            [ (toString asrPort) ]
             (builtins.readFile ./scripts/push-to-talk.sh);
         };
       in {
@@ -344,7 +420,8 @@
             SYMLINK+="${deviceSubPath}", TAG+="uaccess", \
             RUN+="${pkgs.acl}/bin/setfacl -m u:rowan:rw /dev/input/%k"
         '';
-        environment.systemPackages = [ rumble pushToTalk ];
+        environment.systemPackages = [ rumble pushToTalk ]
+          ++ pkgs.lib.optional parakeetOnGpu parakeetServer;
         services.keymasq.enable = true;
         services.keymasq.installPackage = true;
 
@@ -362,6 +439,20 @@
               "--vad -vm ${vadModel}"
               "--host 127.0.0.1 --port ${toString whisperPort}"
             ];
+            Restart = "always";
+            RestartSec = 2;
+          };
+        };
+
+        # Same warm-server reasoning as whisper, more so: the parakeet weights
+        # are 500MB and a CUDA context takes about a second to stand up, neither
+        # of which anyone should pay per utterance. It holds that context open,
+        # which keeps the T500 awake - the reason this is not on by default.
+        systemd.user.services.parakeet-server = pkgs.lib.mkIf parakeetOnGpu {
+          description = "Warm sherpa-onnx parakeet server for push-to-talk dictation";
+          wantedBy = [ "default.target" ];
+          serviceConfig = {
+            ExecStart = "${parakeetServer}/bin/parakeet-server";
             Restart = "always";
             RestartSec = 2;
           };
@@ -1043,7 +1134,7 @@
                 enable = true;
                 settings = {
                   PasswordAuthentication = true;
-                  AllowUsers = [ "rowan@192.168.0.55" ];
+                  AllowUsers = [ "rowan@192.168.0.251" ];
                 };
               };
             })
@@ -1198,18 +1289,33 @@
               virtualisation.docker.enable = true;
               virtualisation.libvirtd.enable = true;
 
-              # These lines enable gpu
-              #services.xserver.videoDrivers = [ "nvidia" ];
-              #hardware.nvidia.open = true;
-              #hardware.nvidia.prime.intelBusId = "PCI:0:2:0";
-              #hardware.nvidia.prime.nvidiaBusId = "PCI:1:0:0";
-              #hardware.nvidia.prime.offload.enable = true;
-              #hardware.nvidia.modesetting.enable = true;
-              #hardware.graphics = {
-              #  enable = true;
-              #  enable32Bit = true;
-              #};
-              #hardware.nvidia-container-toolkit.enable = true;
+              # The T500, off unless parakeet is the dictation engine - see
+              # parakeetOnGpu at the top of this file for why that is the only
+              # job it has. `open` is the open kernel modules, not an open
+              # driver: userspace and CUDA stay proprietary either way, so the
+              # unfree predicate below is what actually keeps the machine clean
+              # while this is off. It is scoped to the three driver packages;
+              # the CUDA redistributables come from the separate asrPkgs set.
+              #
+              # PRIME offload, so the displays stay on the Iris Xe and the T500
+              # only wakes for CUDA - though the warm parakeet server holds a
+              # context open, so in practice it stays awake while enabled.
+              nixpkgs.config.allowUnfreePredicate = pkg:
+                parakeetOnGpu && builtins.elem (pkgs.lib.getName pkg) [
+                  "nvidia-x11" "nvidia-settings" "nvidia-persistenced"
+                ];
+              services.xserver.videoDrivers = pkgs.lib.mkIf parakeetOnGpu [ "nvidia" ];
+              hardware.graphics.enable = pkgs.lib.mkIf parakeetOnGpu true;
+              hardware.nvidia = pkgs.lib.mkIf parakeetOnGpu {
+                open = true;
+                modesetting.enable = true;
+                prime = {
+                  intelBusId = "PCI:0:2:0";
+                  nvidiaBusId = "PCI:1:0:0";
+                  offload.enable = true;
+                  offload.enableOffloadCmd = true;
+                };
+              };
 
               users.users.rowan = {
                 isNormalUser = true;

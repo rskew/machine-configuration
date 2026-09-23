@@ -10,7 +10,8 @@
 STATE="${XDG_RUNTIME_DIR:-/tmp}/push-to-talk"
 WAV="$STATE/clip.wav"
 PIDFILE="$STATE/record.pid"
-VAD_MODEL="@vadmodel@"
+# Whichever ASR server the flake enabled - whisper.cpp, or parakeet on the GPU.
+# Both answer the same /inference contract, so nothing below cares which.
 PORT="@port@"
 # Every accepted clip is kept with the transcript it produced. Chunked streaming
 # has to be judged against whole-clip output, so the pair is the reference.
@@ -47,37 +48,17 @@ case "${1:-}" in
     bytes=$(wc -c < "$WAV")
     [ "$bytes" -gt 16000 ] || exit 0
 
-    # whisper's encoder always runs over a padded 30-second window, so a 3-second
-    # clip costs as much as a 20-second one - about 1.9s either way. Sizing the
-    # audio context to the audio instead cuts that to well under half a second,
-    # with output identical to the full context.
+    # Full audio context deliberately. Sizing the encoder window to the clip is
+    # three to five times faster, and measurably wrong: scored against the eval
+    # corpus with scripts/eval-transcribe.py it loses whole leading words and
+    # garbles proper nouns ("SyncProd UAT" -> "sync prog UAT"), and it does not
+    # recover with a larger window - 17% word error even at ctx 1024. Speed here
+    # has to come from the server config, not from showing whisper less audio.
     #
-    # Size it to the speech rather than the clip: the trigger is always held a
-    # beat before and after talking, and the server drops that silence anyway, so
-    # charging the encoder for it is waste. The VAD pass costs about 8ms. Segment
-    # bounds are printed in centiseconds, so 50 context units per second of speech
-    # is speech_cs / 2. The fixed margin matters - too tight a context makes
-    # whisper repeat itself instead of stopping.
-    speech_cs=0
-    while read -r seg_start seg_end; do
-      speech_cs=$(( speech_cs + seg_end - seg_start ))
-    done < <(whisper-vad-speech-segments -vm "$VAD_MODEL" -f "$WAV" 2>/dev/null |
-      sed -n 's/^Speech segment [0-9]*: start = \([0-9]*\)\.[0-9]*, end = \([0-9]*\)\.[0-9]*$/\1 \2/p')
-
-    # A VAD that returned nothing is a failed pass, not proven silence - fall back
-    # to the clip length and let the hallucination filter below catch real silence.
-    if [ "$speech_cs" -gt 0 ]; then
-      ctx=$(( speech_cs / 2 + 150 ))
-    else
-      ctx=$(( bytes / 640 + 150 ))
-    fi
-    ctx=$(( (ctx + 63) / 64 * 64 ))
-    [ "$ctx" -lt 1500 ] || ctx=0   # 0 is whisper's own default, the full window
-
     # No one-shot fallback on purpose: a silent slow path would hide the server
     # being down. curl -sS puts the failure in the journal and nothing is typed.
     text=$(curl -sS --max-time 30 "http://127.0.0.1:$PORT/inference" \
-      -F file=@"$WAV" -F response_format=text -F audio_ctx="$ctx" || true)
+      -F file=@"$WAV" -F response_format=text || true)
     text=$(printf '%s' "$text" | tr '\n' ' ' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
     # Whisper writes prose - leading capital, closing full stop - but this is
     # dictated into shells, prompts and tab names where neither is wanted.
@@ -103,7 +84,10 @@ case "${1:-}" in
     printf '%s\n' "$EVAL_DIR"/*.wav | sort -r | tail -n "+$(( EVAL_KEEP + 1 ))" |
       while read -r old; do rm -f "$old" "${old%.wav}.txt"; done
 
-    printf '%s' "$text" | keymasq type
+    # Trailing space so consecutive dictations do not run together. Cheaper than
+    # tracking whether the target already has text, and a trailing space is
+    # harmless everywhere this lands - shells, agent prompts, herdr name fields.
+    printf '%s ' "$text" | keymasq type
     ;;
 
   *)
