@@ -29,11 +29,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1784464103,
-        "narHash": "sha256-OwlQ+WWaPCmM+3rdd7GW0jwmX3Q6sKlZsVrJABdF2hM=",
+        "lastModified": 1790159224,
+        "narHash": "sha256-i1N78H0iq/Ax8tUlvWAA9uL/3u9egD1MBfPP4clORv4=",
         "owner": "rskew",
         "repo": "autofarm",
-        "rev": "dcedec83ce65109b7d447bd7454b628a0f180fbd",
+        "rev": "cc1149a9cb0392f01dcbc3238f8bb93f66b260f2",
         "type": "github"
       },
       "original": {
@@ -334,11 +334,11 @@
     },
     "nixpkgs_6": {
       "locked": {
-        "lastModified": 1771008912,
-        "narHash": "sha256-gf2AmWVTs8lEq7z/3ZAsgnZDhWIckkb+ZnAo5RzSxJg=",
+        "lastModified": 1790046670,
+        "narHash": "sha256-MYiI+CzL0tuWgRPjGsKCDHqYs2T3OzMlMQWOYWG0qso=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "a82ccc39b39b621151d6732718e3e250109076fa",
+        "rev": "6774f7bc253789b113a4f39285dc0fa100abeacc",
         "type": "github"
       },
       "original": {
@@ -359,8 +359,8 @@
         "meetthecandidatesmtalexander": "meetthecandidatesmtalexander",
         "musnix": "musnix",
         "nixpkgs": "nixpkgs_6",
-        "touch-synth": "touch-synth",
-        "nixpkgs-asr": "nixpkgs-asr"
+        "nixpkgs-asr": "nixpkgs-asr",
+        "touch-synth": "touch-synth"
       }
     },
     "spago2nixSource": {

@@ -1596,7 +1596,7 @@
               };
 
               environment.systemPackages = with pkgs; [
-                git vim-full fzf
+                git vim-full fzf btop
                 unixtools.netstat
               ];
 
@@ -1612,7 +1612,7 @@
               };
               programs.fish.enable = true;
 
-              services.journald.extraConfig = "SystemMaxUse=200M";
+              services.journald.settings.Journal = { SystemMaxUse = "200M"; };
 
               # Slim it down
               services.speechd.enable = false;
