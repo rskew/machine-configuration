@@ -146,80 +146,6 @@
         ];
       };
 
-      # Lightweight passive capture for a searchable devlog:
-      # - asciinema auto-records each interactive shell (wired up in fish config)
-      #   to ~/asciinema-sessions/<utc-timestamp>.cast (greppable JSON, scrubbable replay)
-      # - activitywatch runs as user services, storing data under ~/activitywatch
-      #   (XDG_DATA_HOME override), UI at http://localhost:5600
-      # Note: upstream aw-watcher-window has no Wayland support, so on niri we run
-      # our own aw-watcher-niri (below) that reads `niri msg event-stream` for
-      # focused-window + active-workspace tracking. The AFK watcher works as-is.
-      # For per-page browser tracking, install the aw-watcher-web extension manually:
-      # - Firefox: https://addons.mozilla.org/en-US/firefox/addon/aw-watcher-web/
-      # - Chromium: https://chrome.google.com/webstore/detail/activitywatch-web-watcher/aw-watcher-web
-      # The extension talks to the local aw-server on http://localhost:5600.
-      devlogCapture = { pkgs, ...}:
-        let
-          aw-watcher-niri = pkgs.writers.writePython3Bin "aw-watcher-niri" { } (builtins.readFile ./scripts/aw-watcher-niri.py);
-          # Upstream asciinema 2.4.0 hardcodes the recorded PTY's pixel size to
-          # 0, which breaks the kitty graphics protocol / sixel (`kitten icat`
-          # aborts: "Terminal does not support reporting screen sizes in
-          # pixels"). Because config.fish `exec`s every interactive shell inside
-          # asciinema, that breaks inline images/plots everywhere. This patch
-          # forwards the real terminal's pixel dimensions into the recorded PTY.
-          asciinema = pkgs.asciinema.overrideAttrs (old: {
-            patches = (old.patches or []) ++ [ ./patches/asciinema-forward-pixel-size.patch ];
-          });
-          # nixpkgs wraps every python app with a `--prefix PATH` that prepends
-          # the app's own python3 onto PATH. Because our fish config `exec`s a
-          # recording *shell* inside asciinema (config.fish), that bundled
-          # python3 (stdlib only, no pandas) leaks onto the recorded shell's PATH
-          # ahead of the system pythonEnv. The underlying .asciinema-wrapped
-          # script finds its interpreter (absolute-path shebang) and deps
-          # (hardcoded site.addsitedir) without touching PATH at all, so exec it
-          # directly to keep the recorded shell's PATH clean. The `.<name>-wrapped`
-          # filename is makeWrapper's stable convention.
-          asciinema-unpolluted = pkgs.writeShellScriptBin "asciinema" ''
-            exec ${asciinema}/bin/.asciinema-wrapped "$@"
-          '';
-        in {
-        environment.systemPackages = [
-          asciinema-unpolluted
-          pkgs.activitywatch
-        ];
-        systemd.user.services.aw-server = {
-          description = "ActivityWatch server";
-          wantedBy = [ "default.target" ];
-          environment.XDG_DATA_HOME = "%h/activitywatch";
-          serviceConfig = {
-            ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/activitywatch";
-            ExecStart = "${pkgs.activitywatch}/bin/aw-server";
-            Restart = "on-failure";
-          };
-        };
-        systemd.user.services.aw-watcher-afk = {
-          description = "ActivityWatch AFK watcher";
-          wantedBy = [ "default.target" ];
-          after = [ "aw-server.service" ];
-          environment.XDG_DATA_HOME = "%h/activitywatch";
-          serviceConfig = {
-            ExecStart = "${pkgs.activitywatch}/bin/aw-watcher-afk";
-            Restart = "on-failure";
-          };
-        };
-        systemd.user.services.aw-watcher-niri = {
-          description = "ActivityWatch window + workspace watcher for niri";
-          wantedBy = [ "default.target" ];
-          after = [ "aw-server.service" ];
-          path = [ pkgs.niri ];
-          serviceConfig = {
-            ExecStart = "${aw-watcher-niri}/bin/aw-watcher-niri";
-            Restart = "on-failure";
-            RestartSec = 5;
-          };
-        };
-      };
-
       audioSystemConfig = { pkgs, ...}: {
         imports = [ musnix.nixosModules.musnix ];
         musnix.enable = true;
@@ -1291,7 +1217,6 @@
             terminalEnv
             windowManager
             graphicalPkgs
-            devlogCapture
             audioSystemConfig
             musicPkgs
             (secondTailnetViaContainer { networkInterface = "wlp0s20f3"; })
