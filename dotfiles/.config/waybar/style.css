@@ -27,6 +27,26 @@ window#waybar {
 	background: #1a1a1a;
 }
 
+#custom-focus {
+	padding: 0 10px;
+}
+#custom-focus.focus {
+	background: #1e6b3a;
+	color: #fff;
+}
+#custom-focus.detour {
+	background: #d79921;
+	color: #000;
+}
+#custom-focus.overdue {
+	background: #c00000;
+	color: #fff;
+	animation: focus-blink 1s steps(2) infinite;
+}
+@keyframes focus-blink {
+	to { background: #600000; }
+}
+
 #workspaces button {
 	padding: 0 2px;
 	color: #fdf6e3;

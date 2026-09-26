@@ -251,9 +251,22 @@
         ];
       };
 
-      windowManager = { pkgs, ...}: {
+      windowManager = { pkgs, ...}:
+        let
+          # Focus Mode: prompts before leaving the focus workspace, timed
+          # detours, waybar countdown. Wired up in the niri and waybar
+          # dotfiles (daemon via spawn-at-startup, guarded workspace binds).
+          focus-mode = pkgs.writers.writePython3Bin "focus-mode" { } (builtins.readFile ./scripts/focus-mode.py);
+          # Workspace binds run on every keypress, so skip Python's ~35ms
+          # startup when no session is active.
+          focus-mode-guard = pkgs.writeShellScriptBin "focus-mode-guard" ''
+            [ -e "''${XDG_RUNTIME_DIR:-/tmp}/focus-mode/state.json" ] || exec niri msg action "$@"
+            exec ${focus-mode}/bin/focus-mode guard "$@"
+          '';
+        in {
         programs.niri.enable = true;
         environment.systemPackages = with pkgs; [
+          focus-mode focus-mode-guard
           fuzzel mako
           waybar
           wl-clipboard
