@@ -92,14 +92,24 @@ def set_detour(minutes):
     def fn(s):
         if s:
             ends = now + minutes * 60
+            # Extending a detour keeps the focus clock paused from the start.
+            paused_at = (s.get("detour") or {}).get("paused_at", now)
             s["detour"] = {
                 "set_at": now,
+                "paused_at": paused_at,
                 "ends": ends,
                 "nag_at": ends + OVERDUE_GRACE,
             }
         return s
 
     update_state(fn)
+
+
+def focus_left(s, now):
+    """Seconds of focus remaining; the clock is paused during a detour."""
+    d = s.get("detour")
+    # set_at fallback: state written by a daemon from before pausing existed.
+    return s["ends"] - (d.get("paused_at", d["set_at"]) if d else now)
 
 
 def finish(s):
@@ -171,7 +181,7 @@ def mmss(seconds):
 
 
 def session_mesg(s):
-    lines = [f"Focus: {mmss(s['ends'] - time.time())} left"]
+    lines = [f"Focus: {mmss(focus_left(s, time.time()))} left"]
     if s["done"]:
         lines.append(f"Done looks like: {s['done']}")
     if s["next"]:
@@ -348,23 +358,28 @@ def bar_output(s, now):
     if not s:
         return {"text": "○ focus", "class": "idle",
                 "tooltip": "Start a focus session"}
-    tip = [f"Focus ends {time.strftime('%H:%M', time.localtime(s['ends']))}"]
+    d = s.get("detour")
+    remaining = focus_left(s, now)
+    if d:
+        tip = ["Focus paused during detour"]
+    else:
+        ends = time.localtime(now + remaining)
+        tip = [f"Focus ends {time.strftime('%H:%M', ends)}"]
     if s["done"]:
         tip.append(f"Done looks like: {s['done']}")
     if s["next"]:
         tip.append(f"Next action: {s['next']}")
-    left = mmss(s["ends"] - now)
-    d = s.get("detour")
+    left = mmss(remaining)
     if not d:
         text, cls = f"● FOCUS {left}", "focus"
         if s["next"]:
             nxt = s["next"]
             text += f" › {nxt[:40] + '…' if len(nxt) > 40 else nxt}"
     elif now < d["ends"]:
-        text, cls = f"◐ DETOUR {mmss(d['ends'] - now)} · focus {left}", \
+        text, cls = f"◐ DETOUR {mmss(d['ends'] - now)} · focus ⏸ {left}", \
             "detour"
     else:
-        text, cls = f"⚠ OVERDUE +{mmss(now - d['ends'])} · focus {left}", \
+        text, cls = f"⚠ OVERDUE +{mmss(now - d['ends'])} · focus ⏸ {left}", \
             "overdue"
     return {"text": html.escape(text), "class": cls,
             "tooltip": html.escape("\n".join(tip))}
@@ -395,16 +410,18 @@ def cmd_daemon():
         def fn(s):
             if not s:
                 return s
-            if now >= s["ends"]:
+            if focus_left(s, now) <= 0:
                 todo.append(("finished", s))
                 return None
             d = s.get("detour")
             if focused is None:
                 return s
             if focused == s["ws_id"]:
-                # Back on the focus workspace: any detour is over. A detour
-                # set moments ago by `guard` hasn't switched away yet.
+                # Back on the focus workspace: any detour is over, so resume
+                # the focus clock. A detour set moments ago by `guard` hasn't
+                # switched away yet.
                 if d and now - d["set_at"] > DETOUR_SETTLE:
+                    s["ends"] += now - d["paused_at"]
                     s["detour"] = None
             elif d is None:
                 todo.append(("left", s))
