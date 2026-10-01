@@ -31,5 +31,9 @@
       publicKey = "OtA576836ujtNK5baw9ot7aSF+Tw83FsWNPVrmW9xw8=";
       wgIp = "10.100.0.4";
     };
+    lorawan-gateway-at-farm = {
+      publicKey = "F5SI3JgXL52Gerp0iU1VG7v6c5DXveeGeBt6SIOXpAo=";
+      wgIp = "10.100.0.5";
+    };
   };
 }
