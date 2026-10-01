@@ -15,6 +15,7 @@
     touch-synth = { url = "github:rskew/touch-synth"; flake = false; };
     musnix  = { url = "github:musnix/musnix"; };
     autofarm.url = "github:rskew/autofarm";
+    autofarm2.url = "git+ssh://git@github.com/rskew/autofarm2.git";
   };
   outputs =
     { self,
@@ -29,6 +30,7 @@
       touch-synth,
       musnix,
       autofarm,
+      autofarm2,
     }:
     let
       pkgs = import nixpkgs {
@@ -545,6 +547,19 @@
                 config.age.secrets.shop-app-env.path;
             })
 
+            autofarm2.nixosModules.default
+            {
+              services.autofarm = {
+                enable = true;
+                farmOperator.environment.TZ = "Australia/Melbourne";
+                ecowitt.enable = true;
+              };
+              networking.firewall.interfaces.wg0 = {
+                allowedUDPPorts = [ 1700 ]; # Semtech UDP from the gateway
+                allowedTCPPorts = [ 8088 ]; # Ecowitt upload
+              };
+            }
+
             ({config, ...}: {
               services.nginx.enable = true;
               services.nginx.virtualHosts = {
@@ -626,7 +641,7 @@
                   enableACME = true;
                   forceSSL = true;
                   locations."/" = {
-                    proxyPass = "http://10.100.0.4:5000";
+                    proxyPass = "http://127.0.0.1:5000";
                     proxyWebsockets = true;
                     extraConfig = ''
                       proxy_set_header Sec-WebSocket-Extensions "";
