@@ -622,6 +622,28 @@
                   serverAliases = ["www.farmapp.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farm-basic-auth.path;
                 };
+                "farmtime.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:5000";
+                    proxyWebsockets = true;
+                    extraConfig = ''
+                      proxy_set_header Sec-WebSocket-Extensions "";
+                    '';
+                  };
+                  serverAliases = ["www.farmtime.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
+                };
+                "maths.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:9045";
+                  };
+                  serverAliases = ["www.maths.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farm-basic-auth.path;
+                };
                 "rowanskewes.com" = {
                   enableACME = true;
                   forceSSL = true;
@@ -656,7 +678,10 @@
                     chmod 600 /postgres-key.pem
                   '';
                   dnsProvider = "namecheap";
-                  credentialsFile = config.age.secrets.namecheap-api-credentials.path;
+                  credentialFiles = {
+                    NAMECHEAP_API_USER_FILE = config.age.secrets.namecheap-api-user.path;
+                    NAMECHEAP_API_KEY_FILE = config.age.secrets.namecheap-api-key.path;
+                  };
                 };
               };
               services.postgresql = {
@@ -797,6 +822,10 @@
               age.secrets.farm-basic-auth.mode = "770";
               age.secrets.farm-basic-auth.owner = "nginx";
               age.secrets.farm-basic-auth.group = "nginx";
+              age.secrets.farmtime-basic-auth.file = ./secrets/farmtime-basic-auth.age;
+              age.secrets.farmtime-basic-auth.mode = "770";
+              age.secrets.farmtime-basic-auth.owner = "nginx";
+              age.secrets.farmtime-basic-auth.group = "nginx";
               age.secrets.farmdb-pgpassword.file = ./secrets/farmdb-pgpassword.age;
               age.secrets.farmdb-pgpassword.mode = "770";
               age.secrets.farmdb-pgpassword.owner = "postgres";
@@ -806,7 +835,8 @@
               age.secrets."pgbackrest-credentials-env".owner = "postgres";
               age.secrets."pgbackrest-credentials-env".group = "postgres";
               age.secrets.b2-credentials.file = ./secrets/b2-credentials.age;
-              age.secrets.namecheap-api-credentials.file = ./secrets/namecheap-api-credentials.age;
+              age.secrets.namecheap-api-user.file = ./secrets/namecheap-api-user.age;
+              age.secrets.namecheap-api-key.file = ./secrets/namecheap-api-key.age;
               age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
             })
 
@@ -844,7 +874,7 @@
                 '';
               };
 
-              services.journald.extraConfig = "SystemMaxUse=1G";
+              services.journald.settings.Journal = { SystemMaxUse = "1G"; };
 
               users.users.rowan = {
                 isNormalUser = true;

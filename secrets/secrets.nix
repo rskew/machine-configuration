@@ -7,12 +7,14 @@ in
   "coolroom-monitor-influxdb-password.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "autofarm-frontend-server-basic-auth-credentials.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "farmdb-pgpassword.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
-  "namecheap-api-credentials.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "namecheap-api-user.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "namecheap-api-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "restic-password.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "b2-credentials.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "pgbackrest-cipher-pass.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "pgbackrest-credentials-env.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "farm-basic-auth.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "farmtime-basic-auth.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "vps1-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "shop-server-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "farm-server-wyse-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
