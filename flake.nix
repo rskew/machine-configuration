@@ -1,10 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # sherpa-onnx (the parakeet runtime) landed after the nixpkgs pin above, and
-    # its CUDA build needs an onnxruntime from the same set. Pinned rather than
-    # tracking a branch: nothing here should move without being re-measured.
-    nixpkgs-asr.url = "github:nixos/nixpkgs/e73de5be04e0eff4190a1432b946d469c794e7b4";
     kmonad.url = "github:kmonad/kmonad?dir=nix";
     keymasq.url = "github:nyrda/keymasq";
     harvest-front-page = { url = "github:rskew/harvest-front-page"; flake = false; };
@@ -20,7 +16,6 @@
   outputs =
     { self,
       nixpkgs,
-      nixpkgs-asr,
       kmonad,
       keymasq,
       harvest-front-page,
@@ -44,19 +39,16 @@
       shedPowerMonitorDeviceSymlink = "vedirect-usb";
       shedPowerMonitor = import ./applications/shed-power-monitor { inherit pkgs; device_path = "/dev/${shedPowerMonitorDeviceSymlink}"; };
 
-      # The one switch for GPU dictation on the p14. It turns on the nvidia
-      # driver, builds a CUDA sherpa-onnx, runs parakeet warm and points
-      # push-to-talk at it instead of whisper. Off means none of that is fetched,
-      # built or evaluated, and the machine stays free-software-only.
+      # The one switch for push-to-talk dictation on the p14. It turns on the
+      # nvidia driver, builds a CUDA sherpa-onnx and runs the streaming model
+      # warm. Off means no dictation, none of that is fetched, built or
+      # evaluated, and the machine stays free-software-only.
       #
-      # Parakeet 0.6B is the more accurate engine - it hears "sync prod UAT"
-      # where whisper base.en produces "SyncProGUAT", and it punctuates - but it
-      # decodes at 3x real time on this CPU. Whisper's cost is flat (~1.9s, set
-      # by its fixed 30s window) while parakeet's is proportional to the clip, so
-      # the T500 is the only thing that can make the trade pay. That is also the
-      # only job the card currently has: on whisper base.en it measured parity
-      # with the CPU, which is why the driver was left off in the first place.
-      parakeetOnGpu = false;
+      # GPU or nothing: the 0.6B NeMo models decode at 3x real time on this CPU,
+      # and whisper base.en, which could keep up there, mangled domain words
+      # ("sync prod UAT" -> "SyncProGUAT") and cannot stream. Dictation is the
+      # only job the T500 has.
+      gpuDictation = true;
 
       terminalEnv = { pkgs, ...}:
         let
@@ -146,10 +138,34 @@
         ];
       };
 
-      audioSystemConfig = { pkgs, ...}: {
+      audioSystemConfig = { pkgs, lib, ...}:
+        let
+          setEpp = pkgs.writeShellScript "set-epp" ''
+            for c in /sys/devices/system/cpu/cpu*/cpufreq; do
+              echo powersave > "$c/scaling_governor"
+              echo "$1" > "$c/energy_performance_preference"
+            done
+          '';
+        in {
         imports = [ musnix.nixosModules.musnix ];
         musnix.enable = true;
         musnix.kernel.realtime = true;
+        # i915 can't be built with PREEMPT_RT (still true in 7.2), so without
+        # this the Tiger Lake iGPU has no driver and niri hangs at login. xe
+        # needs forcing onto it since TGL isn't officially supported.
+        boot.kernelParams = [ "xe.force_probe=9a49" "i915.force_probe=!9a49" ];
+        # xe misreads TGL's frequency table and caps the GPU at RPe (400MHz),
+        # and SLPC never ramps above min_freq under load either, so pin both
+        # to RP0 (1300). The GPU still drops to RC6 when idle.
+        services.udev.extraRules = ''
+          ACTION=="bind", SUBSYSTEM=="pci", DRIVER=="xe", ATTR{tile0/gt0/freq0/max_freq}="1300", ATTR{tile0/gt0/freq0/min_freq}="1300"
+          SUBSYSTEM=="power_supply", KERNEL=="AC", ATTR{online}=="1", RUN+="${setEpp} performance"
+          SUBSYSTEM=="power_supply", KERNEL=="AC", ATTR{online}=="0", RUN+="${setEpp} balance_performance"
+        '';
+        # musnix pins the "performance" governor, which holds idle cores at max
+        # turbo and eats the package power budget, PL1-throttling the iGPU to
+        # ~550MHz. powersave + EPP performance ramps busy cores just as fast.
+        powerManagement.cpuFreqGovernor = lib.mkForce null;
         musnix.rtcqs.enable = true;
         musnix.soundcardPciId = "00:1f.3";
         services.pipewire = {
@@ -251,47 +267,52 @@
           inherit pkgs;
           devicePath = "/dev/${deviceSubPath}";
         };
-        # base.en rather than a larger model: on this CPU (no dGPU) it is the
-        # largest that still transcribes a short clip in about a second, which is
-        # the difference between dictation feeling instant and feeling like a wait.
-        whisperModel = pkgs.fetchurl {
-          url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin";
-          sha256 = "00nhqqvgwyl9zgyy7vk9i3n017q2wlncp5p7ymsk0cpkdp47jdx0";
-        };
-        # Silero, 0.8MB. Used twice per utterance: once by us to measure how much
-        # of the clip is actually speech, and again inside whisper to drop the
-        # silence. Both matter - see the sizing comment in push-to-talk.sh.
-        vadModel = pkgs.fetchurl {
-          url = "https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin";
-          hash = "sha256-KZQNmNQrkfvQXOSJ8+z3xy8KQvAn5IdZGaKPtMBOos8=";
-        };
-        whisperPort = 8378;
-
-        # Everything from here to parakeetServer is inert while parakeetOnGpu is
+        # Everything from here to streamServer is inert while gpuDictation is
         # false: nix never forces a let binding nothing refers to.
         #
-        # The whole parakeet stack comes out of one newer package set rather
-        # than moving the system's pin forward, because sherpa-onnx has to be
-        # built against an onnxruntime carrying the CUDA execution provider and
-        # the two have to agree. allowUnfree is scoped to this set, so the CUDA
-        # redistributables never widen what the host itself will accept.
-        #
-        # Expect a long first build: nixpkgs' cuda-enabled onnxruntime is not on
-        # cache.nixos.org. `nix.settings.substituters` gaining
-        # https://cuda-maintainers.cachix.org is the difference between minutes
-        # and most of a day.
-        asrPkgs = import nixpkgs-asr {
+        # A second instance of the system's nixpkgs, with CUDA and unfree scoped
+        # to it so they never widen what the host itself accepts. cudaSupport is
+        # set set-wide rather than by overriding onnxruntime because that is how
+        # cache.nixos-cuda.org builds it; an override hashes differently and
+        # misses the cache, and onnxruntime is then most of a day's build. The
+        # cache does not build every nixos-unstable commit, so a nixpkgs bump
+        # should land on one its channel-unstable jobset built onnxruntime for.
+        asrPkgs = import nixpkgs {
           system = "x86_64-linux";
-          config.allowUnfree = true;
+          config = { allowUnfree = true; cudaSupport = true; };
         };
-        sherpaOnnx = asrPkgs.sherpa-onnx.override {
-          cudaSupport = true;
-          onnxruntime = asrPkgs.onnxruntime.override { cudaSupport = true; };
-        };
+        # 1.13.5+ for the NeMo streaming greedy-search fix (see
+        # asr-stream-server.py); nixpkgs still packages 1.13.3. The newer tag
+        # moved three of the archives cmake would otherwise download.
+        sherpaOnnx = asrPkgs.sherpa-onnx.overrideAttrs (old: {
+          version = "1.13.8";
+          src = asrPkgs.fetchFromGitHub {
+            owner = "k2-fsa";
+            repo = "sherpa-onnx";
+            tag = "v1.13.8";
+            hash = "sha256-yAkjeRJXSiGW7Pr6cmHKUeYiWZyd88raEMdaJvYhQLM=";
+          };
+          preConfigure = old.preConfigure + asrPkgs.lib.concatStrings
+            (asrPkgs.lib.mapAttrsToList (name: dep: "cp ${asrPkgs.fetchurl dep} ./${name}\n") {
+              "espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip" = {
+                url = "https://github.com/csukuangfj/espeak-ng/archive/ed530aa113046142eb5115cf2fc9157854d0ffe1.zip";
+                sha256 = "e4e262cbe34f7fe21f91f1ba3397f2728e1f30eafbae7853f2b753a9ed13f0dd";
+              };
+              "piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip" = {
+                url = "https://github.com/csukuangfj/piper-phonemize/archive/f3ff95afc03640bc1399e113e83361192a2fafb4.zip";
+                sha256 = "d9cca4e2bdc7d6dd8dffb96a4668283dbd3f77a9c194a3e530c1e8eba9406a5d";
+              };
+              "openfst-1.8.5-2026-07-09.tar.gz" = {
+                url = "https://github.com/csukuangfj/openfst/archive/refs/tags/v1.8.5-2026-07-09.tar.gz";
+                sha256 = "2ff712a32952fcb01d351121a6bc8ccf4fdc6b2aa06ce8df2b3095dedd518c0e";
+              };
+            });
+        });
         # The int8 unified 0.6B, in its non-streaming mode: same weights the CPU
-        # measurement used, in the shape push-to-talk actually needs - one whole
-        # clip in on release, one transcript out. sha256 is the release asset
-        # digest github publishes, so pinning it cost no download.
+        # measurement used, one whole clip in, one transcript out. Its CUDA run
+        # is not all-GPU either (see streamModelFiles), but one pass per clip
+        # hides that. sha256 is the release asset digest github publishes, so
+        # pinning it cost no download.
         parakeetArchive = asrPkgs.fetchurl {
           url = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-unified-en-0.6b-int8-non-streaming.tar.bz2";
           sha256 = "99f63605b3a85a54c250c0869670a687b7d6598a47bf2421515e1f839a76e150";
@@ -301,43 +322,83 @@
           tar xjf ${parakeetArchive} --strip-components=1 -C $out
         '';
         parakeetPort = 8379;
-        parakeetServer = asrPkgs.writeShellApplication {
-          name = "parakeet-server";
+        sherpaServer = name: script: args: asrPkgs.writeShellApplication {
+          inherit name;
           runtimeInputs = [ (asrPkgs.python3.withPackages (ps: [ ps.numpy ])) ];
           # The python bindings are a separate output holding the sherpa_onnx
           # package. LD_LIBRARY_PATH is belt and braces: the extension module in
           # that output is not guaranteed to carry an rpath back to the shared
-          # libraries in $out, and this has not been run yet. Drop it if it turns
-          # out to be unnecessary.
+          # libraries in $out.
           text = ''
             export PYTHONPATH="${sherpaOnnx.python}''${PYTHONPATH:+:$PYTHONPATH}"
             export LD_LIBRARY_PATH="${sherpaOnnx}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-            exec python3 ${./scripts/parakeet-server.py} \
-              --model ${parakeetModel} \
-              --port ${toString parakeetPort} \
-              --provider cuda "$@"
+            exec python3 ${script} ${args} --provider cuda "$@"
           '';
         };
+        # Whole-clip only, so no longer what push-to-talk uses. Kept installed,
+        # not running, as the offline reference for eval-transcribe.py - the
+        # T500's 4GB cannot hold it beside the streaming model.
+        parakeetServer = sherpaServer "parakeet-server" ./scripts/parakeet-server.py
+          "--model ${parakeetModel} --port ${toString parakeetPort}";
 
-        # whisper-server keeps running either way: it is 262MB and it is the
-        # reference every eval run is scored against.
-        asrPort = if parakeetOnGpu then parakeetPort else whisperPort;
+        # Cache-aware streaming - the encoder carries state between 560ms chunks
+        # instead of re-reading its left context - which is what lets text be
+        # typed while the trigger is held. fp32, because the int8 build's
+        # DynamicQuantizeLinear and ConvInteger have no CUDA kernels and fall
+        # back to the CPU on every chunk. Gathered into one directory because
+        # encoder.onnx finds its 2.4GB of weights as encoder.data beside it.
+        streamModelFiles = {
+          "encoder.onnx" = "9af6849f4f4fbd033469998e7c80bf5f1ac5800e230f20f0ca4b7482a524a7e3";
+          "encoder.data" = "44f65771e1570546f61106b3d0c604a60b398d061476fda8042bb05432601bd4";
+          "decoder.onnx" = "17614cc0415d49daefd63cd91cb3415af046fa5a487c2049def68f51a667d6fe";
+          "joiner.onnx" = "d4ef2398e4b19cb166c0c12f03cb20333e4d359d63c5fd8cf965c0649c1d0d03";
+          "tokens.txt" = "dc0b4584ab2e4ddbf888425c076c61b736e7356a015250db7d307e6f1a8188ff";
+        };
+        streamModel = asrPkgs.runCommand "nemotron-speech-streaming-en-0.6b-560ms" { } ''
+          mkdir -p $out
+          ${asrPkgs.lib.concatStrings (asrPkgs.lib.mapAttrsToList (name: sha256: ''
+            cp ${asrPkgs.fetchurl {
+              url = "https://huggingface.co/csukuangfj2/sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-2026-04-25/resolve/d655d5f6c5e6a01525a0c905e548facbb1feba5e/${name}";
+              inherit sha256;
+            }} $out/${name}
+          '') streamModelFiles)}
+        '';
+        streamPort = 8380;
+        streamServer = sherpaServer "asr-stream-server" ./scripts/asr-stream-server.py
+          "--model ${streamModel} --port ${toString streamPort}";
 
         pushToTalk = pkgs.writeShellApplication {
           name = "push-to-talk";
           runtimeInputs = [
-            pkgs.whisper-cpp
             pkgs.pipewire        # pw-record
             pkgs.coreutils
-            pkgs.gnused
-            pkgs.curl
+            pkgs.netcat-openbsd   # nc -N, to half-close when the recording ends
+            pkgs.sox              # the streamed raw PCM back into a wav for eval
             rumble
             keymasq.packages.x86_64-linux.default   # keymasq type
           ];
           text = builtins.replaceStrings
             [ "@port@" ]
-            [ (toString asrPort) ]
+            [ (toString streamPort) ]
             (builtins.readFile ./scripts/push-to-talk.sh);
+        };
+
+        # Joins a Meet as a guest and transcribes it per speaker through the
+        # same warm server. Chromium only: the full browser set is 1GB+.
+        meetBot = pkgs.writeShellApplication {
+          name = "meet-bot";
+          runtimeInputs = [
+            (pkgs.python3.withPackages (ps: [ ps.playwright ps.playwright-stealth ]))
+            pkgs.xvfb       # the bot's own X screen
+            pkgs.xdotool    # real pointer and keys on it
+          ];
+          text = ''
+            export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers.override {
+              withFirefox = false; withWebkit = false; withFfmpeg = false;
+            }}
+            export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+            exec python3 ${./scripts/meet-bot.py} --port ${toString streamPort} "$@"
+          '';
         };
       in {
         imports = [ keymasq.nixosModules.default ];
@@ -359,39 +420,19 @@
             SYMLINK+="${deviceSubPath}", TAG+="uaccess", \
             RUN+="${pkgs.acl}/bin/setfacl -m u:rowan:rw /dev/input/%k"
         '';
-        environment.systemPackages = [ rumble pushToTalk ]
-          ++ pkgs.lib.optional parakeetOnGpu parakeetServer;
+        environment.systemPackages = [ rumble ]
+          ++ pkgs.lib.optionals gpuDictation [ pushToTalk parakeetServer streamServer meetBot ];
         services.keymasq.enable = true;
         services.keymasq.installPackage = true;
 
-        # Keeps the model resident. Spawning whisper-cli per utterance cost ~200ms
-        # in process startup and model load before any audio was looked at; on a
-        # short clip that was a third of the total. 262MB resident, so on 31GB
-        # there is no reason to load it on demand. Localhost only.
-        systemd.user.services.whisper-server = {
-          description = "Warm whisper.cpp server for push-to-talk dictation";
+        # Kept warm: the weights are 2.4GB and a CUDA context takes about a
+        # second to stand up, neither of which anyone should pay per utterance.
+        # It holds that context open, which keeps the T500 awake. Localhost only.
+        systemd.user.services.asr-stream-server = pkgs.lib.mkIf gpuDictation {
+          description = "Warm sherpa-onnx streaming server for push-to-talk dictation";
           wantedBy = [ "default.target" ];
           serviceConfig = {
-            ExecStart = pkgs.lib.concatStringsSep " " [
-              "${pkgs.whisper-cpp}/bin/whisper-server"
-              "-m ${whisperModel}"
-              "--vad -vm ${vadModel}"
-              "--host 127.0.0.1 --port ${toString whisperPort}"
-            ];
-            Restart = "always";
-            RestartSec = 2;
-          };
-        };
-
-        # Same warm-server reasoning as whisper, more so: the parakeet weights
-        # are 500MB and a CUDA context takes about a second to stand up, neither
-        # of which anyone should pay per utterance. It holds that context open,
-        # which keeps the T500 awake - the reason this is not on by default.
-        systemd.user.services.parakeet-server = pkgs.lib.mkIf parakeetOnGpu {
-          description = "Warm sherpa-onnx parakeet server for push-to-talk dictation";
-          wantedBy = [ "default.target" ];
-          serviceConfig = {
-            ExecStart = "${parakeetServer}/bin/parakeet-server";
+            ExecStart = "${streamServer}/bin/asr-stream-server";
             Restart = "always";
             RestartSec = 2;
           };
@@ -1209,7 +1250,7 @@
                 enable = true;
                 settings = {
                   PasswordAuthentication = true;
-                  AllowUsers = [ "rowan@192.168.0.251" ];
+                  AllowUsers = [ "rowan@192.168.0.55" ];
                 };
               };
             })
@@ -1363,8 +1404,8 @@
               virtualisation.docker.enable = true;
               virtualisation.libvirtd.enable = true;
 
-              # The T500, off unless parakeet is the dictation engine - see
-              # parakeetOnGpu at the top of this file for why that is the only
+              # The T500, off unless gpuDictation is on - see the top of this
+              # file for why dictation is the only
               # job it has. `open` is the open kernel modules, not an open
               # driver: userspace and CUDA stay proprietary either way, so the
               # unfree predicate below is what actually keeps the machine clean
@@ -1372,17 +1413,21 @@
               # the CUDA redistributables come from the separate asrPkgs set.
               #
               # PRIME offload, so the displays stay on the Iris Xe and the T500
-              # only wakes for CUDA - though the warm parakeet server holds a
+              # only wakes for CUDA - though the warm dictation server holds a
               # context open, so in practice it stays awake while enabled.
               nixpkgs.config.allowUnfreePredicate = pkg:
-                parakeetOnGpu && builtins.elem (pkgs.lib.getName pkg) [
+                gpuDictation && builtins.elem (pkgs.lib.getName pkg) [
                   "nvidia-x11" "nvidia-settings" "nvidia-persistenced"
                 ];
-              services.xserver.videoDrivers = pkgs.lib.mkIf parakeetOnGpu [ "nvidia" ];
-              hardware.graphics.enable = pkgs.lib.mkIf parakeetOnGpu true;
-              hardware.nvidia = pkgs.lib.mkIf parakeetOnGpu {
+              services.xserver.videoDrivers = pkgs.lib.mkIf gpuDictation [ "nvidia" ];
+              hardware.graphics.enable = pkgs.lib.mkIf gpuDictation true;
+              hardware.nvidia = pkgs.lib.mkIf gpuDictation {
                 open = true;
                 modesetting.enable = true;
+                # The warm dictation server's CUDA context lives across suspend; without
+                # the nvidia-suspend/resume hooks its VRAM state is lost and the first
+                # decode after resume takes an Xid 31 fault that needs a reboot.
+                powerManagement.enable = true;
                 prime = {
                   intelBusId = "PCI:0:2:0";
                   nvidiaBusId = "PCI:1:0:0";
@@ -1390,6 +1435,14 @@
                   offload.enableOffloadCmd = true;
                 };
               };
+              # glvnd tries 10_nvidia before 50_mesa, so without this Firefox's
+              # WebRender ran on the T500 and every frame crossed PCIe to niri
+              # on the Iris Xe. CUDA doesn't go through EGL, so dictation is unaffected.
+              environment.sessionVariables.__EGL_VENDOR_LIBRARY_FILENAMES =
+                pkgs.lib.mkIf gpuDictation "/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json";
+              # The NixOS CUDA team's cache: has asrPkgs' cudnn and CUDA
+              # onnxruntime, which cache.nixos.org never will (unfree).
+              nix.settings.substituters = pkgs.lib.mkIf gpuDictation [ "https://cache.nixos-cuda.org" ];
 
               users.users.rowan = {
                 isNormalUser = true;
@@ -1454,7 +1507,8 @@
               nix.extraOptions = ''
                 experimental-features = nix-command flakes
               '';
-              nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ];
+              nix.settings.trusted-public-keys = [ "silverpond:DvvEdyKZvc86cR1o/a+iJxnb7JxMCBzvSTjjEQIY8+g=" ]
+                ++ pkgs.lib.optional gpuDictation "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=";
               nix.settings.trusted-users = [ "rowan" ];
               nix.settings.trusted-substituters = [ "ssh-ng://rowan@tsuruhashi" ];
               system.stateVersion = "21.11";

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Warm sherpa-onnx ASR server wearing whisper-server's /inference contract.
+"""Warm sherpa-onnx whole-clip ASR server wearing whisper-server's /inference
+contract.
 
-push-to-talk.sh and scripts/eval-transcribe.py both POST a WAV as multipart
-"file" and read plain text back, so answering the same shape makes swapping
-engines a port number, and lets the two be scored against each other with
-`eval-transcribe.py whisper:8378 parakeet:8379`.
+No longer what push-to-talk uses - that is asr-stream-server.py - but kept as
+the offline reference: scripts/eval-transcribe.py POSTs a WAV as multipart
+"file" and reads plain text back, so whole-clip parakeet can be the reference
+variant (`eval-transcribe.py parakeet:8379 ...`) that other engines speaking
+the same contract are scored against. Stop the streaming server first; the
+T500 cannot hold both models.
 
-Parakeet 0.6B transcribes better than whisper base.en, but its cost is
-proportional to audio length where whisper's fixed 30s window is flat, so it
-only becomes the faster engine once the encoder runs on a GPU. --provider cuda
-is the reason this file exists; on CPU it measured 3x slower than real time.
+--provider cuda is the reason this file exists; on CPU parakeet 0.6B measured
+3x slower than real time.
 """
 
 import argparse
