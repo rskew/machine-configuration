@@ -80,11 +80,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1790868295,
-        "narHash": "sha256-bGs3YlRNgft2HzPfQhRHr19GnUi/l/dLtDYvLoQzxEI=",
+        "lastModified": 1791606683,
+        "narHash": "sha256-/89xg6P76Njf9fe63B1V3yIik4qA/n5ruzh8nu1kE4A=",
         "ref": "refs/heads/main",
-        "rev": "83920378702263fe50672cfa4f10d6a7e8aeacfa",
-        "revCount": 131,
+        "rev": "8b594c2cc572d340e7071e06eb754de7a4731fa1",
+        "revCount": 482,
         "type": "git",
         "url": "ssh://git@github.com/rskew/autofarm2.git"
       },

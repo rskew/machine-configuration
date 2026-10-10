@@ -609,24 +609,28 @@
                   serverAliases = ["www.admin.castlemaineharvest.com.au"];
                   basicAuthFile = config.age.secrets.shop-app-basic-auth.path;
                 };
+                "admin-dfs.castlemaineharvest.com.au" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:8767";
+                  };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://10.100.0.4:8767";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://10.100.0.4:8767";
+                    extraConfig = "auth_basic off;";
+                  };
+                  serverAliases = ["www.admin-dfs.castlemaineharvest.com.au"];
+                  basicAuthFile = config.age.secrets.shop-app-basic-auth.path;
+                };
                 "meetthecandidatesmtalexander.com.au" = {
                   root = "${meetthecandidatesmtalexander}/site";
                   enableACME = true;
                   forceSSL = true;
                   serverAliases = ["www.meetthecandidatesmtalexander.com.au"];
-                };
-                "farm.rowanskewes.com" = {
-                  enableACME = true;
-                  forceSSL = true;
-                  locations."/" = {
-                    proxyPass = "http://10.100.0.3:8006";
-                    proxyWebsockets = true;
-                    extraConfig = ''
-                      proxy_set_header Sec-WebSocket-Extensions "";
-                    '';
-                  };
-                  serverAliases = ["www.farm.rowanskewes.com"];
-                  basicAuthFile = config.age.secrets.farm-basic-auth.path;
                 };
                 "farmapp.rowanskewes.com" = {
                   enableACME = true;
@@ -637,7 +641,7 @@
                   serverAliases = ["www.farmapp.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farm-basic-auth.path;
                 };
-                "farmtime.rowanskewes.com" = {
+                "admin.terratactile.farm" = {
                   enableACME = true;
                   forceSSL = true;
                   locations."/" = {
@@ -647,7 +651,77 @@
                       proxy_set_header Sec-WebSocket-Extensions "";
                     '';
                   };
-                  serverAliases = ["www.farmtime.rowanskewes.com"];
+                  serverAliases = ["www.admin.terratactile.farm"];
+                  basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
+                };
+                "chirpstack.terratactile.farm" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://127.0.0.1:8080";
+                    proxyWebsockets = true;
+                  };
+                  locations."~ ^/api\\." = {
+                    extraConfig = ''
+                      grpc_pass grpc://127.0.0.1:8080;
+
+                      grpc_set_header Host $host;
+                      grpc_set_header X-Real-IP $remote_addr;
+                      grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      grpc_set_header X-Forwarded-Proto $scheme;
+                    '';
+                  };
+                  serverAliases = ["www.chirpstack.terratactile.farm"];
+                };
+                "dfs.terratactile.farm" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:8765";
+                  };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://10.100.0.4:8765";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://10.100.0.4:8765";
+                    extraConfig = "auth_basic off;";
+                  };
+                  serverAliases = ["www.dfs.terratactile.farm"];
+                  basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
+                };
+                "dfs-dfs.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:8766";
+                  };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://10.100.0.4:8766";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://10.100.0.4:8766";
+                    extraConfig = "auth_basic off;";
+                  };
+                  serverAliases = ["www.dfs-dfs.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
+                };
+                "house.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:8000";
+                  };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://10.100.0.4:8000";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://10.100.0.4:8000";
+                    extraConfig = "auth_basic off;";
+                  };
+                  serverAliases = ["www.house.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
                 };
                 "maths.rowanskewes.com" = {
