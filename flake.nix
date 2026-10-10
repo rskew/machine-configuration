@@ -689,7 +689,7 @@
                     extraConfig = "auth_basic off;";
                   };
                   serverAliases = ["www.house.rowanskewes.com"];
-                  basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
+                  basicAuthFile = config.age.secrets.house-basic-auth.path;
                 };
                 "maths.rowanskewes.com" = {
                   enableACME = true;
@@ -882,6 +882,11 @@
               age.secrets.farmtime-basic-auth.mode = "770";
               age.secrets.farmtime-basic-auth.owner = "nginx";
               age.secrets.farmtime-basic-auth.group = "nginx";
+
+              age.secrets.house-basic-auth.file = ./secrets/house-basic-auth.age;
+              age.secrets.house-basic-auth.mode = "770";
+              age.secrets.house-basic-auth.owner = "nginx";
+              age.secrets.house-basic-auth.group = "nginx";
               age.secrets.farmdb-pgpassword.file = ./secrets/farmdb-pgpassword.age;
               age.secrets.farmdb-pgpassword.mode = "770";
               age.secrets.farmdb-pgpassword.owner = "postgres";

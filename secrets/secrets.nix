@@ -21,4 +21,5 @@ in
   "peanut-butter-toast-wg-key.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "shop-app-basic-auth.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
   "shop-app-env.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
+  "house-basic-auth.age".publicKeys = [ rowan vpsManagement idToDeployToServers ];
 }
