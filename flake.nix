@@ -123,6 +123,7 @@
             csvlens
             duckdb
             nix-tree
+            yazi
           ];
         };
       graphicalPkgs = { pkgs, ...}: {
