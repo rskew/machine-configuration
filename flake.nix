@@ -1686,8 +1686,6 @@
           system = "x86_64-linux";
           modules = [
 
-            autofarm.nixosModules.gleam-backend
-
             ({ config, lib, ... }: import ./wireguard-to-vps.nix {
               privateKeyFile = config.age.secrets.wg-key.path;
               wgNetwork = import ./wg-network.nix;
