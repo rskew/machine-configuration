@@ -609,6 +609,23 @@
                   serverAliases = ["www.farmapp.rowanskewes.com"];
                   basicAuthFile = config.age.secrets.farm-basic-auth.path;
                 };
+                "farmapp-dfs.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:8769";
+                  };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://10.100.0.4:8769";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://10.100.0.4:8769";
+                    extraConfig = "auth_basic off;";
+                  };
+                  serverAliases = ["www.farmapp-dfs.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farm-basic-auth.path;
+                };
                 "admin.terratactile.farm" = {
                   enableACME = true;
                   forceSSL = true;
@@ -679,14 +696,14 @@
                   enableACME = true;
                   forceSSL = true;
                   locations."/" = {
-                    proxyPass = "http://10.100.0.4:8000";
+                    proxyPass = "http://10.100.0.4:8900";
                   };
                   locations."= /manifest.json" = {
-                    proxyPass = "http://10.100.0.4:8000";
+                    proxyPass = "http://10.100.0.4:8900";
                     extraConfig = "auth_basic off;";
                   };
                   locations."^~ /icons/" = {
-                    proxyPass = "http://10.100.0.4:8000";
+                    proxyPass = "http://10.100.0.4:8900";
                     extraConfig = "auth_basic off;";
                   };
                   serverAliases = ["www.house.rowanskewes.com"];
