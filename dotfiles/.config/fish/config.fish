@@ -1,6 +1,7 @@
 set -gx PATH $HOME/machine-configuration/scripts $PATH
 set -gx PATH $HOME/bin $PATH
-set -gx EDITOR vim
+set -gx EDITOR nvim
+set -gx VISUAL nvim
 
 alias rm='rm -i'
 
@@ -29,8 +30,6 @@ function nix-develop
 end
 
 alias nix-stray-roots='nix-store --gc --print-roots | egrep -v "^(/nix/var|/proc/.*|/run/\w+-system|\{memory)"'
-
-abbr lvim 'nix --offline run nixpkgs#lunarvim'
 
 ####
 #### git aliases from https://gist.github.com/freewind/773c3324b5288ff636af

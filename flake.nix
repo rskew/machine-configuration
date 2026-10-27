@@ -124,6 +124,12 @@
             duckdb
             nix-tree
             yazi
+            # LazyVim; config in dotfiles/.config/nvim. gcc builds treesitter
+            # parsers, fd/lazygit back its pickers and git UI.
+            neovim
+            gcc
+            fd
+            lazygit
           ];
         };
       graphicalPkgs = { pkgs, ...}: {
@@ -283,32 +289,8 @@
           config = { allowUnfree = true; cudaSupport = true; };
         };
         # 1.13.5+ for the NeMo streaming greedy-search fix (see
-        # asr-stream-server.py); nixpkgs still packages 1.13.3. The newer tag
-        # moved three of the archives cmake would otherwise download.
-        sherpaOnnx = asrPkgs.sherpa-onnx.overrideAttrs (old: {
-          version = "1.13.8";
-          src = asrPkgs.fetchFromGitHub {
-            owner = "k2-fsa";
-            repo = "sherpa-onnx";
-            tag = "v1.13.8";
-            hash = "sha256-yAkjeRJXSiGW7Pr6cmHKUeYiWZyd88raEMdaJvYhQLM=";
-          };
-          preConfigure = old.preConfigure + asrPkgs.lib.concatStrings
-            (asrPkgs.lib.mapAttrsToList (name: dep: "cp ${asrPkgs.fetchurl dep} ./${name}\n") {
-              "espeak-ng-ed530aa113046142eb5115cf2fc9157854d0ffe1.zip" = {
-                url = "https://github.com/csukuangfj/espeak-ng/archive/ed530aa113046142eb5115cf2fc9157854d0ffe1.zip";
-                sha256 = "e4e262cbe34f7fe21f91f1ba3397f2728e1f30eafbae7853f2b753a9ed13f0dd";
-              };
-              "piper-phonemize-f3ff95afc03640bc1399e113e83361192a2fafb4.zip" = {
-                url = "https://github.com/csukuangfj/piper-phonemize/archive/f3ff95afc03640bc1399e113e83361192a2fafb4.zip";
-                sha256 = "d9cca4e2bdc7d6dd8dffb96a4668283dbd3f77a9c194a3e530c1e8eba9406a5d";
-              };
-              "openfst-1.8.5-2026-07-09.tar.gz" = {
-                url = "https://github.com/csukuangfj/openfst/archive/refs/tags/v1.8.5-2026-07-09.tar.gz";
-                sha256 = "2ff712a32952fcb01d351121a6bc8ccf4fdc6b2aa06ce8df2b3095dedd518c0e";
-              };
-            });
-        });
+        # asr-stream-server.py); nixpkgs packages 1.13.8.
+        sherpaOnnx = asrPkgs.sherpa-onnx;
         # The int8 unified 0.6B, in its non-streaming mode: same weights the CPU
         # measurement used, one whole clip in, one transcript out. Its CUDA run
         # is not all-GPU either (see streamModelFiles), but one pass per clip
@@ -1281,8 +1263,8 @@
             terminalEnv
             windowManager
             graphicalPkgs
-            audioSystemConfig
-            musicPkgs
+            #audioSystemConfig
+            #musicPkgs
             (secondTailnetViaContainer { networkInterface = "wlp0s20f3"; })
 
             ({pkgs,...}: {
@@ -1374,7 +1356,6 @@
               boot.initrd.luks.devices = {
                 root = {
                   device = "/dev/nvme0n1p2";
-                  preLVM = true;
                 };
               };
               # Use the systemd-boot EFI boot loader.
@@ -1392,7 +1373,9 @@
               networking.firewall.allowedTCPPorts = [
                 3006 # shop app backend
                 3007 # shop app backend
+                8765
               ];
+              networking.firewall.interfaces."br-agents".allowedTCPPorts = [ 9103 ];
 
               services.tailscale.enable = true;
 
@@ -1426,6 +1409,10 @@
 
               virtualisation.docker.enable = true;
               virtualisation.libvirtd.enable = true;
+
+              # VA-API for the Iris Xe; without it browsers decode/encode
+              # video calls on the CPU.
+              hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
 
               # The T500, off unless gpuDictation is on - see the top of this
               # file for why dictation is the only
@@ -1702,6 +1689,14 @@
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
+
+            autofarm2.nixosModules.ve-direct
+            ({...}: {
+              services.autofarm-ve-direct = {
+                #enable = true;
+                device = "/dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VE6INUFY-if00-port0";
+              };
+            })
 
             ({ config, lib, ... }: import ./wireguard-to-vps.nix {
               privateKeyFile = config.age.secrets.wg-key.path;
