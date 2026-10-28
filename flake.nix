@@ -50,12 +50,22 @@
       # only job the T500 has.
       gpuDictation = true;
 
-      terminalEnv = { pkgs, ...}:
+      terminalEnv = { pkgs, lib, config, ...}:
         let
           pythonEnv = pkgs.python3.withPackages (ps: with ps; [
             ipython pandas matplotlib seaborn pyyaml
             boto3 tqdm duckdb requests
           ]);
+          batman = pkgs.fishPlugins.buildFishPlugin {
+            pname = "batman";
+            version = "hello";
+            src = pkgs.fetchFromGitHub {
+              owner = "oh-my-fish";
+              repo = "theme-batman";
+              rev = "2a76bd81f4805debd7f137cb98828bff34570562";
+              sha256 = "Ko4w9tMnIi17db174FzW44LgUdui/bUzPFEHEHv//t4=";
+            };
+          };
           vim-with-custom-rc = pkgs.vim-full.customize {
             vimrcConfig = {
               customRC = ''
@@ -75,7 +85,25 @@
             };
           };
         in {
-          environment.systemPackages = with pkgs; [
+          options.terminalEnv.promptName = lib.mkOption {
+            type = lib.types.str;
+            default = config.networking.hostName;
+            description = "Machine name shown at the start of the fish prompt.";
+          };
+          # Batman only shows the hostname over SSH; prefix it always. The
+          # wrapper restores $status so batman still colours failed commands.
+          config.programs.fish.interactiveShellInit = ''
+            source ${batman}/share/fish/vendor_functions.d/fish_prompt.fish
+            functions --copy fish_prompt __batman_fish_prompt
+            function __set_status; return $argv[1]; end
+            function fish_prompt
+              set -l last_status $status
+              echo -n (set_color 888)"${config.terminalEnv.promptName}"(set_color normal)" "
+              __set_status $last_status
+              __batman_fish_prompt
+            end
+          '';
+          config.environment.systemPackages = with pkgs; [
             git
             ripgrep # for project-wide search in emacs
             fzf # for reverse history search in fish shell
@@ -108,16 +136,7 @@
             gh
             nettools
             pkgs.fishPlugins.fzf
-            (pkgs.fishPlugins.buildFishPlugin {
-              pname = "batman";
-              version = "hello";
-              src = pkgs.fetchFromGitHub {
-                owner = "oh-my-fish";
-                repo = "theme-batman";
-                rev = "2a76bd81f4805debd7f137cb98828bff34570562";
-                sha256 = "Ko4w9tMnIi17db174FzW44LgUdui/bUzPFEHEHv//t4=";
-              };
-            })
+            batman
             nushell
             timg
             csvlens
@@ -905,6 +924,7 @@
 
             ({pkgs, ...}: {
               networking.hostName = "rowan-vps1";
+              terminalEnv.promptName = "vps1";
 
               # Default hardware-configuration has no swap device,
               # causing nixos-rebuilt to crash
@@ -985,6 +1005,7 @@
                 ];
 
               networking.hostName = "shop-server";
+              terminalEnv.promptName = "shop";
 
               networking.networkmanager.enable = true;
 
@@ -1059,143 +1080,6 @@
           EOF
         '';
       };
-
-      nixosConfigurations.farm-server =
-        nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = {inherit pkgs;};
-          modules = [
-
-            agenix.nixosModules.age
-            ({...}: {
-              age.secrets."autofarm-frontend-server-basic-auth-credentials".file = ./secrets/autofarm-frontend-server-basic-auth-credentials.age;
-              age.identityPaths = [ "/home/rowan/.ssh/id_to_deploy_to_servers1" ];
-            })
-
-            shedPowerMonitor.module
-            ({...}: {
-              services.udev.extraRules = ''
-                SUBSYSTEM=="tty", ATTRS{idProduct}=="6015", ATTRS{idVendor}=="0403", ATTRS{serial}=="VE6INUFY", GROUP="dialout", MODE="0664", SYMLINK+="${shedPowerMonitorDeviceSymlink}"
-              '';
-              environment.systemPackages = [ pkgs.influxdb ];
-              # On first start of influxdb:
-              #   $ influx
-              #   > CREATE USER <user> WITH PASSWORD '<password>' WITH ALL PRIVILEGES
-              # Query users:
-              #   > SHOW USERS
-              # Database management:
-              #   > CREATE DATABASE shed_power
-              # Query data:
-              #   > USE shed_power
-              #   > SELECT * FROM battery_voltage
-              services.influxdb.enable = true;
-              # On first start of grafana:
-              # - log in with admin/admin, set admin password, create other users
-              # - create data-source pointing at influxdb http://localhost:8086
-              # - create dashboard with shed-power signals
-              services.grafana = {
-                enable = true;
-                settings = {};
-              };
-            })
-
-            (import ./persistent-ssh-tunnel.nix)
-            ({...}: {
-              services.persistentSSHTunnel = {
-                enable = true;
-                remoteIp = jumpBoxIp;
-                remoteUser = "rowan";
-                idFile = "/home/rowan/.ssh/id_to_deploy_to_servers1";
-                knownHostsLine = jumpBoxKnownHostsLine;
-                remoteForwards = [
-                  { localPort = 22; remotePort = 7722; } # SSH
-                  { localPort = 3000; remotePort = 3001; } # Grafana
-                  { localPort = 8123; remotePort = 8123; } # Home Assistant
-                ];
-              };
-            })
-
-            ({config, pkgs, ...}: {
-              services.home-assistant = {
-                enable = true;
-                extraComponents = [
-                  # Components required to complete the onboarding
-                  "esphome"
-                  "met"
-                  "radio_browser"
-                  "zha" # for zigbee
-                  "http"
-                ];
-                config = {
-                  # Includes dependencies for a basic setup
-                  # https://www.home-assistant.io/integrations/default_config/
-                  default_config = {};
-                  automation = "!include automations.yaml";
-                  http = {
-                    use_x_forwarded_for = true;
-                    trusted_proxies = [ "::1" ];
-                  };
-                  influxdb = {}; # The database "home_assistant" needs to be created manually
-                };
-              };
-              networking.firewall.allowedTCPPorts = [ 8123 ];
-            })
-
-            terminalEnv
-
-            ({config, pkgs, ...}: {
-              imports =
-                [./machines/farm-server-hardware-configuration.nix
-                ];
-              networking.hostName = "farm-server";
-              networking.networkmanager.enable = true;
-              networking.useDHCP = false;
-              networking.interfaces.enp3s0.useDHCP = true;
-
-              # Use the systemd-boot EFI boot loader.
-              boot.loader.grub.enable = true;
-              boot.loader.grub.device = "/dev/sda";
-
-              # Default hardware-configuration has no swap device,
-              # causing nixos-rebuilt to crash
-              swapDevices = pkgs.lib.mkOverride 5 [
-                {
-                  device = "/swapfile";
-                  size = 3000; # MB
-                }
-              ];
-
-              # Select internationalisation properties.
-              i18n.defaultLocale = "en_AU.UTF-8";
-              # Set your time zone.
-              time.timeZone = "Australia/Melbourne";
-
-              services.openssh = {
-                enable = true;
-                settings = {
-                  PasswordAuthentication = false;
-                  PermitRootLogin = "no";
-                  X11Forwarding = false;
-                };
-              };
-
-              users.users.rowan = {
-                isNormalUser = true;
-                extraGroups = [
-                  "wheel"  # Enable ‘sudo’ for the user.
-                  "docker"
-                  "usb" "dialout" "uucp"
-                ];
-                openssh.authorizedKeys.keys = [ vpsManagementPubkey ];
-                shell = pkgs.fish;
-              };
-              programs.fish.enable = true;
-
-              nix.extraOptions = "experimental-features = nix-command flakes";
-              system.stateVersion = "20.03"; # Did you read the comment?
-            })
-          ];
-        };
 
       # Steps to reproduce laptop state:
       # - setup encrypted hard drive
@@ -1368,6 +1252,7 @@
               };
 
               networking.hostName = "rowan-p14";
+              terminalEnv.promptName = "p14";
               networking.networkmanager.enable = true;
               services.resolved.enable = true;
               networking.firewall.allowedTCPPorts = [
@@ -1615,6 +1500,7 @@
 
               networking.hostId = "00000000";
               networking.hostName = "rowan-peanut-butter-toast";
+              terminalEnv.promptName = "pbt";
 
               networking.networkmanager.enable = true;
               services.resolved.enable = true;
