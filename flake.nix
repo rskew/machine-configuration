@@ -1214,7 +1214,7 @@
                     defcfg = {
                       enable = true;
                       fallthrough = true;
-                      allowCommands = false;
+                      allowCommands = true; # base.kbd's @ptt
                     };
                   };
                   texUsb = {
@@ -1223,10 +1223,38 @@
                     defcfg = {
                       enable = true;
                       fallthrough = true;
-                      allowCommands = false;
+                      allowCommands = true; # base.kbd's @ptt
                     };
                   };
                 };
+              };
+            })
+
+            # Right Alt push-to-talk: kmonad (user kmonad) can write this FIFO but
+            # not reach the session, so a user service relays it to push-to-talk.
+            # stop is backgrounded so it cannot hold up the next start.
+            ({ lib, pkgs, ... }: lib.mkIf gpuDictation {
+              systemd.tmpfiles.rules = [
+                "d /run/push-to-talk 0750 rowan kmonad -"
+                "p /run/push-to-talk/ctl 0620 rowan kmonad -"
+              ];
+              systemd.user.services.push-to-talk-keyboard = {
+                description = "Relay kmonad's Right Alt to push-to-talk";
+                wantedBy = [ "default.target" ];
+                serviceConfig = {
+                  Restart = "always";
+                  RestartSec = 2;
+                };
+                # Opened read-write so the read never sees EOF between writers.
+                script = ''
+                  exec 3<> /run/push-to-talk/ctl
+                  while read -r cmd <&3; do
+                    case "$cmd" in
+                      start) /run/current-system/sw/bin/push-to-talk start ;;
+                      stop) /run/current-system/sw/bin/push-to-talk stop & ;;
+                    esac
+                  done
+                '';
               };
             })
 

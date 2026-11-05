@@ -1,5 +1,12 @@
 ;; defcfg section provided by nixos module
 
+;; Right Alt held: push-to-talk. kmonad runs as its own system user, so it only
+;; pokes a FIFO; push-to-talk-keyboard reads it inside the user session. The -p
+;; guard keeps the key inert on a build without dictation.
+(defalias ptt (cmd-button
+  "[ -p /run/push-to-talk/ctl ] && echo start > /run/push-to-talk/ctl"
+  "[ -p /run/push-to-talk/ctl ] && echo stop > /run/push-to-talk/ctl"))
+
 (defsrc
   esc  f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  home end  ins  del
   `    1    2    3    4    5    6    7    8    9    0    -     =    bspc
@@ -16,7 +23,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [     ]    \
   @ctlarrows a    s    d    f    g    h    j    k    l    ;    '          ret
   lsft z    x    c    v    b    n    m    ,    .    /               rsft
-  _    lctl lmet lalt           spc            ralt prnt  rctl  pgup up   pgdn
+  _    lctl lmet lalt           spc            @ptt prnt  rctl  pgup up   pgdn
                                                                 left down rght
 )
 
