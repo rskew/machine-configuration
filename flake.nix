@@ -522,6 +522,7 @@
                 enable = true;
                 farmOperator.environment.TZ = "Australia/Melbourne";
                 ecowitt.enable = true;
+                veDirect = { enable = true; port = 8088; };
               };
               networking.firewall.interfaces.wg0 = {
                 allowedUDPPorts = [ 1700 ]; # Semtech UDP from the gateway

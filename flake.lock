@@ -80,11 +80,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1793067814,
-        "narHash": "sha256-UcWbgSNwglvu4JqDNzmpa/P0GSFuCkue67ZEcj3adK8=",
+        "lastModified": 1794447657,
+        "narHash": "sha256-MdEl/Swk/yrfr+yENQ43+r29fnmGKUFXGggRvRoDGsA=",
         "ref": "refs/heads/main",
-        "rev": "611efc77aadc955f3ca3fbc286a03de7a721d425",
-        "revCount": 1064,
+        "rev": "8213c33c09650241811a0d0683b99f709da52df4",
+        "revCount": 1300,
         "type": "git",
         "url": "ssh://git@github.com/rskew/autofarm2.git"
       },
@@ -138,11 +138,11 @@
         "spago2nixSource": "spago2nixSource"
       },
       "locked": {
-        "lastModified": 1792368199,
-        "narHash": "sha256-+H8QF2pQUPIbnwsqo/NmeQQlCvi3XI6wGNJx+INiAn4=",
+        "lastModified": 1795031091,
+        "narHash": "sha256-BVyUndlcm8N1Go9y95T5Skvb2MDRow8LG/Tp7ealRQo=",
         "ref": "refs/heads/master",
-        "rev": "bb222319ead9012798b7fcaf6e2111f2e0761349",
-        "revCount": 1545,
+        "rev": "d9a253566cadadd9b35e3143d15ff8d841a085a9",
+        "revCount": 2038,
         "type": "git",
         "url": "ssh://git@github.com/rskew/greengrocer-admin-app.git"
       },
