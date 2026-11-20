@@ -730,6 +730,23 @@
                     index = "index.html";
                   };
                 };
+                "dfs-gardenos.rowanskewes.com" = {
+                  enableACME = true;
+                  forceSSL = true;
+                  locations."/" = {
+                    proxyPass = "http://10.100.0.4:8770";
+                  };
+                  locations."= /manifest.json" = {
+                    proxyPass = "http://10.100.0.4:8770";
+                    extraConfig = "auth_basic off;";
+                  };
+                  locations."^~ /icons/" = {
+                    proxyPass = "http://10.100.0.4:8770";
+                    extraConfig = "auth_basic off;";
+                  };
+                  serverAliases = ["www.dfs-gardenos.rowanskewes.com"];
+                  basicAuthFile = config.age.secrets.farmtime-basic-auth.path;
+                };
               };
               services.nginx.recommendedProxySettings = true;
               security.acme.defaults.email = "rowan.skewes@gmail.com";
