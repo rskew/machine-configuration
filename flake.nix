@@ -532,6 +532,12 @@
 
             ({config, ...}: {
               services.nginx.enable = true;
+              services.nginx.appendHttpConfig = ''
+                map $request_method $eftpos_bridge_auth {
+                  POST    off;
+                  default "Restricted";
+                }
+              '';
               services.nginx.virtualHosts = {
                 "castlemaineharvest.com.au" = {
                   root = harvest-front-page;
@@ -574,6 +580,16 @@
                       # nginx's default 1m would 413 the bigger photos.
                       client_max_body_size 20m;
                       proxy_buffering off; # For SSE
+                    '';
+                  };
+                  locations."= /api/eftpos/bridge-status" = {
+                    proxyPass = "http://127.0.0.1:3006";
+                    extraConfig = ''
+                      # The registers' eftpos-bridge daemons POST here with their own token, which
+                      # the app checks (EFTPOS_BRIDGE_TOKEN); they do not carry the humans' basic
+                      # auth. The page's GET of the same URL stays behind it.
+                      auth_basic $eftpos_bridge_auth;
+                      error_page 502 503 504 @maintenance;
                     '';
                   };
                   serverAliases = ["www.admin.castlemaineharvest.com.au"];
