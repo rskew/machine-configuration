@@ -795,8 +795,8 @@
               };
               services.postgresql = {
                 enable = true;
-                package = pkgs.postgresql_14;
-                extensions = [ pkgs.postgresql14Packages.postgis ];
+                package = pkgs.postgresql_17;
+                extensions = [ pkgs.postgresql17Packages.postgis ];
                 initdbArgs = ["--pwfile=${config.age.secrets.farmdb-pgpassword.path}"];
                 initialScript = pkgs.writeText "initialScript" ''
                   CREATE EXTENSION postgis;
@@ -1360,6 +1360,9 @@
               # VA-API for the Iris Xe; without it browsers decode/encode
               # video calls on the CPU.
               hardware.graphics.extraPackages = [ pkgs.intel-media-driver ];
+              # Load HuC: iHD only exposes TGL's low-power (VDEnc) encoders,
+              # including VP9 for Meet, when it's authenticated.
+              boot.kernelParams = [ "i915.enable_guc=2" ];
 
               # The T500, off unless gpuDictation is on - see the top of this
               # file for why dictation is the only
@@ -1397,6 +1400,12 @@
               # on the Iris Xe. CUDA doesn't go through EGL, so dictation is unaffected.
               environment.sessionVariables.__EGL_VENDOR_LIBRARY_FILENAMES =
                 pkgs.lib.mkIf gpuDictation "/run/opengl-driver/share/glvnd/egl_vendor.d/50_mesa.json";
+              # mutter 51.1 segfaults in add_drm_device on the T500's nvidia-drm
+              # node (no CRTCs), so gdm's greeter never starts. The T500 drives
+              # no displays, so make mutter skip it.
+              services.udev.extraRules = pkgs.lib.mkIf gpuDictation ''
+                SUBSYSTEM=="drm", KERNEL=="card*", SUBSYSTEMS=="pci", ATTRS{vendor}=="0x10de", TAG+="mutter-device-ignore"
+              '';
               # The NixOS CUDA team's cache: has asrPkgs' cudnn and CUDA
               # onnxruntime, which cache.nixos.org never will (unfree).
               nix.settings.substituters = pkgs.lib.mkIf gpuDictation [ "https://cache.nixos-cuda.org" ];
